@@ -9,13 +9,17 @@ instance (Show t) => Show (Angle t) where
     show (Degrees f) = show f ++ "°"
     show (Radians f) = show f ++ " rad"
 
-degrees :: (Floating t) => Angle t -> t
+degrees    :: (Floating t) => Angle t -> t
+radians    :: (Floating t) => Angle t -> t
+as_degrees :: (Floating t) => (Angle t) -> (Angle t)
+as_radians :: (Floating t) => (Angle t) -> (Angle t)
+
 degrees (Degrees val) = val
 degrees (Radians val) = val * (180/pi)
-
-radians :: (Floating t) => Angle t -> t
 radians (Degrees val) = val * (pi/180)
 radians (Radians val) = val
+as_degrees angle = Degrees $ degrees angle 
+as_radians angle = Radians $ radians angle 
 
 -- Vector ----------------------------------------------------------------------
 data Vector t = Vector t t t
