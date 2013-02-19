@@ -4,6 +4,10 @@
 
 module Geometry
 ( Angle
+, Vector
+, Point
+, normal
+, direction
 ) where
 
 -- Angle -----------------------------------------------------------------------
@@ -56,3 +60,36 @@ p_diff :: (Num t) => Point t -> Point  t -> Vector t
 p_add  (Point a b c) (Vector x y z) = Point  (a+x) (b+y) (c+z)
 p_sub  (Point a b c) (Vector x y z) = Point  (a-x) (b-y) (c-z)
 p_diff (Point a b c) (Point  x y z) = Vector (a-x) (b-y) (c-z)
+
+-- Normal ----------------------------------------------------------------------
+data Normal t = Normal t t t
+              deriving (Show)
+
+normal :: (Floating t) => t -> t -> t -> Normal t
+
+normal a b c = 
+    let normal_from_vec (Vector x y z) = Normal x y z
+    in  normal_from_vec $ v_normalize $ Vector a b c
+
+
+-- Direction -------------------------------------------------------------------
+data Direction t = Direction t t t
+                 deriving (Show)
+
+direction :: (Floating t) => t -> t -> t -> Direction t
+d_stretch :: (Num t)      => Direction t -> t -> Vector t
+
+direction a b c = 
+    let direction_from_vec (Vector x y z) = Direction x y z
+    in  direction_from_vec $ v_normalize $ Vector a b c
+
+d_stretch (Direction a b c) f = Vector (a*f) (b*f) (c*f)
+
+-- Ray -------------------------------------------------------------------------
+data Ray t = Ray (Point t) (Direction t)
+           deriving (Show)
+
+ray_point :: (Num t, Ord t) => Ray t -> t -> Point t
+ray_point (Ray point direction) f
+    | f<0       = error "ray_point undefined for negative f"
+    | otherwise = p_add point (d_stretch direction f)
