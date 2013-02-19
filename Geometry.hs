@@ -5,6 +5,10 @@ module Geometry
 -- Angle -----------------------------------------------------------------------
 data Angle t = Degrees t | Radians t
 
+instance (Show t) => Show (Angle t) where
+    show (Degrees f) = show f ++ "°"
+    show (Radians f) = show f ++ " rad"
+
 degrees :: (Floating t) => Angle t -> t
 degrees (Degrees val) = val
 degrees (Radians val) = val * (180/pi)
