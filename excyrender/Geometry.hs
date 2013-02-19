@@ -8,6 +8,7 @@ module Geometry
 , Point
 , normal
 , direction
+, Ray
 ) where
 
 
