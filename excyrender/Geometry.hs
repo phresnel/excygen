@@ -72,7 +72,7 @@ p_diff (Point a b c) (Point  x y z) = Vector (a-x) (b-y) (c-z)
 
 -- Normal ----------------------------------------------------------------------
 data Normal t = Normal t t t
-              deriving (Show)
+                deriving (Show)
 
 normal :: (Floating t) => t -> t -> t -> Normal t
 
@@ -84,7 +84,7 @@ normal a b c =
 
 -- Direction -------------------------------------------------------------------
 data Direction t = Direction t t t
-                 deriving (Show)
+                   deriving (Show)
 
 direction :: (Floating t) => t -> t -> t -> Direction t
 d_stretch :: (Num t)      => Direction t -> t -> Vector t
@@ -99,7 +99,7 @@ d_stretch (Direction a b c) f = Vector (a*f) (b*f) (c*f)
 
 -- Ray -------------------------------------------------------------------------
 data Ray t = Ray (Point t) (Direction t)
-           deriving (Show)
+             deriving (Show)
 
 ray_point :: (Num t, Ord t) => Ray t -> t -> Point t
 
