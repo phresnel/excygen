@@ -3,12 +3,12 @@
 -- See COPYING in the root-folder of the excygen project folder.
 
 module Geometry
-( Angle
-, Vector
-, Point
+( Angle(..), degrees, radians, as_degrees, as_radians
+, Vector(..), v_add, v_sub, v_len_sq, v_len, v_stretch, v_shrink, v_normalize
+, Point(..), p_add, p_sub, p_diff
 , normal
-, direction
-, Ray
+, direction, d_stretch
+, Ray(..), ray_point
 ) where
 
 
