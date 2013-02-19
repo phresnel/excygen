@@ -6,12 +6,20 @@ module Shape
 ( Sphere(..)
 ) where
 
-import Geometry(Point(..))
+import Geometry(Point(..), Ray(..), direction)
+
+
+
+-- Shape -----------------------------------------------------------------------
+class Shape s where
+    intersect :: (Floating t, Ord t) => Ray t -> s t -> Bool
+
+
 
 -- Sphere ----------------------------------------------------------------------
-newtype Radius t = Radius t deriving(Show)
+data Sphere t = Sphere (Point t) t
+                deriving(Show)
 
-data Sphere t = Sphere (Point t) (Radius t)
-              deriving(Show)
+instance Shape Sphere where
+    intersect ray sphere = False
 
-main = putStrLn $ show (Sphere (Point 1 1 1) (Radius 3))
