@@ -25,15 +25,21 @@ as_radians angle = Radians $ radians angle
 data Vector t = Vector t t t
                 deriving (Show)
 
-v_add       :: (Num t)      => Vector t -> Vector t -> Vector t
-v_sub       :: (Num t)      => Vector t -> Vector t -> Vector t
-v_len_sq    :: (Num t)      => Vector t -> t
-v_len       :: (Floating t) => Vector t -> t
+v_add       :: (Num t)        => Vector t -> Vector t -> Vector t
+v_sub       :: (Num t)        => Vector t -> Vector t -> Vector t
+v_len_sq    :: (Num t)        => Vector t -> t
+v_len       :: (Floating t)   => Vector t -> t
+v_stretch   :: (Num t)        => Vector t -> t -> Vector t
+v_shrink    :: (Fractional t) => Vector t -> t -> Vector t
+v_normalize :: (Floating t)   => Vector t -> Vector t
 
 v_add       (Vector a b c) (Vector x y z) = Vector (a+x) (b+y) (c+z) 
 v_sub       (Vector a b c) (Vector x y z) = Vector (a-x) (b-y) (c-z) 
 v_len_sq    (Vector a b c)                = a*a + b*b + c*c
 v_len                                     = sqrt . v_len_sq
+v_stretch   (Vector a b c) f              = Vector (a*f) (b*f) (c*f)
+v_shrink    (Vector a b c) f              = Vector (a/f) (b/f) (c/f)
+v_normalize v                             = v `v_shrink` (v_len v)
 
 -- Point -----------------------------------------------------------------------
 data Point t = Point t t t
