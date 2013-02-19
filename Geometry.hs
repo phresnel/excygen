@@ -30,3 +30,15 @@ v_sub :: (Num t) => Vector t -> Vector t -> Vector t
 
 v_add (Vector a b c) (Vector x y z) = Vector (a+x) (b+y) (c+z) 
 v_sub (Vector a b c) (Vector x y z) = Vector (a-x) (b-y) (c-z) 
+
+-- Point -----------------------------------------------------------------------
+data Point t = Point t t t
+               deriving (Show)
+
+p_add  :: (Num t) => Point t -> Vector t -> Point t
+p_sub  :: (Num t) => Point t -> Vector t -> Point t
+p_diff :: (Num t) => Point t -> Point t  -> Vector t
+
+p_add  (Point a b c) (Vector x y z) = Point  (a+x) (b+y) (c+z)
+p_sub  (Point a b c) (Vector x y z) = Point  (a-x) (b-y) (c-z)
+p_diff (Point a b c) (Point  x y z) = Vector (a-x) (b-y) (c-z)
