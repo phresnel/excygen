@@ -7,6 +7,7 @@ module Shape
 ) where
 
 import Geometry(Point(..), Ray(..), direction)
+import AABB
 
 
 
@@ -14,7 +15,8 @@ import Geometry(Point(..), Ray(..), direction)
 class Shape s where
     intersect :: (Floating t, Ord t) => Ray t -> s t -> Bool
 
-
+class (Shape s) => FiniteShape s where
+    aabb :: (Num t, Ord t) => s t -> AABB t
 
 -- Sphere ----------------------------------------------------------------------
 data Sphere t = Sphere (Point t) t
@@ -22,4 +24,8 @@ data Sphere t = Sphere (Point t) t
 
 instance Shape Sphere where
     intersect ray sphere = False
+
+instance FiniteShape Sphere where
+    aabb (Sphere (Point a b c) r) = AABB.aabb (Point (a-r) (b-r) (c-r))
+                                              (Point (a+r) (b+r) (c+r))
 

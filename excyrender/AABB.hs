@@ -3,6 +3,7 @@
 -- See COPYING in the root-folder of the excygen project folder.
 
 module AABB (
+    AABB,
     aabb,
     left, right, top, bottom, front, back,
     min, max,
