@@ -3,9 +3,10 @@
 -- See COPYING in the root-folder of the excygen project folder.
 
 module RGB(
-    RGB, saturate, stretch, shrink
+    RGB(..), saturate, stretch, shrink, RGB.floor
 )where
 
+import Prelude as P
 
 -- RGB -------------------------------------------------------------------------
 data RGB t = RGB t t t
@@ -14,6 +15,7 @@ data RGB t = RGB t t t
 saturate :: (Ord t)        => RGB t -> t -> t -> RGB t
 stretch  :: (Fractional t) => RGB t -> t -> RGB t 
 shrink   :: (Fractional t) => RGB t -> t -> RGB t
+floor    :: (RealFrac a, Integral b) => RGB a -> RGB b
 
 
 -- impl ------------------------------------------------------------------------
@@ -23,3 +25,5 @@ saturate (RGB r g b) min_ max_ =
 
 stretch (RGB r g b) f = RGB (r*f) (g*f) (b*f)
 shrink  (RGB r g b) f = RGB (r/f) (g/f) (b/f)
+floor   (RGB r g b)   = RGB (P.floor r) (P.floor g) (P.floor b)
+
