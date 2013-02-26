@@ -3,7 +3,8 @@
 -- See COPYING in the root-folder of the excygen project folder.
 
 module Shape
-( Sphere(..)
+( Shape(..)
+, FiniteShape(..)
 ) where
 
 import Geometry(Point(..), Ray(..), direction)
@@ -13,19 +14,9 @@ import AABB
 
 -- Shape -----------------------------------------------------------------------
 class Shape s where
-    intersect :: (Floating t, Ord t) => Ray t -> s t -> Bool
+    intersect :: (RealFrac t, Floating t, Ord t) => Ray t -> s t -> Bool
 
 class (Shape s) => FiniteShape s where
     aabb :: (Num t, Ord t) => s t -> AABB t
 
--- Sphere ----------------------------------------------------------------------
-data Sphere t = Sphere (Point t) t
-                deriving(Show)
-
-instance Shape Sphere where
-    intersect ray sphere = False
-
-instance FiniteShape Sphere where
-    aabb (Sphere (Point a b c) r) = AABB.aabb (Point (a-r) (b-r) (c-r))
-                                              (Point (a+r) (b+r) (c+r))
 

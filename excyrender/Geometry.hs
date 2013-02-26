@@ -7,7 +7,7 @@ module Geometry
 , Vector(..), v_add, v_sub, v_len_sq, v_len, v_stretch, v_shrink, v_normalize
 , Point(..), p_add, p_sub, p_diff
 , normal
-, direction, d_stretch
+, direction, d_stretch, d_u, d_v, d_w
 , Ray(..), ray_point
 ) where
 
@@ -88,12 +88,18 @@ data Direction t = Direction t t t
 
 direction :: (Floating t) => t -> t -> t -> Direction t
 d_stretch :: (Num t)      => Direction t -> t -> Vector t
+d_u       :: Direction t -> t
+d_v       :: Direction t -> t
+d_w       :: Direction t -> t
 
 direction a b c = 
     let direction_from_vec (Vector x y z) = Direction x y z
     in  direction_from_vec $ v_normalize $ Vector a b c
 
 d_stretch (Direction a b c) f = Vector (a*f) (b*f) (c*f)
+d_u (Direction f _ _) = f
+d_v (Direction _ f _) = f
+d_w (Direction _ _ f) = f
 
 
 
