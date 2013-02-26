@@ -3,7 +3,7 @@
 -- See COPYING in the root-folder of the excygen project folder.
 
 module Sphere(
-    Sphere
+    sphere
 )where
 
 import Shape
@@ -21,13 +21,19 @@ instance FiniteShape Sphere where
     aabb (Sphere (Point a b c) r) = AABB.aabb (Point (a-r) (b-r) (c-r))
                                               (Point (a+r) (b+r) (c+r))
 
+sphere :: (Fractional t, Ord t) => Point t -> t -> Sphere t
 
 -- Impl ------------------------------------------------------------------------
+sphere point radius 
+    | radius<0  = error "sphere radius must be positive"
+    | otherwise = Sphere point radius 
+
 isectRaySphere :: (Floating t, Ord t, RealFrac t) => 
                   Ray t -> Sphere t -> Bool -- Maybe (Intersection t)
-isectRaySphere (Ray origin direction)
+isectRaySphere ray
                (Sphere center radius) =
   let
+    (origin, direction) = ((ray_origin ray), (ray_direction ray))
     (Vector a b c) = origin `p_diff` center
     d0  = a*(d_u direction) + b*(d_v direction) + c*(d_w direction)
     d1  = d0^2

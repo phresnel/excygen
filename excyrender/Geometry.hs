@@ -8,7 +8,7 @@ module Geometry
 , Point(..), p_add, p_sub, p_diff
 , normal
 , direction, d_stretch, d_u, d_v, d_w
-, Ray(..), ray_point
+, Ray, ray, ray_origin, ray_direction, ray_point
 ) where
 
 
@@ -107,7 +107,14 @@ d_w (Direction _ _ f) = f
 data Ray t = Ray (Point t) (Direction t)
              deriving (Show)
 
-ray_point :: (Num t, Ord t) => Ray t -> t -> Point t
+ray           :: Point t -> Direction t -> Ray t
+ray_direction :: Ray t -> Direction t
+ray_origin    :: Ray t -> Point t
+ray_point     :: (Num t, Ord t) => Ray t -> t -> Point t
+
+ray origin direction = Ray origin direction
+ray_direction (Ray _ direction) = direction
+ray_origin    (Ray origin _)    = origin
 
 ray_point (Ray point direction) f
     | f<0       = error "ray_point undefined for negative f"
