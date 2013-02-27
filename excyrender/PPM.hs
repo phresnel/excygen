@@ -17,7 +17,9 @@ toPPM :: (RealFrac t) => Int -> Int -> [RGB t] -> String
 ---impl ------------------------------------------------------------------------
 toPPM width height pixels =
   if width*height /= length pixels then
-     error "toPPM: width*height does not equal number of pixels"
+     error ("toPPM: width*height (" ++ show width ++ "*" ++ show height ++ "="
+            ++ show (width*height) ++ ") does not equal"
+            ++ " number of pixels (" ++ show (length pixels) ++ ")")
   else 
       "P3\n" ++
       show width ++ " " ++ show height ++ "\n" ++
