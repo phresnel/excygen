@@ -8,19 +8,23 @@ import RGB
 import Shape
 import Sphere
 
-raytrace :: (Fractional t, Shape s) => Int -> Int -> s t -> [RGB t]
-raytrace width height shape =
-    let trace_pixel x y = 
-            let u' = fromIntegral(x) / fromIntegral(width)
-                v' = 1 - fromIntegral(y) / fromIntegral(height)
-            in RGB u' v' 0
-    in [trace_pixel x y | y<-[0..height-1], x<-[0..width-1]]
+data ImageSize = ImageSize { width :: Int, height :: Int }
+
+raytracePixel :: (Fractional t, Shape s) => s t -> t -> t -> RGB t
+raytracePixel shape u v = RGB u v 0
+
+raytraceImage :: (Fractional t, Shape s) => ImageSize -> s t -> [RGB t]
+raytraceImage size shape = [let u = fromIntegral(x) / fromIntegral(width size)
+                                v = fromIntegral(y) / fromIntegral(height size)
+                            in raytracePixel shape u v
+                           | y<-[0..(height size)-1]
+                           , x<-[0..(width size)-1]]
 
 ppm = 
   let width  = 64
       height = 48
       shape  = sphere (Point 0 0 5) 1
-      pixels = raytrace width height shape
+      pixels = raytraceImage ImageSize{width=width,height=height} shape
   in  toPPM width height pixels
 
 main = putStrLn $ ppm
