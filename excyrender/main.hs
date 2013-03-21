@@ -9,6 +9,14 @@ import Shape
 import Sphere
 import Intersection
 
+
+--data Radiance t = Radiance t t t
+--radianceFromRGB :: RGB t -> Radiance t
+--radianceFromRGB (RGB r g b) = Radiance r g b 
+--radianceToRGB :: Radiance t -> RGB t
+--radianceToRGB (Radiance r g b) = RGB r g b
+
+
 -- integrator for only primary intersections -----------------------------------
 primary :: (RealFrac t, Floating t, Shape s) => Ray t -> s t -> RGB t
 primary ray shape =
@@ -19,21 +27,20 @@ primary ray shape =
                   in RGB (d_u dir) (d_v dir) 0
 
 
+
 -- simple renderer -------------------------------------------------------------
 raytrace :: (RealFrac t, Floating t, Shape s)
     => Int -> Int -> s t -> (Ray t -> s t -> RGB t) -> [RGB t]
 raytrace width height shape surface_integrator =
-    -- TODO just do a list comprehension?
-    let raytrace_rows y | y==height = []
-                        | otherwise = scanline 0 y ++ raytrace_rows (y+1)
-        scanline x y    | x==width  = []
-                        | otherwise = (trace_pixel x y) : scanline (x+1) y
-        trace_pixel x y = 
-            let u = fromIntegral(x) / fromIntegral(width)
-                v = 1 - fromIntegral(y) / fromIntegral(height)
-                ray = Ray (Point 0 0 0) (direction (u-0.5) (v-0.5) 1)
+    [let u = fromIntegral(x) / fromIntegral(width)
+         v = 1 - fromIntegral(y) / fromIntegral(height)
+     in trace_pixel u v
+    | y<-[0..height-1]
+    , x<-[0..width-1]]
+    where trace_pixel u v = 
+            let ray = Ray (Point 0 0 0) (direction (u-0.5) (v-0.5) 1)
             in surface_integrator ray shape
-    in raytrace_rows 0
+
 
 
 ppm = 
