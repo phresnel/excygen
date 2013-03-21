@@ -8,7 +8,7 @@ module Geometry
 , Point(..), p_add, p_sub, p_diff
 , normal
 , direction, d_stretch, d_u, d_v, d_w
-, Ray, ray, ray_origin, ray_direction, ray_point
+, Ray(..), ray, ray_origin, ray_direction, ray_point
 ) where
 
 
