@@ -9,12 +9,14 @@ module Shape
 
 import Geometry(Point(..), Ray(..), direction)
 import AABB
+import Intersection(Intersection(..))
 
 
 
 -- Shape -----------------------------------------------------------------------
 class Shape s where
-    intersect :: (RealFrac t, Floating t, Ord t) => Ray t -> s t -> Bool
+    intersect :: (RealFrac t, Floating t, Ord t) =>
+     Ray t -> s t -> Maybe (Intersection t)
 
 class (Shape s) => FiniteShape s where
     aabb :: (Num t, Ord t) => s t -> AABB t

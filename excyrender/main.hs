@@ -7,6 +7,7 @@ import PPM(toPPM)
 import RGB
 import Shape
 import Sphere
+import Intersection
 
 raytrace :: (RealFrac t, Floating t, Shape s) => Int -> Int -> s t -> [RGB t]
 raytrace width height shape =
@@ -19,16 +20,16 @@ raytrace width height shape =
             let u = fromIntegral(x) / fromIntegral(width)
                 v = 1 - fromIntegral(y) / fromIntegral(height)
                 ray = Ray (Point 0 0 0) (direction (u-0.5) (v-0.5) 1)
-                does_intersect = intersect ray shape
-            in if does_intersect
-               then RGB u v 1
-               else RGB u v 0
+                intersection = intersect ray shape
+            in case intersection of
+               Just i -> diffuse i
+               Nothing -> RGB u v 0
     in raytrace_rows 0
 
 
 ppm = 
-  let width  = 640
-      height = 640
+  let width  = 64
+      height = 64
       shape  = sphere (Point 0 0 5) 1
       pixels = raytrace width height shape
   in  toPPM width height pixels

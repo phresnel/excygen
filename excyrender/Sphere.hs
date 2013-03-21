@@ -9,6 +9,8 @@ module Sphere(
 import Shape
 import Geometry
 import AABB
+import Intersection
+import RGB
 
 -- Sphere ----------------------------------------------------------------------
 data Sphere t = Sphere (Point t) t
@@ -29,9 +31,9 @@ sphere point radius
     | otherwise = Sphere point radius 
 
 isectRaySphere :: (Floating t, Ord t, RealFrac t) => 
-                  Ray t -> Sphere t -> Bool -- Maybe (Intersection t)
-isectRaySphere ray
-               (Sphere center radius) =
+                  Ray t -> Sphere t -> Maybe (Intersection t)
+
+isectRaySphere ray (Sphere center radius) =
   let
     (origin, direction) = ((ray_origin ray), (ray_direction ray))
     (Vector a b c) = origin `p_diff` center
@@ -40,11 +42,11 @@ isectRaySphere ray
     d2  = (d_u direction)^2 + (d_v direction)^2 + (d_w direction)^2
     d3  = a^2 + b^2 + c^2
     discriminant = d1 - d2*(d3 - radius^2)    
-  in if discriminant<0 then False -- Nothing
+  in if discriminant<0 then Nothing
      else let
        solA = -d0 - (sqrt discriminant)
        solB = -d0 + (sqrt discriminant)      
-     in if solA>0 then True -- Just $ Intersection (solA/d2)
-        else if solB>0 then True -- Just $ Intersection (solB/d2)
-        else False -- Nothing
+     in if solA>0 then Just Intersection {d=distance (solA/d2), diffuse=RGB 1 1 1}
+        else if solB>0 then Just Intersection {d=distance (solB/d2), diffuse=RGB 1 1 1}
+        else Nothing
 
