@@ -8,6 +8,7 @@ import RGB
 import Shapes.Shape
 import Shapes.Sphere
 import Intersection
+import Shapes.DifferentialGeometry
 
 
 --data Radiance t = Radiance t t t

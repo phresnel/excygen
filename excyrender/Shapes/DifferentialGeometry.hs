@@ -2,17 +2,19 @@
 -- GNU General Public License, Version 3 (a.k.a. GPLv3).
 -- See COPYING in the root-folder of the excygen project folder.
 
-module Intersection
-( Intersection(..)
+module Shapes.DifferentialGeometry
+( 
 ) where
 
-import RGB
+import Geometry(Point, Normal)
 import Distance
 
-
--- Intersection ----------------------------------------------------------------
-data Intersection t = Intersection {
+--------------------------------------------------------------------------------
+data DifferentialGeometry t = DifferentialGeometry {
     d :: Distance t,
-    diffuse :: RGB t
+    poi :: Point t,
+    nn :: Normal t,
+    u :: t,
+    v :: t
 } deriving (Show)
 

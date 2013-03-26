@@ -11,6 +11,7 @@ import Geometry
 import AABB
 import Intersection
 import RGB
+import Distance
 
 -- Sphere ----------------------------------------------------------------------
 data Sphere t = Sphere (Point t) t
