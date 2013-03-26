@@ -5,8 +5,8 @@
 import Geometry(Ray(..),ray_direction,Point(..),direction,d_u,d_v)
 import PPM(toPPM)
 import RGB
-import Shape
-import Sphere
+import Shapes.Shape
+import Shapes.Sphere
 import Intersection
 
 

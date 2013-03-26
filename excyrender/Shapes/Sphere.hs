@@ -2,11 +2,11 @@
 -- GNU General Public License, Version 3 (a.k.a. GPLv3).
 -- See COPYING in the root-folder of the excygen project folder.
 
-module Sphere(
+module Shapes.Sphere(
     sphere
 )where
 
-import Shape
+import Shapes.Shape
 import Geometry
 import AABB
 import Intersection
