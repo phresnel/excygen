@@ -3,11 +3,12 @@
 -- See COPYING in the root-folder of the excygen project folder.
 
 module Shapes.DifferentialGeometry
-( 
+( DifferentialGeometry(..)
 ) where
 
-import Geometry(Point, Normal)
+import Geometry(Point, Normal, ray_point)
 import Distance
+
 
 --------------------------------------------------------------------------------
 data DifferentialGeometry t = DifferentialGeometry {
@@ -16,5 +17,7 @@ data DifferentialGeometry t = DifferentialGeometry {
     nn :: Normal t,
     u :: t,
     v :: t
+    -- shape :: Shape <-- This is as PBRT has it, but it would produce a 
+    --                    recursive dependency
 } deriving (Show)
 

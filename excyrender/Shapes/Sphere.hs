@@ -9,7 +9,7 @@ module Shapes.Sphere(
 import Shapes.Shape
 import Geometry
 import AABB
-import Intersection
+import Shapes.DifferentialGeometry
 import RGB
 import Distance
 
@@ -32,7 +32,7 @@ sphere point radius
     | otherwise = Sphere point radius 
 
 isectRaySphere :: (Floating t, Ord t, RealFrac t) => 
-                  Ray t -> Sphere t -> Maybe (Intersection t)
+                  Ray t -> Sphere t -> Maybe (DifferentialGeometry t)
 
 isectRaySphere ray (Sphere center radius) =
   let
@@ -46,8 +46,18 @@ isectRaySphere ray (Sphere center radius) =
   in if discriminant<0 then Nothing
      else let
        solA = -d0 - (sqrt discriminant)
-       solB = -d0 + (sqrt discriminant)      
-     in if solA>0 then Just Intersection {d=distance (solA/d2), diffuse=RGB 1 1 1}
-        else if solB>0 then Just Intersection {d=distance (solB/d2), diffuse=RGB 1 1 1}
+       solB = -d0 + (sqrt discriminant)
+     in if solA>0 then
+            let dd = solA/d2 
+            in Just DifferentialGeometry {d=distance dd,
+                                          poi=ray_point ray dd,
+                                          nn=normal 1 1 1,
+                                          u=0, v=0 }
+        else if solB>0 then
+            let dd = solB/d2
+            in Just DifferentialGeometry {d=distance dd,
+                                          poi=ray_point ray dd,
+                                          nn=normal 1 1 1,
+                                          u=0, v=0 }
         else Nothing
 

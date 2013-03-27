@@ -23,7 +23,9 @@ primary :: (RealFrac t, Floating t, Shape s) => Ray t -> s t -> RGB t
 primary ray shape =
     let intersection = intersect ray shape
     in case intersection of
-       Just i -> diffuse i
+       Just i -> let (Point x y z) = poi i
+                     f = sqrt (x^2+y^2+z^2) / 6.0 
+                 in RGB f f f
        Nothing -> let dir = ray_direction ray
                   in RGB (d_u dir) (d_v dir) 0
 
