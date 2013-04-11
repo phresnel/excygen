@@ -60,6 +60,7 @@ sampleRegular (Regular lambdaMin lambdaMax spectrum _ inverseDelta) lambda
 
 
 toXYZRegular spd@(Regular lambdaMin _ _ _ inverseDelta) =  
+    -- TODO: directly fold up a tuple instead of having three separate integrations
     let 
         samp i = sample spd $ lambdaMin + inverseDelta * fromIntegral i
         integrate curve = (sum $ map (\i -> curve!!i * samp i) [0..cie_length]) * cie_inverse_length
