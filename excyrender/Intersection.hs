@@ -3,23 +3,11 @@
 -- See COPYING in the root-folder of the excygen project folder.
 
 module Intersection
-( distance
-, Intersection(..)
+( Intersection(..)
 ) where
 
-import RGB(RGB(..))
-
-
-
--- Distance --------------------------------------------------------------------
-data Distance t = Distance t
-                  deriving (Show)
-
-distance :: (Num t, Ord t, Fractional t) => t -> Distance t
-
-distance f | f>=0      = Distance f
-           | otherwise = error "Distance can't be negative"
-
+import RGB
+import Distance
 
 
 -- Intersection ----------------------------------------------------------------

@@ -5,9 +5,10 @@
 import Geometry(Ray(..),ray_direction,Point(..),direction,d_u,d_v)
 import PPM(toPPM)
 import RGB
-import Shape
-import Sphere
+import Shapes.Shape
+import Shapes.Sphere
 import Intersection
+import Shapes.DifferentialGeometry
 
 
 --data Radiance t = Radiance t t t
@@ -22,7 +23,9 @@ primary :: (RealFrac t, Floating t, Shape s) => Ray t -> s t -> RGB t
 primary ray shape =
     let intersection = intersect ray shape
     in case intersection of
-       Just i -> diffuse i
+       Just i -> let (Point x y z) = poi i
+                     f = sqrt (x^2+y^2+z^2) / 6.0 
+                 in RGB f f f
        Nothing -> let dir = ray_direction ray
                   in RGB (d_u dir) (d_v dir) 0
 

@@ -6,8 +6,8 @@ module Geometry
 ( Angle(..), degrees, radians, as_degrees, as_radians
 , Vector(..), v_add, v_sub, v_len_sq, v_len, v_stretch, v_shrink, v_normalize
 , Point(..), p_add, p_sub, p_diff
-, normal
-, direction, d_stretch, d_u, d_v, d_w
+, Normal, normal
+, Direction, direction, d_stretch, d_u, d_v, d_w
 , Ray(..), ray, ray_origin, ray_direction, ray_point
 ) where
 
