@@ -2,6 +2,9 @@
 -- GNU General Public License, Version 3 (a.k.a. GPLv3).
 -- See COPYING in the root-folder of the excygen project folder.
 
+-- To avoid confusion (I am always confused with linear RGB, sRGB and all that), 
+-- this module and the type RGB should be renamed, like e.g. ImagePixel or so.
+
 module RGB(
     RGB(..), saturate, stretch, shrink, RGB.floor
 )where
