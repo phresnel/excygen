@@ -7,7 +7,9 @@ module Shapes.Sphere(
 )where
 
 import Shapes.Shape
-import Geometry
+import Geometry.Geometry
+import Geometry.Point as P
+import Geometry.Vector as V
 import DifferentialGeometry
 import Distance
 
@@ -32,7 +34,7 @@ isectRaySphere :: (Floating a, Ord a, RealFrac a) =>
 isectRaySphere center radius ray =
   let
     (origin, direction) = ((ray_origin ray), (ray_direction ray))
-    (Vector a b c) = origin `p_diff` center
+    (Vector a b c) = origin `P.diff` center
     d0  = a*(d_u direction) + b*(d_v direction) + c*(d_w direction)
     d1  = d0^2
     d2  = (d_u direction)^2 + (d_v direction)^2 + (d_w direction)^2

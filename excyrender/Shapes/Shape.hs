@@ -6,7 +6,7 @@ module Shapes.Shape
 ( Shape(..)
 ) where
 
-import Geometry(Ray)
+import Geometry.Geometry(Ray)
 import DifferentialGeometry(DifferentialGeometry)
 
 

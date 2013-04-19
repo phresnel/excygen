@@ -2,15 +2,16 @@
 -- GNU General Public License, Version 3 (a.k.a. GPLv3).
 -- See COPYING in the root-folder of the excygen project folder.
 
-module Geometry
+module Geometry.Geometry
 ( Angle(..), degrees, radians, as_degrees, as_radians
-, Vector(..), v_add, v_sub, v_len_sq, v_len, v_stretch, v_shrink, v_normalize
-, Point(..), p_add, p_sub, p_diff
 , Normal, normal
 , Direction, direction, d_stretch, d_u, d_v, d_w
 , Ray(..), ray, ray_origin, ray_direction, ray_point
 ) where
 
+
+import Geometry.Vector as V
+import Geometry.Point as P
 
 
 -- Angle -----------------------------------------------------------------------
@@ -34,42 +35,6 @@ as_radians angle = Radians $ radians angle
 
 
 
--- Vector ----------------------------------------------------------------------
-data Vector t = Vector t t t
-                deriving (Show)
-
-v_add       :: (Num t)        => Vector t -> Vector t -> Vector t
-v_sub       :: (Num t)        => Vector t -> Vector t -> Vector t
-v_len_sq    :: (Num t)        => Vector t -> t
-v_len       :: (Floating t)   => Vector t -> t
-v_stretch   :: (Num t)        => Vector t -> t -> Vector t
-v_shrink    :: (Fractional t) => Vector t -> t -> Vector t
-v_normalize :: (Floating t)   => Vector t -> Vector t
-
-v_add       (Vector a b c) (Vector x y z) = Vector (a+x) (b+y) (c+z) 
-v_sub       (Vector a b c) (Vector x y z) = Vector (a-x) (b-y) (c-z) 
-v_len_sq    (Vector a b c)                = a*a + b*b + c*c
-v_len                                     = sqrt . v_len_sq
-v_stretch   (Vector a b c) f              = Vector (a*f) (b*f) (c*f)
-v_shrink    (Vector a b c) f              = Vector (a/f) (b/f) (c/f)
-v_normalize v                             = v `v_shrink` (v_len v)
-
-
-
--- Point -----------------------------------------------------------------------
-data Point t = Point t t t
-               deriving (Show)
-
-p_add  :: (Num t) => Point t -> Vector t -> Point  t
-p_sub  :: (Num t) => Point t -> Vector t -> Point  t
-p_diff :: (Num t) => Point t -> Point  t -> Vector t
-
-p_add  (Point a b c) (Vector x y z) = Point  (a+x) (b+y) (c+z)
-p_sub  (Point a b c) (Vector x y z) = Point  (a-x) (b-y) (c-z)
-p_diff (Point a b c) (Point  x y z) = Vector (a-x) (b-y) (c-z)
-
-
-
 -- Normal ----------------------------------------------------------------------
 data Normal t = Normal t t t
                 deriving (Show)
@@ -77,8 +42,8 @@ data Normal t = Normal t t t
 normal :: (Floating t) => t -> t -> t -> Normal t
 
 normal a b c = 
-    let normal_from_vec (Vector x y z) = Normal x y z
-    in  normal_from_vec $ v_normalize $ Vector a b c
+    let normal_from_vec (V.Vector x y z) = Normal x y z
+    in  normal_from_vec $ V.normalize $ V.Vector a b c
 
 
 
@@ -93,8 +58,8 @@ d_v       :: Direction t -> t
 d_w       :: Direction t -> t
 
 direction a b c = 
-    let direction_from_vec (Vector x y z) = Direction x y z
-    in  direction_from_vec $ v_normalize $ Vector a b c
+    let direction_from_vec (V.Vector x y z) = Direction x y z
+    in  direction_from_vec $ V.normalize $ V.Vector a b c
 
 d_stretch (Direction a b c) f = Vector (a*f) (b*f) (c*f)
 d_u (Direction f _ _) = f
@@ -104,13 +69,13 @@ d_w (Direction _ _ f) = f
 
 
 -- Ray -------------------------------------------------------------------------
-data Ray t = Ray (Point t) (Direction t)
+data Ray t = Ray (P.Point t) (Direction t)
              deriving (Show)
 
-ray           :: Point t -> Direction t -> Ray t
+ray           :: P.Point t -> Direction t -> Ray t
 ray_direction :: Ray t -> Direction t
-ray_origin    :: Ray t -> Point t
-ray_point     :: (Num t, Ord t) => Ray t -> t -> Point t
+ray_origin    :: Ray t -> P.Point t
+ray_point     :: (Num t, Ord t) => Ray t -> t -> P.Point t
 
 ray origin direction = Ray origin direction
 ray_direction (Ray _ direction) = direction
@@ -118,4 +83,4 @@ ray_origin    (Ray origin _)    = origin
 
 ray_point (Ray point direction) f
     | f<0       = error "ray_point undefined for negative f"
-    | otherwise = p_add point (d_stretch direction f)
+    | otherwise = P.add point (d_stretch direction f)

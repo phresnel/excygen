@@ -6,8 +6,9 @@ module DifferentialGeometry
 ( DifferentialGeometry(..)
 ) where
 
-import Geometry(Point, Normal, ray_point)
+import Geometry.Geometry(Normal, ray_point)
 import Distance
+import Geometry.Point
 
 
 --------------------------------------------------------------------------------

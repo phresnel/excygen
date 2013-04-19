@@ -7,7 +7,7 @@ module Primitives.Primitive
   primitiveFromShape -- TODO: put in separate module
 ) where
 
-import Geometry(Ray)
+import Geometry.Geometry(Ray)
 import DifferentialGeometry(DifferentialGeometry)
 import Intersection
 import Shapes.Shape

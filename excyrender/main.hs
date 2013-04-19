@@ -2,7 +2,8 @@
 -- GNU General Public License, Version 3 (a.k.a. GPLv3).
 -- See COPYING in the root-folder of the excygen project folder.
 
-import Geometry(Ray(..),ray_direction,Point(..),direction,d_u,d_v)
+import Geometry.Geometry(Ray(..),ray_direction,direction,d_u,d_v)
+import Geometry.Point
 
 import ImageFormat.PPM(toPPM)
 
