@@ -5,8 +5,8 @@
 -- To avoid confusion (I am always confused with linear RGB, sRGB and all that), 
 -- this module and the type RGB should be renamed, like e.g. ImagePixel or so.
 
-module RGB(
-    RGB(..), saturate, stretch, shrink, RGB.floor
+module Photometry.RGB(
+    RGB(..), saturate, stretch, shrink, Photometry.RGB.floor
 )where
 
 import Prelude as P

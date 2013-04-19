@@ -2,14 +2,12 @@
 -- GNU General Public License, Version 3 (a.k.a. GPLv3).
 -- See COPYING in the root-folder of the excygen project folder.
 
-module SPD.Regular
-( regularSPD,
-  sample,
-  toXYZ
+module Photometry.SPD.Regular
+( regularSPD
 ) where
 
-import SPD
-import CIEMatchingCurves
+import Photometry.SPD.SPD
+import Photometry.CIEMatchingCurves
 
 
 

@@ -2,7 +2,7 @@
 -- GNU General Public License, Version 3 (a.k.a. GPLv3).
 -- See COPYING in the root-folder of the excygen project folder.
 
-module Primitive
+module Primitives.Primitive
 ( Primitive(..),
   primitiveFromShape -- TODO: put in separate module
 ) where
@@ -10,10 +10,9 @@ module Primitive
 import Geometry(Ray)
 import DifferentialGeometry(DifferentialGeometry)
 import Intersection
-import Shape
-import SPD
-
-import SPD.Regular
+import Shapes.Shape
+import Photometry.SPD.SPD
+import Photometry.SPD.Regular
 
 
 
@@ -32,12 +31,12 @@ isectFromShape     :: RealFrac a => Shape a -> Ray a -> Maybe (Intersection a)
 
 primitiveFromShape shape = 
         Primitive { 
-            Primitive.intersect = isectFromShape shape
+            Primitives.Primitive.intersect = isectFromShape shape
         }
 
 
 isectFromShape shape ray =
-        let dg = Shape.intersect shape ray
+        let dg = Shapes.Shape.intersect shape ray
         in case dg of
             Just dg -> Just Intersection { differentialGeometry = dg,
                                            spd = regularSPD 100 600 [1] }

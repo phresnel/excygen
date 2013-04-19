@@ -7,7 +7,7 @@ module Intersection
 ) where
 
 import DifferentialGeometry
-import SPD
+import Photometry.SPD.SPD
 
 -- Intersection ----------------------------------------------------------------
 data Intersection t = Intersection {

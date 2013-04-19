@@ -3,14 +3,18 @@
 -- See COPYING in the root-folder of the excygen project folder.
 
 import Geometry(Ray(..),ray_direction,Point(..),direction,d_u,d_v)
-import PPM(toPPM)
-import RGB
-import ColorSpace
-import Shape
-import Shape.Sphere
+
+import ImageFormat.PPM(toPPM)
+
+import Photometry.RGB
+import Photometry.ColorSpace
+
+import Shapes.Shape
+import Shapes.Sphere
+
 import Intersection
 import DifferentialGeometry
-import Primitive
+import Primitives.Primitive
 
 
 --data Radiance t = Radiance t t t
@@ -24,7 +28,7 @@ import Primitive
 primary :: (RealFrac t, Floating t) => Primitive t -> Ray t -> RGB t
 
 primary primitive ray =
-    let intersection = Primitive.intersect primitive ray
+    let intersection = Primitives.Primitive.intersect primitive ray
     in case intersection of
        Just i -> let (Point x y z) = poi $ differentialGeometry i
                      f = sqrt (x^2+y^2+z^2) / 6.0 

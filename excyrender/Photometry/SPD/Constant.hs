@@ -2,15 +2,13 @@
 -- GNU General Public License, Version 3 (a.k.a. GPLv3).
 -- See COPYING in the root-folder of the excygen project folder.
 
-module SPD.Constant
-( constantSPD,
-  sample,
-  toXYZ
+module Photometry.SPD.Constant
+( constantSPD
 ) where
 
-import SPD
+import SPD.SPD
 import SPD.Regular (regularSPD)
-import CIEMatchingCurves (cie_start, cie_end)
+import SPD.CIEMatchingCurves (cie_start, cie_end)
 
 
 -- Constant ------------------------------------------------------------------------------------

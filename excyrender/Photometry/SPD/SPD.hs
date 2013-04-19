@@ -2,8 +2,9 @@
 -- GNU General Public License, Version 3 (a.k.a. GPLv3).
 -- See COPYING in the root-folder of the excygen project folder.
 
-module SPD
-where
+module Photometry.SPD.SPD (
+  SPD(..)
+) where
 
 data SPD t = SPD {
     sample :: t -> t,

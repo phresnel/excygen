@@ -2,11 +2,11 @@
 -- GNU General Public License, Version 3 (a.k.a. GPLv3).
 -- See COPYING in the root-folder of the excygen project folder.
 
-module PPM (
+module ImageFormat.PPM (
   toPPM
 ) where
 
-import RGB
+import Photometry.RGB
 
 
 -- PPM -------------------------------------------------------------------------
@@ -35,5 +35,5 @@ toPPM width height pixels =
                      show g ++ " " ++
                      show b ++ "  "
                where scaled = stretch rgb 255
-                     (RGB r g b) = RGB.floor $ saturate scaled 0 255
+                     (RGB r g b) = Photometry.RGB.floor $ saturate scaled 0 255
 

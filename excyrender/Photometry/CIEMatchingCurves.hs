@@ -4,7 +4,7 @@
 -- Source: LuxRender, itself having it from PBRT
 
 
-module CIEMatchingCurves
+module Photometry.CIEMatchingCurves
 where
 
 

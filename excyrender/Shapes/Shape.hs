@@ -3,18 +3,15 @@
 -- See COPYING in the root-folder of the excygen project folder.
 
 module Shapes.Shape
-( FiniteShape(..)
+( Shape(..)
 ) where
 
 import Geometry(Ray)
-import AABB
-import Shapes.DifferentialGeometry(DifferentialGeometry)
+import DifferentialGeometry(DifferentialGeometry)
 
 
 -- Shape -----------------------------------------------------------------------
-
-data FiniteShape a =  FiniteShape {
-     aabb      :: AABB a,
+data Shape a = Shape {
      intersect :: Ray a -> Maybe (DifferentialGeometry a)
  }
 

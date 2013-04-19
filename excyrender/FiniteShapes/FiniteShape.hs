@@ -2,16 +2,19 @@
 -- GNU General Public License, Version 3 (a.k.a. GPLv3).
 -- See COPYING in the root-folder of the excygen project folder.
 
-module Shape
-( Shape(..)
+module FiniteShapes.FiniteShape
+( FiniteShape(..)
 ) where
 
 import Geometry(Ray)
-import DifferentialGeometry(DifferentialGeometry)
+import AABB
+import Shapes.DifferentialGeometry(DifferentialGeometry)
 
 
 -- Shape -----------------------------------------------------------------------
-data Shape a = Shape {
+
+data FiniteShape a =  FiniteShape {
+     aabb      :: AABB a,
      intersect :: Ray a -> Maybe (DifferentialGeometry a)
  }
 
