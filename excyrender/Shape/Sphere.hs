@@ -2,39 +2,36 @@
 -- GNU General Public License, Version 3 (a.k.a. GPLv3).
 -- See COPYING in the root-folder of the excygen project folder.
 
-module Shapes.Sphere(
+module Shape.Sphere(
     sphere
 )where
 
-import Shapes.Shape
+import Shape
 import Geometry
 import AABB
-import Shapes.DifferentialGeometry
+import DifferentialGeometry
 import RGB
 import Distance
 
+
+
 -- Sphere ----------------------------------------------------------------------
-data Sphere t = Sphere (Point t) t
-                deriving(Show)
+sphere :: (Floating a, Ord a, RealFrac a) => Point a -> a -> Shape a
 
-instance Shape Sphere where
-    intersect = isectRaySphere
 
-instance FiniteShape Sphere where
-    aabb (Sphere (Point a b c) r) = AABB.aabb (Point (a-r) (b-r) (c-r))
-                                              (Point (a+r) (b+r) (c+r))
-
-sphere :: (Fractional t, Ord t) => Point t -> t -> Sphere t
 
 -- Impl ------------------------------------------------------------------------
-sphere point radius 
+sphere center radius 
     | radius<0  = error "sphere radius must be positive"
-    | otherwise = Sphere point radius 
+    | otherwise = Shape {
+                      intersect = isectRaySphere center radius
+                  }
 
-isectRaySphere :: (Floating t, Ord t, RealFrac t) => 
-                  Ray t -> Sphere t -> Maybe (DifferentialGeometry t)
 
-isectRaySphere ray (Sphere center radius) =
+isectRaySphere :: (Floating a, Ord a, RealFrac a) => 
+                  Point a -> a -> Ray a -> Maybe (DifferentialGeometry a)
+
+isectRaySphere center radius ray =
   let
     (origin, direction) = ((ray_origin ray), (ray_direction ray))
     (Vector a b c) = origin `p_diff` center

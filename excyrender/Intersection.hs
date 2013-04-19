@@ -6,13 +6,12 @@ module Intersection
 ( Intersection(..)
 ) where
 
-import RGB
-import Distance
-import Shapes.DifferentialGeometry
-
+import DifferentialGeometry
+import SPD
 
 -- Intersection ----------------------------------------------------------------
 data Intersection t = Intersection {
-    differentialGeometry :: DifferentialGeometry t
-} deriving (Show)
+    differentialGeometry :: DifferentialGeometry t,
+    spd :: SPD t
+} 
 

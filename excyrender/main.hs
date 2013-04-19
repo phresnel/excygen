@@ -6,10 +6,10 @@ import Geometry(Ray(..),ray_direction,Point(..),direction,d_u,d_v)
 import PPM(toPPM)
 import RGB
 import ColorSpace
-import Shapes.Shape
-import Shapes.Sphere
+import Shape
+import Shape.Sphere
 import Intersection
-import Shapes.DifferentialGeometry
+import DifferentialGeometry
 import Primitive
 
 
@@ -21,9 +21,10 @@ import Primitive
 
 
 -- integrator for only primary intersections -----------------------------------
-primary :: (RealFrac t, Floating t, Primitive s) => Ray t -> s t -> RGB t
-primary ray shape =
-    let intersection = Primitive.intersect ray shape
+primary :: (RealFrac t, Floating t) => Primitive t -> Ray t -> RGB t
+
+primary primitive ray =
+    let intersection = Primitive.intersect primitive ray
     in case intersection of
        Just i -> let (Point x y z) = poi $ differentialGeometry i
                      f = sqrt (x^2+y^2+z^2) / 6.0 
@@ -34,9 +35,9 @@ primary ray shape =
 
 
 -- simple renderer -------------------------------------------------------------
-raytrace :: (RealFrac t, Floating t, Primitive s)
-    => Int -> Int -> s t -> (Ray t -> s t -> RGB t) -> [RGB t]
-raytrace width height shape surface_integrator =
+raytrace :: (RealFrac t, Floating t)
+    => Int -> Int -> Primitive t -> (Primitive t -> Ray t -> RGB t) -> [RGB t]
+raytrace width height primitive surface_integrator =
     [let u = fromIntegral(x) / fromIntegral(width)
          v = 1 - fromIntegral(y) / fromIntegral(height)
      in trace_pixel u v
@@ -44,14 +45,14 @@ raytrace width height shape surface_integrator =
     , x<-[0..width-1]]
     where trace_pixel u v = 
             let ray = Ray (Point 0 0 0) (direction (u-0.5) (v-0.5) 1)
-            in surface_integrator ray shape
+            in surface_integrator primitive ray
 
 
 
 ppm = 
   let width  = 64
       height = 64
-      primitive  = PrimitiveFromShape $ sphere (Point 0 0 5) 1
+      primitive  = primitiveFromShape $ sphere (Point 0 0 5) 1
       pixels = raytrace width height primitive primary
   in  toPPM width height pixels
 

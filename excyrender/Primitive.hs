@@ -4,26 +4,42 @@
 
 module Primitive
 ( Primitive(..),
-  PrimitiveFromShape(..) -- TODO: put in separate module
+  primitiveFromShape -- TODO: put in separate module
 ) where
 
-import Geometry(Point, Ray, direction)
-import Shapes.DifferentialGeometry(DifferentialGeometry)
+import Geometry(Ray)
+import DifferentialGeometry(DifferentialGeometry)
 import Intersection
-import Shapes.Shape
+import Shape
+import SPD
 
--- Primitive --------------------------------------------------------------------------------------
-
-class Primitive p where
-    intersect :: (RealFrac t, Floating t, Ord t, Primitive p)
-              => Ray t -> p t -> Maybe (Intersection t)
+import SPD.Regular
 
 
-data PrimitiveFromShape s t = PrimitiveFromShape (s t)
 
-instance (Shape s) => Primitive (PrimitiveFromShape s) where
-    intersect ray (PrimitiveFromShape shape) = 
-        case Shapes.Shape.intersect ray shape of
-            Just dg -> Just Intersection { differentialGeometry = dg }
+---------------------------------------------------------------------------------------------------
+
+data Primitive a = Primitive {
+                      intersect :: Ray a -> Maybe (Intersection a)
+                   }
+
+primitiveFromShape :: RealFrac a => Shape a -> Primitive a
+isectFromShape     :: RealFrac a => Shape a -> Ray a -> Maybe (Intersection a)
+
+
+
+---------------------------------------------------------------------------------------------------
+
+primitiveFromShape shape = 
+        Primitive { 
+            Primitive.intersect = isectFromShape shape
+        }
+
+
+isectFromShape shape ray =
+        let dg = Shape.intersect shape ray
+        in case dg of
+            Just dg -> Just Intersection { differentialGeometry = dg,
+                                           spd = regularSPD 100 600 [1] }
             Nothing -> Nothing
 
