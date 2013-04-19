@@ -5,9 +5,8 @@
 module SPD
 where
 
-
-class SPD s where
-    sample :: (RealFrac t) => s t -> t -> t
-    toXYZ  :: (RealFrac a) => s a -> (a, a, a)
-
+data SPD t = SPD {
+    sample :: t -> t,
+    toXYZ  :: (t, t, t)
+}
 

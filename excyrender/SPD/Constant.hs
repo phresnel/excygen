@@ -14,15 +14,10 @@ import CIEMatchingCurves (cie_start, cie_end)
 
 
 -- Constant ------------------------------------------------------------------------------------
-data Constant t = Constant t
-                  deriving (Show)
+constantSPD :: (RealFrac a) => a -> SPD a
 
-instance SPD Constant where
-    sample (Constant x) _ = x 
-    toXYZ  (Constant x)   = toXYZ (regularSPD cie_start cie_end [x])
-
-
-constantSPD :: (RealFrac a) => a -> Constant a
-
-constantSPD = Constant
+constantSPD x = SPD {
+                    sample = \_ -> x,
+                    toXYZ  = toXYZ (regularSPD cie_start cie_end [x])
+                }
 
