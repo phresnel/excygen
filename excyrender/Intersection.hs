@@ -8,11 +8,11 @@ module Intersection
 
 import RGB
 import Distance
+import Shapes.DifferentialGeometry
 
 
 -- Intersection ----------------------------------------------------------------
 data Intersection t = Intersection {
-    d :: Distance t,
-    diffuse :: RGB t
+    differentialGeometry :: DifferentialGeometry t
 } deriving (Show)
 

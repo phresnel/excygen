@@ -10,6 +10,7 @@ import Shapes.Shape
 import Shapes.Sphere
 import Intersection
 import Shapes.DifferentialGeometry
+import Primitive
 
 
 --data Radiance t = Radiance t t t
@@ -20,11 +21,11 @@ import Shapes.DifferentialGeometry
 
 
 -- integrator for only primary intersections -----------------------------------
-primary :: (RealFrac t, Floating t, Shape s) => Ray t -> s t -> RGB t
+primary :: (RealFrac t, Floating t, Primitive s) => Ray t -> s t -> RGB t
 primary ray shape =
-    let intersection = intersect ray shape
+    let intersection = Primitive.intersect ray shape
     in case intersection of
-       Just i -> let (Point x y z) = poi i
+       Just i -> let (Point x y z) = poi $ differentialGeometry i
                      f = sqrt (x^2+y^2+z^2) / 6.0 
                  in RGB f f f
        Nothing -> let dir = ray_direction ray
@@ -33,7 +34,7 @@ primary ray shape =
 
 
 -- simple renderer -------------------------------------------------------------
-raytrace :: (RealFrac t, Floating t, Shape s)
+raytrace :: (RealFrac t, Floating t, Primitive s)
     => Int -> Int -> s t -> (Ray t -> s t -> RGB t) -> [RGB t]
 raytrace width height shape surface_integrator =
     [let u = fromIntegral(x) / fromIntegral(width)
@@ -50,8 +51,8 @@ raytrace width height shape surface_integrator =
 ppm = 
   let width  = 64
       height = 64
-      shape  = sphere (Point 0 0 5) 1
-      pixels = raytrace width height shape primary
+      primitive  = PrimitiveFromShape $ sphere (Point 0 0 5) 1
+      pixels = raytrace width height primitive primary
   in  toPPM width height pixels
 
 main = putStrLn $ ppm
