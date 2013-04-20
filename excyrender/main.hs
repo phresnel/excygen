@@ -2,7 +2,8 @@
 -- GNU General Public License, Version 3 (a.k.a. GPLv3).
 -- See COPYING in the root-folder of the excygen project folder.
 
-import Geometry.Geometry(Ray(..),ray_direction,direction,d_u,d_v)
+import Geometry.Ray as Ray
+import Geometry.Direction as D
 import Geometry.Point
 
 import ImageFormat.PPM(toPPM)
@@ -34,8 +35,8 @@ primary primitive ray =
        Just i -> let (Point x y z) = poi $ differentialGeometry i
                      f = sqrt (x^2+y^2+z^2) / 6.0 
                  in RGB f f f
-       Nothing -> let dir = ray_direction ray
-                  in RGB (d_u dir) (d_v dir) 0
+       Nothing -> let dir = Ray.direction ray
+                  in RGB (D.u dir) (D.v dir) 0
 
 
 
@@ -49,7 +50,7 @@ raytrace width height primitive surface_integrator =
     | y<-[0..height-1]
     , x<-[0..width-1]]
     where trace_pixel u v = 
-            let ray = Ray (Point 0 0 0) (direction (u-0.5) (v-0.5) 1)
+            let ray = Ray.Ray (Point 0 0 0) (D.direction (u-0.5) (v-0.5) 1)
             in surface_integrator primitive ray
 
 

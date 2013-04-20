@@ -9,7 +9,10 @@ module Shapes.Sphere(
 import Shapes.Shape
 import Geometry.Geometry
 import Geometry.Point as P
+import Geometry.Direction as D
+import Geometry.Normal as N
 import Geometry.Vector as V
+import Geometry.Ray as Ray
 import DifferentialGeometry
 import Distance
 
@@ -33,11 +36,11 @@ isectRaySphere :: (Floating a, Ord a, RealFrac a) =>
 
 isectRaySphere center radius ray =
   let
-    (origin, direction) = ((ray_origin ray), (ray_direction ray))
+    (origin, direction) = ((Ray.origin ray), (Ray.direction ray))
     (Vector a b c) = origin `P.diff` center
-    d0  = a*(d_u direction) + b*(d_v direction) + c*(d_w direction)
+    d0  = a*(D.u direction) + b*(D.v direction) + c*(D.w direction)
     d1  = d0^2
-    d2  = (d_u direction)^2 + (d_v direction)^2 + (d_w direction)^2
+    d2  = (D.u direction)^2 + (D.v direction)^2 + (D.w direction)^2
     d3  = a^2 + b^2 + c^2
     discriminant = d1 - d2*(d3 - radius^2)    
   in if discriminant<0 then Nothing
@@ -47,14 +50,16 @@ isectRaySphere center radius ray =
      in if solA>0 then
             let dd = solA/d2 
             in Just DifferentialGeometry {d=distance dd,
-                                          poi=ray_point ray dd,
-                                          nn=normal 1 1 1,
-                                          u=0, v=0 }
+                                          poi=Ray.point ray dd,
+                                          nn=N.normal 1 1 1,
+                                          DifferentialGeometry.u=0,
+                                          DifferentialGeometry.v=0 }
         else if solB>0 then
             let dd = solB/d2
             in Just DifferentialGeometry {d=distance dd,
-                                          poi=ray_point ray dd,
-                                          nn=normal 1 1 1,
-                                          u=0, v=0 }
+                                          poi=Ray.point ray dd,
+                                          nn=N.normal 1 1 1,
+                                          DifferentialGeometry.u=0,
+                                          DifferentialGeometry.v=0 }
         else Nothing
 
