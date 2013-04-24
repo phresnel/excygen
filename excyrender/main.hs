@@ -18,27 +18,13 @@ import Intersection
 import DifferentialGeometry
 import Primitives.Primitive
 
+import Integrators.Surface.VisualizeDistance
 
 --data Radiance t = Radiance t t t
 --radianceFromRGB :: RGB t -> Radiance t
 --radianceFromRGB (RGB r g b) = Radiance r g b 
 --radianceToRGB :: Radiance t -> RGB t
 --radianceToRGB (Radiance r g b) = RGB r g b
-
-
--- integrator for only primary intersections -----------------------------------
-visualizeDistance :: (RealFrac t, Floating t) => t -> t -> Primitive t -> Ray t -> RGB t
-
-visualizeDistance minT maxT primitive ray =
-    let intersection = Primitives.Primitive.intersect primitive ray
-    in case intersection of
-       Just i -> let (Point x y z) = poi $ differentialGeometry i
-                     f' = (sqrt (x^2+y^2+z^2) - minT) / (maxT - minT)
-                     f = max 0 $ min 1 f'
-                 in RGB f f f
-       Nothing -> let dir = Ray.direction ray
-                  in RGB (D.u dir) (D.v dir) 0
-
 
 
 -- simple renderer -------------------------------------------------------------
