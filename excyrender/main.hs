@@ -18,7 +18,7 @@ import Intersection
 import DifferentialGeometry
 import Primitives.Primitive
 
-import Integrators.Surface.VisualizeDistance
+import Integrators.Surface.PrimaryColor
 
 --data Radiance t = Radiance t t t
 --radianceFromRGB :: RGB t -> Radiance t
@@ -47,7 +47,7 @@ ppm =
       height = 64
       primitive  = primitiveFromShape $ sphere (Point 0 0 5) 1
       pixels = raytrace width height primitive
-                        (visualizeDistance 5.0 6.0)
+                        primaryColor
   in  toPPM width height pixels
 
 main = putStrLn $ ppm
