@@ -27,13 +27,14 @@ import Primitives.Primitive
 
 
 -- integrator for only primary intersections -----------------------------------
-primary :: (RealFrac t, Floating t) => Primitive t -> Ray t -> RGB t
+visualizeDistance :: (RealFrac t, Floating t) => t -> t -> Primitive t -> Ray t -> RGB t
 
-primary primitive ray =
+visualizeDistance minT maxT primitive ray =
     let intersection = Primitives.Primitive.intersect primitive ray
     in case intersection of
        Just i -> let (Point x y z) = poi $ differentialGeometry i
-                     f = sqrt (x^2+y^2+z^2) / 6.0 
+                     f' = (sqrt (x^2+y^2+z^2) - minT) / (maxT - minT)
+                     f = max 0 $ min 1 f'
                  in RGB f f f
        Nothing -> let dir = Ray.direction ray
                   in RGB (D.u dir) (D.v dir) 0
@@ -59,7 +60,8 @@ ppm =
   let width  = 64
       height = 64
       primitive  = primitiveFromShape $ sphere (Point 0 0 5) 1
-      pixels = raytrace width height primitive primary
+      pixels = raytrace width height primitive
+                        (visualizeDistance 5.0 6.0)
   in  toPPM width height pixels
 
 main = putStrLn $ ppm
