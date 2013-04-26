@@ -8,6 +8,7 @@ module Photometry.SPD.SPD (
 
 data SPD t = SPD {
     sample :: t -> t,
-    toXYZ  :: (t, t, t)
+    toXYZ  :: (t, t, t),
+    stretch :: t -> SPD t
 }
 

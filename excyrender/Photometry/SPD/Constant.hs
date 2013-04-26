@@ -6,9 +6,9 @@ module Photometry.SPD.Constant
 ( constantSPD
 ) where
 
-import SPD.SPD
-import SPD.Regular (regularSPD)
-import SPD.CIEMatchingCurves (cie_start, cie_end)
+import Photometry.SPD.SPD
+import Photometry.SPD.Regular (regularSPD)
+import Photometry.CIEMatchingCurves (cie_start, cie_end)
 
 
 -- Constant ------------------------------------------------------------------------------------
@@ -16,6 +16,7 @@ constantSPD :: (RealFrac a) => a -> SPD a
 
 constantSPD x = SPD {
                     sample = \_ -> x,
-                    toXYZ  = toXYZ (regularSPD cie_start cie_end [x])
+                    toXYZ  = toXYZ (regularSPD cie_start cie_end [x]),
+                    stretch = \f -> constantSPD (f*x)
                 }
 

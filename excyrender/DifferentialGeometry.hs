@@ -13,7 +13,7 @@ import Geometry.Normal
 
 --------------------------------------------------------------------------------
 data DifferentialGeometry t = DifferentialGeometry {
-    d :: Distance t,
+    d :: t,
     poi :: Point t,
     nn :: Normal t,
     u :: t,
@@ -22,3 +22,5 @@ data DifferentialGeometry t = DifferentialGeometry {
     --                    recursive dependency
 } deriving (Show)
 
+
+-- TODO: use a smart constructor to enforce d's positiveness

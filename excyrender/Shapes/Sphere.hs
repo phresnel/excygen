@@ -14,7 +14,6 @@ import Geometry.Normal as N
 import Geometry.Vector as V
 import Geometry.Ray as Ray
 import DifferentialGeometry
-import Distance
 
 
 
@@ -48,17 +47,21 @@ isectRaySphere center radius ray =
        solA = -d0 - (sqrt discriminant)
        solB = -d0 + (sqrt discriminant)
      in if solA>0 then
-            let dd = solA/d2 
-            in Just DifferentialGeometry {d=distance dd,
-                                          poi=Ray.point ray dd,
-                                          nn=N.normal 1 1 1,
+            let dd   = solA/d2
+                poi' = Ray.point ray dd
+            in Just DifferentialGeometry {d=dd,
+                                          poi=poi',
+                                          nn=let (Vector x y z) = poi' `diff` center
+                                             in normal x y z,
                                           DifferentialGeometry.u=0,
                                           DifferentialGeometry.v=0 }
         else if solB>0 then
-            let dd = solB/d2
-            in Just DifferentialGeometry {d=distance dd,
-                                          poi=Ray.point ray dd,
-                                          nn=N.normal 1 1 1,
+            let dd   = solB/d2
+                poi' = Ray.point ray dd
+            in Just DifferentialGeometry {d=dd,
+                                          poi=poi',
+                                          nn=let (Vector x y z) = poi' `diff` center
+                                             in normal x y z,
                                           DifferentialGeometry.u=0,
                                           DifferentialGeometry.v=0 }
         else Nothing

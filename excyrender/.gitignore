@@ -1,3 +1,5 @@
 *.hs~
 *.hi
 *.o
+dist/
+test.ppm

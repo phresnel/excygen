@@ -23,8 +23,9 @@ regularSPD lambdaMin' lambdaMax' spectrum' =
         inverseDelta = 1.0 / delta'
         sample' = sampleRegular lambdaMin' lambdaMax' spectrum' inverseDelta
     in SPD {
-        sample = sample',
-        toXYZ  = toXYZRegular lambdaMin' inverseDelta sample'
+        sample  = sample',
+        toXYZ   = toXYZRegular lambdaMin' inverseDelta sample',
+        stretch = \f -> regularSPD lambdaMin' lambdaMax' $ map (f*) spectrum'
     }
 
 

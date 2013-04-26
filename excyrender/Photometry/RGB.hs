@@ -6,7 +6,11 @@
 -- this module and the type RGB should be renamed, like e.g. ImagePixel or so.
 
 module Photometry.RGB(
-    RGB(..), saturate, stretch, shrink, Photometry.RGB.floor
+    RGB(..), 
+    saturate,
+    stretch, shrink,
+    Photometry.RGB.floor,
+    add
 )where
 
 import Prelude as P
@@ -19,6 +23,7 @@ saturate :: (Ord t)        => RGB t -> t -> t -> RGB t
 stretch  :: (Fractional t) => RGB t -> t -> RGB t 
 shrink   :: (Fractional t) => RGB t -> t -> RGB t
 floor    :: (RealFrac a, Integral b) => RGB a -> RGB b
+add      :: (Num t) => RGB t -> RGB t -> RGB t
 
 
 -- impl ------------------------------------------------------------------------
@@ -30,3 +35,4 @@ stretch (RGB r g b) f = RGB (r*f) (g*f) (b*f)
 shrink  (RGB r g b) f = RGB (r/f) (g/f) (b/f)
 floor   (RGB r g b)   = RGB (P.floor r) (P.floor g) (P.floor b)
 
+add (RGB a b c) (RGB x y z) = RGB (a+x) (b+y) (c+z)
