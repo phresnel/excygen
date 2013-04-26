@@ -13,6 +13,7 @@ import Intersection
 import Shapes.Shape
 import Photometry.SPD.SPD
 import Photometry.SPD.Regular
+import Photometry.BSDF.BSDF
 
 
 
@@ -39,6 +40,9 @@ isectFromShape shape ray =
         let dg = Shapes.Shape.intersect shape ray
         in case dg of
             Just dg -> Just Intersection { differentialGeometry = dg,
-                                           spd = regularSPD 100 600 [1] }
+                                           bsdf = BSDF { --regularSPD 100 600 [1]
+                                                           f = \_ _ -> regularSPD 100 600 [1]
+                                                       }
+                                         }
             Nothing -> Nothing
 

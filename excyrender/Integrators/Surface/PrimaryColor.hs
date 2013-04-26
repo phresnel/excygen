@@ -15,6 +15,7 @@ import Photometry.RGB
 import Intersection
 import Photometry.ColorSpace
 import Photometry.SPD.SPD
+import Photometry.BSDF.BSDF
 
 
 primaryColor :: (RealFrac t, Floating t) => Primitive t -> Ray t -> RGB t
@@ -22,7 +23,8 @@ primaryColor :: (RealFrac t, Floating t) => Primitive t -> Ray t -> RGB t
 primaryColor primitive ray =
     let intersection = intersect primitive ray
     in case intersection of
-       Just i -> let (sr, sg, sb) = from_XYZ_to_sRGB . toXYZ . spd $ i
+       Just i -> let s = (f $ bsdf i) (D.direction 0 1 0) (D.direction 0 1 0)
+                     (sr, sg, sb) = from_XYZ_to_sRGB . toXYZ $ s
                  in RGB sr sg sb
        Nothing -> let dir = Ray.direction ray
                   in RGB (D.u dir) (D.v dir) 0

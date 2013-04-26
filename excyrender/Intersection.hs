@@ -8,10 +8,11 @@ module Intersection
 
 import DifferentialGeometry
 import Photometry.SPD.SPD
+import Photometry.BSDF.BSDF
 
 -- Intersection ----------------------------------------------------------------
 data Intersection t = Intersection {
     differentialGeometry :: DifferentialGeometry t,
-    spd :: SPD t
+    bsdf :: BSDF t
 } 
 
