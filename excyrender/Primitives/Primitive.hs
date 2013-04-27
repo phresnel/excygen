@@ -4,16 +4,10 @@
 
 module Primitives.Primitive
 ( Primitive(..),
-  primitiveFromShape -- TODO: put in separate module
 ) where
 
 import Geometry.Ray
-import DifferentialGeometry(DifferentialGeometry)
 import Intersection
-import Shapes.Shape
-import Photometry.SPD.SPD
-import Photometry.SPD.Regular
-import Photometry.BSDF.BSDF
 
 
 
@@ -22,27 +16,4 @@ import Photometry.BSDF.BSDF
 data Primitive a = Primitive {
                       intersect :: Ray a -> Maybe (Intersection a)
                    }
-
-primitiveFromShape :: RealFrac a => Shape a -> Primitive a
-isectFromShape     :: RealFrac a => Shape a -> Ray a -> Maybe (Intersection a)
-
-
-
----------------------------------------------------------------------------------------------------
-
-primitiveFromShape shape = 
-        Primitive { 
-            Primitives.Primitive.intersect = isectFromShape shape
-        }
-
-
-isectFromShape shape ray =
-        let dg = Shapes.Shape.intersect shape ray
-        in case dg of
-            Just dg -> Just Intersection { differentialGeometry = dg,
-                                           bsdf = BSDF { --regularSPD 100 600 [1]
-                                                           f = \_ _ -> regularSPD 100 600 [1]
-                                                       }
-                                         }
-            Nothing -> Nothing
 

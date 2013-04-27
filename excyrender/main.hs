@@ -16,7 +16,9 @@ import Shapes.Sphere
 
 import Intersection
 import DifferentialGeometry
+
 import Primitives.Primitive
+import Primitives.PrimitiveFromShape
 
 import Integrators.Surface.Whitted
 
