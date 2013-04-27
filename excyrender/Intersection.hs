@@ -4,6 +4,7 @@
 
 module Intersection
 ( Intersection(..)
+, distance
 ) where
 
 import DifferentialGeometry
@@ -16,3 +17,9 @@ data Intersection t = Intersection {
     bsdf :: BSDF t
 } 
 
+distance :: (RealFrac t) => Intersection t -> t
+
+
+
+--------------------------------------------------------------------------------
+distance = d . differentialGeometry

@@ -19,6 +19,7 @@ import DifferentialGeometry
 
 import Primitives.Primitive
 import Primitives.PrimitiveFromShape
+import Primitives.PrimitiveList
 
 import Integrators.Surface.Whitted
 
@@ -47,7 +48,8 @@ raytrace width height primitive surface_integrator =
 ppm = 
   let width  = 64
       height = 64
-      primitive  = primitiveFromShape $ sphere (Point 0 0 5) 1
+      primitive  = primitiveList [primitiveFromShape $ sphere (Point (-1.0) 0.0 5) 1
+                                 ,primitiveFromShape $ sphere (Point 1.0 0.5 5) 1]
       pixels = raytrace width height primitive
                         whitted
   in  toPPM width height pixels
