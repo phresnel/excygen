@@ -12,6 +12,7 @@ import Photometry.SPD.SPD
 import Photometry.SPD.Regular
 import Photometry.BSDF.BSDF
 import Geometry.Ray
+import Geometry.Point
 import Intersection
 import Primitives.Primitive
 
@@ -27,7 +28,8 @@ primitiveList :: RealFrac a => [Primitive a] -> Primitive a
 
 primitiveList primitives = 
         Primitive { 
-            Primitives.Primitive.intersect = isect primitives
+            Primitives.Primitive.intersect = isect primitives,
+            Primitives.Primitive.occludes = occl primitives
         }
 
 
@@ -35,6 +37,7 @@ primitiveList primitives =
 ---------------------------------------------------------------------------------------------------
 
 isect     :: RealFrac a => [Primitive a] -> Ray a -> Maybe (Intersection a)
+occl      :: RealFrac a => [Primitive a] -> Point a -> Point a -> Bool
 
 isect [] _ = Nothing
 
@@ -47,4 +50,10 @@ isect (x:xs) ray =
                                      else other'
                        Nothing -> Just current
      Nothing -> other'
+
+
+occl [] _ _ = False
+occl (x:xs) p q 
+   | Primitives.Primitive.occludes x p q = True
+   | otherwise = False
 

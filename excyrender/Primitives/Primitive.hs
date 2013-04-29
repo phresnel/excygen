@@ -7,6 +7,7 @@ module Primitives.Primitive
 ) where
 
 import Geometry.Ray
+import Geometry.Point
 import Intersection
 
 
@@ -14,6 +15,7 @@ import Intersection
 ---------------------------------------------------------------------------------------------------
 
 data Primitive a = Primitive {
-                      intersect :: Ray a -> Maybe (Intersection a)
+                      intersect :: Ray a -> Maybe (Intersection a),
+                      occludes  :: Point a -> Point a -> Bool
                    }
 

@@ -26,7 +26,8 @@ sphere :: (Floating a, Ord a, RealFrac a) => Point a -> a -> Shape a
 sphere center radius 
     | radius<0  = error "sphere radius must be positive"
     | otherwise = Shape {
-                      intersect = isectRaySphere center radius
+                      intersect = isectRaySphere center radius,
+                      occludes = occl center radius
                   }
 
 
@@ -65,4 +66,25 @@ isectRaySphere center radius ray =
                                           DifferentialGeometry.u=0,
                                           DifferentialGeometry.v=0 }
         else Nothing
+
+
+
+occl :: (Floating a, Ord a, RealFrac a) 
+     => Point a -> a -> Point a -> Point a -> Bool
+
+occl center radius origin target = 
+  let     
+    direction = D.direction u v w
+                where (Vector u v w) = target `P.diff` origin 
+    (Vector a b c) = origin `P.diff` center
+    d0  = a*(D.u direction) + b*(D.v direction) + c*(D.w direction)
+    d1  = d0^2
+    d2  = (D.u direction)^2 + (D.v direction)^2 + (D.w direction)^2
+    d3  = a^2 + b^2 + c^2
+    discriminant = d1 - d2*(d3 - radius^2)    
+  in if discriminant<0 then False
+     else let
+       solA = -d0 - (sqrt discriminant)
+       solB = -d0 + (sqrt discriminant)
+     in solA>0 || solB>0
 

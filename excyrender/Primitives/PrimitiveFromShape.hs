@@ -12,6 +12,7 @@ import Photometry.SPD.SPD
 import Photometry.SPD.Regular
 import Photometry.BSDF.BSDF
 import Geometry.Ray
+import Geometry.Point
 import Intersection
 import Primitives.Primitive
 
@@ -20,10 +21,12 @@ import Primitives.Primitive
 
 primitiveFromShape :: RealFrac a => Shape a -> Primitive a
 isectFromShape     :: RealFrac a => Shape a -> Ray a -> Maybe (Intersection a)
+occludesFromShape  :: RealFrac a => Shape a -> Point a -> Point a -> Bool
 
 primitiveFromShape shape = 
         Primitive { 
-            Primitives.Primitive.intersect = isectFromShape shape
+            Primitives.Primitive.intersect = isectFromShape shape,
+            Primitives.Primitive.occludes = occludesFromShape shape
         }
 
 
@@ -37,3 +40,4 @@ isectFromShape shape ray =
                                          }
             Nothing -> Nothing
 
+occludesFromShape = Shapes.Shape.occludes

@@ -7,12 +7,14 @@ module Shapes.Shape
 ) where
 
 import Geometry.Ray
+import Geometry.Point
 import DifferentialGeometry(DifferentialGeometry)
 
 
 -- Shape -----------------------------------------------------------------------
 data Shape a = Shape {
-     intersect :: Ray a -> Maybe (DifferentialGeometry a)
+     intersect :: Ray a -> Maybe (DifferentialGeometry a),
+     occludes :: Point a -> Point a -> Bool
  }
 
 
