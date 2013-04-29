@@ -30,9 +30,11 @@ lightSources = [Directional (N.normal 1 0.0 0) (regularSPD 100 600 [3]),
                 Directional (N.normal 0 1.0 0) (regularSPD 100 600 [3])]
 
 
-lightFrom :: (RealFrac t, Floating t) => P.Point t -> N.Normal t -> LightSource t -> SPD t
-lightFrom (P.Point x y z) n (Directional dir spd) =  
-        let f = max 0 $ n `N.dot` dir
+lightFrom :: (RealFrac t, Floating t) => Primitive t -> P.Point t -> N.Normal t -> LightSource t -> SPD t
+lightFrom world at@(P.Point x y z) n (Directional dir spd) =  
+        let s = occludes world at $
+                   (at `P.add` (dir `N.stretch` 1000000)) 
+            f = if s then 0 else max 0 $ n `N.dot` dir
         in (SPD.stretch spd) f
 
 whitted :: (RealFrac t, Floating t) => Primitive t -> Ray t -> RGB t
@@ -50,7 +52,7 @@ whitted primitive ray =
 
                       tosRGB spd    = let (r,g,b) = from_XYZ_to_sRGB . toXYZ $ spd
                                       in RGB r g b
-                      incomingLight = map (tosRGB . lightFrom poi normal) lightSources
+                      incomingLight = map (tosRGB . lightFrom primitive poi normal) lightSources
                   in
                       foldr RGB.add (RGB 0 0 0) incomingLight
         Nothing -> let dir = Ray.direction ray

@@ -55,5 +55,5 @@ isect (x:xs) ray =
 occl [] _ _ = False
 occl (x:xs) p q 
    | Primitives.Primitive.occludes x p q = True
-   | otherwise = False
+   | otherwise = occl xs p q
 
