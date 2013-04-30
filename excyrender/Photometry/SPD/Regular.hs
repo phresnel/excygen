@@ -44,9 +44,9 @@ toXYZRegular lambdaMin inverseDelta sample =
     foldr f (0.0,0.0,0.0) [0..cie_length]
      where f i (a1,a2,a3) = 
              let s = cie_inverse_length * samp i
-             in (a1 + cie_x!!i * s,
-                 a2 + cie_y!!i * s,
-                 a3 + cie_z!!i * s)
+             in (a1 + cie_x i * s,
+                 a2 + cie_y i * s,
+                 a3 + cie_z i * s)
              where
                 samp i = sample $ lambdaMin + inverseDelta * fromIntegral i
 
