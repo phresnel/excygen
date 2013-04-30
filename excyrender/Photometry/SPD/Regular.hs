@@ -41,11 +41,13 @@ sampleRegular lambdaMin lambdaMax spectrum inverseDelta lambda
 
 
 toXYZRegular lambdaMin inverseDelta sample =  
-    -- TODO: directly fold up a tuple instead of having three separate integrations
-    let 
-        samp i = sample $ lambdaMin + inverseDelta * fromIntegral i
-        integrate curve = (sum $ map (\i -> curve!!i * samp i) [0..cie_length]) * cie_inverse_length
-    in
-        (integrate cie_x, integrate cie_y, integrate cie_z)
+    foldr f (0.0,0.0,0.0) [0..cie_length]
+     where f i (a1,a2,a3) = 
+             let s = cie_inverse_length * samp i
+             in (a1 + cie_x!!i * s,
+                 a2 + cie_y!!i * s,
+                 a3 + cie_z!!i * s)
+             where
+                samp i = sample $ lambdaMin + inverseDelta * fromIntegral i
 
 

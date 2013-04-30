@@ -46,8 +46,8 @@ raytrace width height primitive surface_integrator =
 
 
 ppm = 
-  let width  = 16
-      height = 16
+  let width  = 32 
+      height = 32
       primitive  = primitiveList [primitiveFromShape $ sphere (Point (-1.0) 0.0 5) 1
                                  ,primitiveFromShape $ sphere (Point 1.0 0.5 5) 1]
       pixels = raytrace width height primitive
