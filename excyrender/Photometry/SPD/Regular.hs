@@ -8,7 +8,7 @@ module Photometry.SPD.Regular
 
 import Photometry.SPD.SPD
 import Photometry.CIEMatchingCurves
-
+--import Data.Array.Vector
 
 
 -- Regular -------------------------------------------------------------------------------------

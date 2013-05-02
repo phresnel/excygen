@@ -7,7 +7,7 @@
 module Photometry.CIEMatchingCurves
 where
 
-import Data.Array.IArray as A
+import Data.Vector as V
 
 -- cie --------------------------------------------------------------------------------------------
 cie_start :: (RealFrac t) => t
@@ -20,15 +20,14 @@ cie_x :: (RealFrac t) => Int -> t
 cie_y :: (RealFrac t) => Int -> t
 cie_z :: (RealFrac t) => Int -> t
 
-cie_x' :: (RealFrac t) => Array Int t
-cie_y' :: (RealFrac t) => Array Int t
-cie_z' :: (RealFrac t) => Array Int t
+cie_x' :: (RealFrac t) => V.Vector t
+cie_y' :: (RealFrac t) => V.Vector t
+cie_z' :: (RealFrac t) => V.Vector t
 
 
 
 -- impl -------------------------------------------------------------------------------------------
-cie_length = 470 -- assume that cie_x,y,z have the same length
-                 -- TODO: this should be calculated, need a kind of cie_x'' for that
+cie_length = V.length cie_x' - 1 -- assume that cie_x,y,z have the same length
 
 cie_inverse_length = 1.0 / fromIntegral cie_length
 
@@ -39,7 +38,7 @@ cie_x = (!) cie_x'
 cie_y = (!) cie_y'
 cie_z = (!) cie_z'
 
-cie_x' = A.listArray (0, cie_length)
+cie_x' = V.fromList
        [0.0001299000, 0.0001458470, 0.0001638021, 0.0001840037,
         0.0002066902,  0.0002321000,  0.0002607280,  0.0002930750,
         0.0003293880,  0.0003699140,  0.0004149000,  0.0004641587,
@@ -159,7 +158,7 @@ cie_x' = A.listArray (0, cie_length)
         0.000001905497,  0.000001776509,  0.000001656215,  0.000001544022,
         0.000001439440, 0.000001341977, 0.000001251141]
 
-cie_y' = A.listArray (0, cie_length)
+cie_y' = V.fromList
        [0.000003917000,  0.000004393581,  0.000004929604,  0.000005532136,
         0.000006208245,  0.000006965000,  0.000007813219,  0.000008767336,
         0.000009839844,  0.00001104323,  0.00001239000,  0.00001388641,
@@ -279,7 +278,7 @@ cie_y' = A.listArray (0, cie_length)
         0.0000006881098,  0.0000006415300,  0.0000005980895,  0.0000005575746,
         0.0000005198080, 0.0000004846123, 0.0000004518100]
 
-cie_z' =  A.listArray (0, cie_length)
+cie_z' = V.fromList
        [0.0006061000,  0.0006808792,  0.0007651456,  0.0008600124,
         0.0009665928,  0.001086000,  0.001220586,  0.001372729,
         0.001543579,  0.001734286,  0.001946000,  0.002177777,

@@ -19,5 +19,5 @@ executable excyrender
   ghc-options: -Wall -O2 -auto-all 
   main-is: main.hs             
   -- other-modules:       
-  build-depends:       base ==4.5.*, array
+  build-depends:       base ==4.5.*, vector
 
