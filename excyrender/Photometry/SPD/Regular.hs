@@ -42,10 +42,9 @@ sampleRegular lambdaMin lambdaMax spectrum inverseDelta lambda
 
 toXYZRegular :: (RealFrac t, Num t) => t -> t -> (t->t) -> (t,t,t)
 toXYZRegular lambdaMin inverseDelta sample =  
-    let samp i = sample $ lambdaMin + inverseDelta * fromIntegral i
-        samples = V.map samp (V.enumFromN 0 cie_length) 
-        f index c a = a + c * samples!index
-    in (cie_inverse_length * V.ifoldr' f 0.0 cie_x',
-        cie_inverse_length * V.ifoldr' f 0.0 cie_y',
-        cie_inverse_length * V.ifoldr' f 0.0 cie_z')
+    let samples = V.map f (V.enumFromN 0 cie_length)
+                   where f i = sample $ lambdaMin + inverseDelta * fromIntegral i 
+    in (cie_inverse_length * V.sum (V.zipWith (*) cie_x' samples),
+        cie_inverse_length * V.sum (V.zipWith (*) cie_y' samples),
+        cie_inverse_length * V.sum (V.zipWith (*) cie_z' samples))
 
