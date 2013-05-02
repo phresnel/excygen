@@ -27,7 +27,7 @@ cie_z' :: (RealFrac t) => V.Vector t
 
 
 -- impl -------------------------------------------------------------------------------------------
-cie_length = V.length cie_x' - 1 -- assume that cie_x,y,z have the same length
+cie_length = V.length cie_x' -- assume that cie_x,y,z have the same length
 
 cie_inverse_length = 1.0 / fromIntegral cie_length
 

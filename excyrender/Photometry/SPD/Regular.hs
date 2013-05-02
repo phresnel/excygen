@@ -8,7 +8,7 @@ module Photometry.SPD.Regular
 
 import Photometry.SPD.SPD
 import Photometry.CIEMatchingCurves
---import Data.Array.Vector
+import Data.Vector as V
 
 
 -- Regular -------------------------------------------------------------------------------------
@@ -19,13 +19,13 @@ regularSPD    :: (RealFrac t) => t -> t -> [t] -> SPD t
 -- impl -------------------------------------------------------------------------------------------
 regularSPD lambdaMin' lambdaMax' spectrum' =
     let delta' = (lambdaMax' - lambdaMin') /
-                 (fromIntegral ((length spectrum') - 1))
+                 (fromIntegral ((Prelude.length spectrum') - 1))
         inverseDelta = 1.0 / delta'
         sample' = sampleRegular lambdaMin' lambdaMax' spectrum' inverseDelta
     in SPD {
         sample  = sample',
         toXYZ   = toXYZRegular lambdaMin' inverseDelta sample',
-        stretch = \f -> regularSPD lambdaMin' lambdaMax' $ map (f*) spectrum'
+        stretch = \f -> regularSPD lambdaMin' lambdaMax' $ Prelude.map (f*) spectrum'
     }
 
 
@@ -35,19 +35,17 @@ sampleRegular lambdaMin lambdaMax spectrum inverseDelta lambda
     | otherwise = let
         x = (lambda - lambdaMin) * inverseDelta
         b0 = floor x
-        b1 = min (b0+1) ((length spectrum) - 1)
+        b1 = min (b0+1) ((Prelude.length spectrum) - 1)
         dx = x - fromIntegral b0
       in (1.0 - dx) * spectrum!!b0 + dx * spectrum!!b1
 
 
+toXYZRegular :: (RealFrac t, Num t) => t -> t -> (t->t) -> (t,t,t)
 toXYZRegular lambdaMin inverseDelta sample =  
-    foldr f (0.0,0.0,0.0) [0..cie_length]
-     where f i (a1,a2,a3) = 
-             let s = cie_inverse_length * samp i
-             in (a1 + cie_x i * s,
-                 a2 + cie_y i * s,
-                 a3 + cie_z i * s)
-             where
-                samp i = sample $ lambdaMin + inverseDelta * fromIntegral i
-
+    let samp i = sample $ lambdaMin + inverseDelta * fromIntegral i
+        samples = V.map samp (V.enumFromN 0 cie_length) 
+        f index c a = a + c * samples!index
+    in (cie_inverse_length * V.ifoldr' f 0.0 cie_x',
+        cie_inverse_length * V.ifoldr' f 0.0 cie_y',
+        cie_inverse_length * V.ifoldr' f 0.0 cie_z')
 
