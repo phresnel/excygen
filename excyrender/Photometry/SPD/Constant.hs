@@ -9,10 +9,11 @@ module Photometry.SPD.Constant
 import Photometry.SPD.SPD
 import Photometry.SPD.Regular (regularSPD)
 import Photometry.CIEMatchingCurves (cie_start, cie_end)
+import RealNum
 
 
 -- Constant ------------------------------------------------------------------------------------
-constantSPD :: (RealFrac a) => a -> SPD a
+constantSPD :: RealNum -> SPD
 
 constantSPD x = SPD {
                     sample = \_ -> x,

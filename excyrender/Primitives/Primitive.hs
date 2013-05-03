@@ -14,8 +14,8 @@ import Intersection
 
 ---------------------------------------------------------------------------------------------------
 
-data Primitive a = Primitive {
-                      intersect :: Ray a -> Maybe (Intersection a),
-                      occludes  :: Point a -> Point a -> Bool
-                   }
+data Primitive = Primitive {
+                    intersect :: Ray -> Maybe Intersection,
+                    occludes  :: Point -> Point -> Bool
+                 }
 

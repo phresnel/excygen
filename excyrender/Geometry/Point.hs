@@ -10,13 +10,14 @@ module Geometry.Point (
 ) where
 
 import Geometry.Vector as V
+import RealNum
 
-data Point t = Point t t t
-               deriving (Show)
+data Point = Point RealNum RealNum RealNum
+             deriving (Show)
 
-add  :: (Num t) => Point t -> V.Vector t -> Point  t
-sub  :: (Num t) => Point t -> V.Vector t -> Point  t
-diff :: (Num t) => Point t -> Point  t -> V.Vector t
+add  :: Point -> V.Vector -> Point
+sub  :: Point -> V.Vector -> Point
+diff :: Point -> Point    -> V.Vector
 
 add  (Point a b c) (V.Vector x y z) = Point  (a+x) (b+y) (c+z)
 sub  (Point a b c) (V.Vector x y z) = Point  (a-x) (b-y) (c-z)

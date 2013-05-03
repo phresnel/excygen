@@ -7,10 +7,11 @@ module ImageFormat.PPM (
 ) where
 
 import Photometry.RGB
+import RealNum
 
 
 -- PPM -------------------------------------------------------------------------
-toPPM :: (RealFrac t) => Int -> Int -> [RGB t] -> String
+toPPM :: Int -> Int -> [RGB RealNum] -> String
 
 
 

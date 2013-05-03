@@ -10,14 +10,14 @@ module Geometry.Normal (
 ) where
 
 import qualified Geometry.Vector as V
+import RealNum
 
+data Normal = Normal RealNum RealNum RealNum
+              deriving (Show)
 
-data Normal t = Normal t t t
-                deriving (Show)
-
-normal  :: (Floating t) => t -> t -> t -> Normal t
-stretch :: (Floating t) => Normal t -> t -> V.Vector t
-dot     :: (Floating t) => Normal t -> Normal t -> t
+normal  :: RealNum -> RealNum -> RealNum -> Normal
+stretch :: Normal -> RealNum -> V.Vector
+dot     :: Normal -> Normal -> RealNum
 
 normal a b c = 
     let normal_from_vec (V.Vector x y z) = Normal x y z

@@ -12,9 +12,9 @@ import DifferentialGeometry(DifferentialGeometry)
 
 
 -- Shape -----------------------------------------------------------------------
-data Shape a = Shape {
-     intersect :: Ray a -> Maybe (DifferentialGeometry a),
-     occludes :: Point a -> Point a -> Bool
+data Shape = Shape {
+     intersect :: Ray -> Maybe DifferentialGeometry,
+     occludes :: Point -> Point -> Bool
  }
 
 

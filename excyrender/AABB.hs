@@ -13,28 +13,29 @@ module AABB (
 
 import Geometry(Point(..))
 import Prelude hiding(min,max)
+import RealNum
 
 
 -- AABB ------------------------------------------------------------------------
-data AABB t = AABB (Point t) (Point t)
+data AABB t = AABB Point Point
               deriving (Show)
 
-aabb   :: (Ord t) => Point t -> Point t -> AABB t
+aabb   :: (Point -> Point -> AABB
 
-left   :: AABB t -> t
-right  :: AABB t -> t
-top    :: AABB t -> t
-bottom :: AABB t -> t
-front  :: AABB t -> t
-back   :: AABB t -> t
+left   :: AABB -> RealNum
+right  :: AABB -> RealNum
+top    :: AABB -> RealNum
+bottom :: AABB -> RealNum
+front  :: AABB -> RealNum
+back   :: AABB -> RealNum
 
-min    :: AABB t -> Point t
-max    :: AABB t -> Point t
+min    :: AABB -> Point
+max    :: AABB -> Point
 
-width  :: (Num t) => AABB t -> t
-height :: (Num t) => AABB t -> t
-depth  :: (Num t) => AABB t -> t
-size   :: (Num t, Integral i) => AABB t -> i -> t -- Useful e.g. for kd-builds
+width  :: AABB -> RealNum
+height :: AABB -> RealNum
+depth  :: AABB -> RealNum
+size   :: AABB -> Int -> RealNum -- Useful e.g. for kd-builds
 
 
 -- impl ------------------------------------------------------------------------

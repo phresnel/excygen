@@ -16,7 +16,7 @@ build-type:          Simple
 cabal-version:       >=1.8
 
 executable excyrender
-  ghc-options: -Wall -O2 -auto-all 
+  ghc-options: -Wall -O2 -auto-all -fllvm 
   main-is: main.hs             
   -- other-modules:       
   build-depends:       base ==4.5.*, vector

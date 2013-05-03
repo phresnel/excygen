@@ -5,8 +5,9 @@
 module Photometry.ColorSpace
 where
 
+import RealNum
 
-from_XYZ_to_sRGB :: (RealFrac a) => (a, a, a) -> (a, a, a)
+from_XYZ_to_sRGB :: (RealNum, RealNum, RealNum) -> (RealNum, RealNum, RealNum)
 
 
 from_XYZ_to_sRGB (x, y, z) =

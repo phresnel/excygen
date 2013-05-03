@@ -8,21 +8,23 @@ module Photometry.CIEMatchingCurves
 where
 
 import Data.Vector as V
+import RealNum
+
 
 -- cie --------------------------------------------------------------------------------------------
-cie_start :: (RealFrac t) => t
-cie_end   :: (RealFrac t) => t
+cie_start :: RealNum
+cie_end   :: RealNum
 
 cie_length         :: Int
-cie_inverse_length :: (RealFrac t) => t
+cie_inverse_length :: RealNum
 
-cie_x :: (RealFrac t) => Int -> t
-cie_y :: (RealFrac t) => Int -> t
-cie_z :: (RealFrac t) => Int -> t
+cie_x :: Int -> RealNum
+cie_y :: Int -> RealNum
+cie_z :: Int -> RealNum
 
-cie_x' :: (RealFrac t) => V.Vector t
-cie_y' :: (RealFrac t) => V.Vector t
-cie_z' :: (RealFrac t) => V.Vector t
+cie_x' :: V.Vector RealNum
+cie_y' :: V.Vector RealNum
+cie_z' :: V.Vector RealNum
 
 
 

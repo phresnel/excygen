@@ -9,13 +9,13 @@ module FiniteShapes.FiniteShape
 import Geometry(Ray)
 import AABB
 import Shapes.DifferentialGeometry(DifferentialGeometry)
-
+import RealNum
 
 -- Shape -----------------------------------------------------------------------
 
-data FiniteShape a =  FiniteShape {
-     aabb      :: AABB a,
-     intersect :: Ray a -> Maybe (DifferentialGeometry a)
+data FiniteShape =  FiniteShape {
+     aabb      :: AABB,
+     intersect :: Ray -> Maybe DifferentialGeometry
  }
 
 

@@ -14,11 +14,11 @@ import Geometry.Normal as N
 import Geometry.Vector as V
 import Geometry.Ray as Ray
 import DifferentialGeometry
-
+import RealNum
 
 
 -- Sphere ----------------------------------------------------------------------
-sphere :: (Floating a, Ord a, RealFrac a) => Point a -> a -> Shape a
+sphere :: Point -> RealNum -> Shape
 
 
 
@@ -31,8 +31,7 @@ sphere center radius
                   }
 
 
-isectRaySphere :: (Floating a, Ord a, RealFrac a) => 
-                  Point a -> a -> Ray a -> Maybe (DifferentialGeometry a)
+isectRaySphere :: Point -> RealNum -> Ray -> Maybe DifferentialGeometry
 
 isectRaySphere center radius ray =
   let
@@ -69,8 +68,7 @@ isectRaySphere center radius ray =
 
 
 
-occl :: (Floating a, Ord a, RealFrac a) 
-     => Point a -> a -> Point a -> Point a -> Bool
+occl :: Point -> RealNum -> Point -> Point -> Bool
 
 occl center radius origin target = 
   let     

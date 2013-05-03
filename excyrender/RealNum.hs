@@ -2,15 +2,11 @@
 -- GNU General Public License, Version 3 (a.k.a. GPLv3).
 -- See COPYING in the root-folder of the excygen project folder.
 
-module Photometry.BSDF.BSDF
-( BSDF(..)
+module RealNum
+( RealNum(..)
 ) where
 
-import Geometry.Direction
-import Photometry.SPD.SPD
-import RealNum
 
-data BSDF = BSDF {
-    pdf :: Direction -> Direction -> RealNum,
-    f   :: Direction -> Direction -> SPD
-}
+-- Shape -----------------------------------------------------------------------
+type RealNum = Float
+

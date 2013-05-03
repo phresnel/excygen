@@ -6,13 +6,13 @@ module Distance (
   Distance, distance
 ) where
 
-
+import RealNum
 
 -- Distance --------------------------------------------------------------------
-data Distance t = Distance t
-                  deriving (Show)
+data Distance = Distance RealNum
+                deriving (Show)
 
-distance :: (Num t, Ord t, Fractional t) => t -> Distance t
+distance :: RealNum -> Distance
 
 distance f | f>=0      = Distance f
            | otherwise = error "Distance can't be negative"

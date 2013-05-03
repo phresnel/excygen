@@ -20,7 +20,7 @@ import Primitives.Primitive
 
 ---------------------------------------------------------------------------------------------------
 
-primitiveList :: RealFrac a => [Primitive a] -> Primitive a
+primitiveList :: [Primitive] -> Primitive
 
 
 
@@ -36,8 +36,8 @@ primitiveList primitives =
 
 ---------------------------------------------------------------------------------------------------
 
-isect     :: RealFrac a => [Primitive a] -> Ray a -> Maybe (Intersection a)
-occl      :: RealFrac a => [Primitive a] -> Point a -> Point a -> Bool
+isect     :: [Primitive] -> Ray -> Maybe Intersection
+occl      :: [Primitive] -> Point -> Point -> Bool
 
 isect [] _ = Nothing
 

@@ -16,9 +16,10 @@ import Intersection
 import Photometry.ColorSpace
 import Photometry.SPD.SPD
 import Photometry.BSDF.BSDF
+import RealNum
 
 
-primaryColor :: (RealFrac t, Floating t) => Primitive t -> Ray t -> RGB t
+primaryColor :: Primitive -> Ray -> RGB
 
 primaryColor primitive ray =
     let intersection = intersect primitive ray

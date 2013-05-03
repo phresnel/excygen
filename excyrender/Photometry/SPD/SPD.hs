@@ -6,9 +6,11 @@ module Photometry.SPD.SPD (
   SPD(..)
 ) where
 
-data SPD t = SPD {
-    sample :: t -> t,
-    toXYZ  :: (t, t, t),
-    stretch :: t -> SPD t
+import RealNum
+
+data SPD = SPD {
+    sample :: RealNum -> RealNum,
+    toXYZ  :: (RealNum, RealNum, RealNum),
+    stretch :: RealNum -> SPD
 }
 

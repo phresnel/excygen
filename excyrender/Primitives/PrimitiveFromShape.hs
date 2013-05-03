@@ -19,9 +19,9 @@ import Primitives.Primitive
 
 ---------------------------------------------------------------------------------------------------
 
-primitiveFromShape :: RealFrac a => Shape a -> Primitive a
-isectFromShape     :: RealFrac a => Shape a -> Ray a -> Maybe (Intersection a)
-occludesFromShape  :: RealFrac a => Shape a -> Point a -> Point a -> Bool
+primitiveFromShape :: Shape -> Primitive
+isectFromShape     :: Shape -> Ray -> Maybe Intersection
+occludesFromShape  :: Shape -> Point -> Point -> Bool
 
 primitiveFromShape shape = 
         Primitive { 

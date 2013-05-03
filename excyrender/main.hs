@@ -23,6 +23,8 @@ import Primitives.PrimitiveList
 
 import Integrators.Surface.Whitted
 
+import RealNum
+
 --data Radiance t = Radiance t t t
 --radianceFromRGB :: RGB t -> Radiance t
 --radianceFromRGB (RGB r g b) = Radiance r g b 
@@ -31,8 +33,7 @@ import Integrators.Surface.Whitted
 
 
 -- simple renderer -------------------------------------------------------------
-raytrace :: (RealFrac t, Floating t)
-    => Int -> Int -> Primitive t -> (Primitive t -> Ray t -> RGB t) -> [RGB t]
+raytrace :: Int -> Int -> Primitive -> (Primitive -> Ray -> RGB RealNum) -> [RGB RealNum]
 raytrace width height primitive surface_integrator =
     [let u = fromIntegral(x) / fromIntegral(width)
          v = 1 - fromIntegral(y) / fromIntegral(height)
@@ -46,12 +47,12 @@ raytrace width height primitive surface_integrator =
 
 
 ppm = 
-  let width  = 32 
-      height = 32
+  let width  = 128 
+      height = 128 
       primitive  = primitiveList [primitiveFromShape $ sphere (Point (-1.0) 0.0 5) 1
                                  ,primitiveFromShape $ sphere (Point 1.0 0.5 5) 1]
       pixels = raytrace width height primitive
-                        whitted :: [RGB Float]
+                        whitted
   in  toPPM width height pixels
 
 main = putStrLn $ ppm

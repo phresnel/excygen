@@ -23,21 +23,24 @@ import Photometry.SPD.Regular
 import Photometry.SPD.Constant
 import qualified Photometry.RGB as RGB
 
-data LightSource t = Directional (N.Normal t) (SPD t)
+import RealNum
 
-lightSources :: (Floating t, RealFrac t) => [LightSource t]
+
+data LightSource = Directional N.Normal SPD
+
+lightSources :: [LightSource]
 lightSources = [Directional (N.normal 1 0.0 0) (regularSPD 100 600 [3]),
                 Directional (N.normal 0 1.0 0) (regularSPD 100 600 [3])]
 
 
-lightFrom :: (RealFrac t, Floating t) => Primitive t -> P.Point t -> N.Normal t -> LightSource t -> SPD t
+lightFrom :: Primitive -> P.Point -> N.Normal -> LightSource -> SPD
 lightFrom world at@(P.Point x y z) n (Directional dir spd) =  
         let s = occludes world at $
                    (at `P.add` (dir `N.stretch` 1000000)) 
             f = if s then 0 else max 0 $ n `N.dot` dir
         in (SPD.stretch spd) f
 
-whitted :: (RealFrac t, Floating t) => Primitive t -> Ray t -> RGB t
+whitted :: Primitive -> Ray -> RGB RealNum
 
 whitted primitive ray =
     case intersect primitive ray of

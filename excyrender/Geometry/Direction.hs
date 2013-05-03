@@ -9,15 +9,16 @@ module Geometry.Direction (
 ) where
 
 import Geometry.Vector as V
+import RealNum
 
-data Direction t = Direction t t t
-                   deriving (Show)
+data Direction = Direction RealNum RealNum RealNum
+                 deriving (Show)
 
-direction :: (Floating t) => t -> t -> t -> Direction t
-stretch :: (Num t)      => Direction t -> t -> V.Vector t
-u       :: Direction t -> t
-v       :: Direction t -> t
-w       :: Direction t -> t
+direction :: RealNum -> RealNum -> RealNum -> Direction
+stretch :: Direction -> RealNum -> V.Vector
+u       :: Direction -> RealNum
+v       :: Direction -> RealNum
+w       :: Direction -> RealNum
 
 direction a b c = 
     let direction_from_vec (V.Vector x y z) = Direction x y z

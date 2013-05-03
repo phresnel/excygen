@@ -14,11 +14,11 @@ import Geometry.Ray as Ray
 import DifferentialGeometry
 import Photometry.RGB
 import Intersection
+import RealNum
 
 
-visualizeDistance :: (RealFrac t, Floating t) 
-                  => t -> t                           -- configure: minT, maxT 
-                  -> Primitive t -> Ray t -> RGB t    -- integrator
+visualizeDistance :: RealNum -> RealNum               -- configure: minT, maxT 
+                  -> Primitive -> Ray -> RGB    -- integrator
 
 visualizeDistance minT maxT primitive ray =
     let intersection = intersect primitive ray

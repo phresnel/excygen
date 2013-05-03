@@ -6,16 +6,18 @@ module Geometry.Angle (
   Angle(..), degrees, radians, as_degrees, as_radians
 ) where
 
-data Angle t = Degrees t | Radians t
+import RealNum
 
-instance (Show t) => Show (Angle t) where
+data Angle = Degrees RealNum | Radians RealNum
+
+instance (Show RealNum) => Show (Angle RealNum) where
     show (Degrees f) = show f ++ "°"
     show (Radians f) = show f ++ " rad"
 
-degrees    :: (Floating t) => Angle t -> t
-radians    :: (Floating t) => Angle t -> t
-as_degrees :: (Floating t) => (Angle t) -> (Angle t)
-as_radians :: (Floating t) => (Angle t) -> (Angle t)
+degrees    :: Angle -> RealNum
+radians    :: Angle -> RealNum
+as_degrees :: Angle -> Angle
+as_radians :: Angle -> Angle
 
 degrees (Degrees val) = val
 degrees (Radians val) = val * (180/pi)

@@ -13,15 +13,16 @@ module Geometry.Ray (
 
 import Geometry.Point as P
 import Geometry.Direction as D
+import RealNum
 
 
-data Ray t = Ray (P.Point t) (Direction t)
-             deriving (Show)
+data Ray = Ray P.Point Direction
+           deriving (Show)
 
-ray       :: P.Point t -> D.Direction t -> Ray t
-direction :: Ray t -> D.Direction t
-origin    :: Ray t -> P.Point t
-point     :: (Num t, Ord t) => Ray t -> t -> P.Point t
+ray       :: P.Point -> D.Direction -> Ray
+direction :: Ray -> D.Direction
+origin    :: Ray -> P.Point
+point     :: Ray -> RealNum -> P.Point
 
 ray origin direction = Ray origin direction
 direction (Ray _ direction) = direction

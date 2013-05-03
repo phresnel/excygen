@@ -10,16 +10,18 @@ module Geometry.Vector (
   normalize
 ) where
 
-data Vector t = Vector t t t
-                deriving (Show)
+import RealNum
 
-add       :: (Num t)        => Vector t -> Vector t -> Vector t
-sub       :: (Num t)        => Vector t -> Vector t -> Vector t
-len_sq    :: (Num t)        => Vector t -> t
-len       :: (Floating t)   => Vector t -> t
-stretch   :: (Num t)        => Vector t -> t -> Vector t
-shrink    :: (Fractional t) => Vector t -> t -> Vector t
-normalize :: (Floating t)   => Vector t -> Vector t
+data Vector = Vector RealNum RealNum RealNum
+              deriving (Show)
+
+add       :: Vector -> Vector -> Vector
+sub       :: Vector -> Vector -> Vector
+len_sq    :: Vector -> RealNum
+len       :: Vector -> RealNum
+stretch   :: Vector -> RealNum -> Vector
+shrink    :: Vector -> RealNum -> Vector
+normalize :: Vector -> Vector
 
 add       (Vector a b c) (Vector x y z) = Vector (a+x) (b+y) (c+z) 
 sub       (Vector a b c) (Vector x y z) = Vector (a-x) (b-y) (c-z) 

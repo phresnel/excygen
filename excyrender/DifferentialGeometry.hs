@@ -9,15 +9,15 @@ module DifferentialGeometry
 import Distance
 import Geometry.Point
 import Geometry.Normal
-
+import RealNum
 
 --------------------------------------------------------------------------------
-data DifferentialGeometry t = DifferentialGeometry {
-    d :: t,
-    poi :: Point t,
-    nn :: Normal t,
-    u :: t,
-    v :: t
+data DifferentialGeometry = DifferentialGeometry {
+    d :: RealNum,
+    poi :: Point,
+    nn :: Normal,
+    u :: RealNum,
+    v :: RealNum
     -- shape :: Shape <-- This is as PBRT has it, but it would produce a 
     --                    recursive dependency
 } deriving (Show)

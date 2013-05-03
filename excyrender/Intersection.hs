@@ -10,14 +10,15 @@ module Intersection
 import DifferentialGeometry
 import Photometry.SPD.SPD
 import Photometry.BSDF.BSDF
+import RealNum
 
 -- Intersection ----------------------------------------------------------------
-data Intersection t = Intersection {
-    differentialGeometry :: DifferentialGeometry t,
-    bsdf :: BSDF t
+data Intersection = Intersection {
+    differentialGeometry :: DifferentialGeometry,
+    bsdf :: BSDF
 } 
 
-distance :: (RealFrac t) => Intersection t -> t
+distance :: Intersection -> RealNum
 
 
 
