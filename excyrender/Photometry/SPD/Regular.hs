@@ -8,7 +8,7 @@ module Photometry.SPD.Regular
 
 import Photometry.SPD.SPD
 import Photometry.CIEMatchingCurves
-import Data.Vector as V
+import Data.Vector.Unboxed as V
 import RealNum
 
 
@@ -44,7 +44,7 @@ sampleRegular lambdaMin lambdaMax spectrum inverseDelta lambda
 toXYZRegular :: RealNum -> RealNum -> (RealNum->RealNum) -> (RealNum,RealNum,RealNum)
 toXYZRegular lambdaMin inverseDelta sample =  
     let samples = V.map f (V.enumFromN 0 cie_length)
-                   where f i = sample $ lambdaMin + inverseDelta * fromIntegral i 
+                   where f i = sample $ lambdaMin + inverseDelta * i 
     in (cie_inverse_length * V.sum (V.zipWith (*) cie_x' samples),
         cie_inverse_length * V.sum (V.zipWith (*) cie_y' samples),
         cie_inverse_length * V.sum (V.zipWith (*) cie_z' samples))

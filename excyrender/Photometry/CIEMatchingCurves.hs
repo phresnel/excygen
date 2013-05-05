@@ -7,7 +7,7 @@
 module Photometry.CIEMatchingCurves
 where
 
-import Data.Vector as V
+import Data.Vector.Unboxed as V
 import RealNum
 
 
