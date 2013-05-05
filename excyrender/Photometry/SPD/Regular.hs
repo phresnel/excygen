@@ -18,15 +18,16 @@ regularSPD    :: RealNum -> RealNum -> [RealNum] -> SPD
 
 
 -- impl -------------------------------------------------------------------------------------------
-regularSPD lambdaMin' lambdaMax' spectrum' =
-    let delta' = (lambdaMax' - lambdaMin') /
-                 (fromIntegral ((Prelude.length spectrum') - 1))
+regularSPD lambdaMin' lambdaMax' spectrum'' =
+    let spectrum' = V.fromList spectrum''
+        delta' = (lambdaMax' - lambdaMin') /
+                 (fromIntegral ((V.length spectrum') - 1))
         inverseDelta = 1.0 / delta'
         sample' = sampleRegular lambdaMin' lambdaMax' spectrum' inverseDelta
     in SPD {
         sample  = sample',
         toXYZ   = toXYZRegular lambdaMin' inverseDelta sample',
-        stretch = \f -> regularSPD lambdaMin' lambdaMax' $ Prelude.map (f*) spectrum'
+        stretch = \f -> regularSPD lambdaMin' lambdaMax' $ V.toList $ V.map (f*) spectrum'
     }
 
 
@@ -36,9 +37,9 @@ sampleRegular lambdaMin lambdaMax spectrum inverseDelta lambda
     | otherwise = let
         x = (lambda - lambdaMin) * inverseDelta
         b0 = floor x
-        b1 = min (b0+1) ((Prelude.length spectrum) - 1)
+        b1 = min (b0+1) ((V.length spectrum) - 1)
         dx = x - fromIntegral b0
-      in (1.0 - dx) * spectrum!!b0 + dx * spectrum!!b1
+      in (1.0 - dx) * spectrum!b0 + dx * spectrum!b1
 
 
 toXYZRegular :: RealNum -> RealNum -> (RealNum->RealNum) -> (RealNum,RealNum,RealNum)
