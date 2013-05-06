@@ -30,8 +30,8 @@ import RealNum
 data LightSource = Directional N.Normal Spectrum
 
 lightSources :: [LightSource]
-lightSources = [Directional (N.normal 1 0.0 0) (spectrumFromSPD 100 600 3 $ regularSPD 100 600 [3]),
-                Directional (N.normal 0 1.0 0) (spectrumFromSPD 100 600 3 $ regularSPD 100 600 [3])]
+lightSources = [Directional (N.normal 1 0.0 0) (spectrumFromSPD 100 600 1 $ regularSPD 100 600 [3]),
+                Directional (N.normal 0 1.0 0) (spectrumFromSPD 100 600 1 $ regularSPD 100 600 [3])]
 
 
 lightFrom :: Primitive -> P.Point -> N.Normal -> LightSource -> Spectrum
@@ -41,8 +41,8 @@ lightFrom world at@(P.Point x y z) n (Directional dir spec) =
             f = if s then 0 else max 0 $ n `N.dot` dir
         in (Spectrum.stretch spec) f
 
-whitted :: Primitive -> Ray -> Spectrum
 
+whitted :: Primitive -> Ray -> Spectrum
 whitted primitive ray =
     case intersect primitive ray of
         Just i -> let
@@ -53,8 +53,14 @@ whitted primitive ray =
                       bsdf = Intersection.bsdf i
                       (f, pdf) = (BSDF.f bsdf, BSDF.pdf bsdf)
 
-                      incomingLight = map (lightFrom primitive poi normal) lightSources
+                      directLighting = foldr1 Spectrum.add . 
+                                        map (lightFrom primitive poi normal) $
+                                        lightSources
+                      specularReflection   = spectrum 100 600 [0]
+                      specularTransmission = spectrum 100 600 [0]
                   in
-                      foldr1 Spectrum.add incomingLight
+                      directLighting
+                        `Spectrum.add` specularReflection
+                        `Spectrum.add` specularTransmission
         Nothing -> spectrum 100 700 [0]
 
