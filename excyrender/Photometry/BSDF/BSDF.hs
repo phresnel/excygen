@@ -7,10 +7,10 @@ module Photometry.BSDF.BSDF
 ) where
 
 import Geometry.Direction
-import Photometry.SPD.SPD
+import Photometry.Spectrum
 import RealNum
 
 data BSDF = BSDF {
     pdf :: Direction -> Direction -> RealNum,
-    f   :: Direction -> Direction -> SPD
+    f   :: Direction -> Direction -> Spectrum
 }

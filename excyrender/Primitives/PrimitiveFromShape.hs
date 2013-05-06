@@ -11,6 +11,7 @@ import Shapes.Shape
 import Photometry.SPD.SPD
 import Photometry.SPD.Regular
 import Photometry.BSDF.BSDF
+import Photometry.Spectrum
 import Geometry.Ray
 import Geometry.Point
 import Intersection
@@ -20,23 +21,24 @@ import Primitives.Primitive
 ---------------------------------------------------------------------------------------------------
 
 primitiveFromShape :: Shape -> Primitive
-isectFromShape     :: Shape -> Ray -> Maybe Intersection
+isectFromShape     :: Shape -> BSDF -> Ray -> Maybe Intersection
 occludesFromShape  :: Shape -> Point -> Point -> Bool
 
 primitiveFromShape shape = 
-        Primitive { 
-            Primitives.Primitive.intersect = isectFromShape shape,
+        let bsdf = BSDF {
+                      f = \_ _ -> spectrumFromSPD 100 600 3 $ regularSPD 100 600 [1]
+                   }
+        in Primitive { 
+            Primitives.Primitive.intersect = isectFromShape shape bsdf,
             Primitives.Primitive.occludes = occludesFromShape shape
         }
 
 
-isectFromShape shape ray =
+isectFromShape shape bsdf' ray =
         let dg = Shapes.Shape.intersect shape ray
         in case dg of
             Just dg -> Just Intersection { differentialGeometry = dg,
-                                           bsdf = BSDF { --regularSPD 100 600 [1]
-                                                           f = \_ _ -> regularSPD 100 600 [1]
-                                                       }
+                                           bsdf = bsdf'
                                          }
             Nothing -> Nothing
 

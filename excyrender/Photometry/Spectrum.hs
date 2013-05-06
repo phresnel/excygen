@@ -4,9 +4,9 @@
 
 module Photometry.Spectrum
 ( Spectrum, spectrum,
-  spdToSpectrum,
-  toXYZ,
-  add, sub, stretch, pow
+  spectrumFromSPD,
+  Photometry.Spectrum.toXYZ,
+  add, sub, Photometry.Spectrum.stretch, pow
 ) where
 
 import Photometry.SPD.SPD
@@ -26,8 +26,8 @@ type Intensities   = V.Vector RealNum
 type Resolution    = Int
 
 
-spdToSpectrum :: WavelengthMin -> WavelengthMax -> Resolution -> SPD -> Spectrum
-toXYZ         :: Spectrum -> (RealNum,RealNum,RealNum)
+spectrumFromSPD :: WavelengthMin -> WavelengthMax -> Resolution -> SPD -> Spectrum
+toXYZ           :: Spectrum -> (RealNum,RealNum,RealNum)
 
 
 add     :: Spectrum -> Spectrum -> Spectrum
@@ -38,7 +38,7 @@ pow     :: Spectrum -> RealNum -> Spectrum
 
 
 ---------------------------------------------------------------------------------------------------
-spdToSpectrum min max res spd = 
+spectrumFromSPD min max res spd = 
     let range = max - min
         f i = sample spd $ (i / fromIntegral res) * range + min
     in Spectrum min max $ V.map f (V.enumFromN 0 res)
@@ -50,7 +50,7 @@ toXYZ (Spectrum min max s) = Photometry.SPD.SPD.toXYZ $ regularSPD min max $ V.t
 add = binary (+)
 sub = binary (-)
 stretch s x = map' (x*) s
-pow s x     = map' (^x) s
+pow s x     = map' (**x) s
 
 
 binary o (Spectrum min max l) (Spectrum min_r max_r r)
@@ -58,5 +58,5 @@ binary o (Spectrum min max l) (Spectrum min_r max_r r)
         =  Spectrum min max $ V.zipWith o l r
   | otherwise = error "Tried to operate on Spectrums of different topology"
 
-map' o (Spectrum _ _ bands) = V.map o bands
+map' o (Spectrum min max bands) = Spectrum min max $ V.map o bands
 
