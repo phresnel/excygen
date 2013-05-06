@@ -26,6 +26,7 @@ type Intensities   = V.Vector RealNum
 type Resolution    = Int
 
 
+spectrum        :: WavelengthMin -> WavelengthMax -> [RealNum] -> Spectrum
 spectrumFromSPD :: WavelengthMin -> WavelengthMax -> Resolution -> SPD -> Spectrum
 toXYZ           :: Spectrum -> (RealNum,RealNum,RealNum)
 

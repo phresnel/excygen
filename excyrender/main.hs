@@ -10,6 +10,7 @@ import ImageFormat.PPM(toPPM)
 
 import Photometry.RGB
 import Photometry.ColorSpace
+import Photometry.Spectrum as Spectrum
 
 import Shapes.Shape
 import Shapes.Sphere
@@ -33,7 +34,7 @@ import RealNum
 
 
 -- simple renderer -------------------------------------------------------------
-raytrace :: Int -> Int -> Primitive -> (Primitive -> Ray -> RGB RealNum) -> [RGB RealNum]
+raytrace :: Int -> Int -> Primitive -> (Primitive -> Ray -> Spectrum) -> [RGB RealNum]
 raytrace width height primitive surface_integrator =
     [let u = fromIntegral(x) / fromIntegral(width)
          v = 1 - fromIntegral(y) / fromIntegral(height)
@@ -42,7 +43,8 @@ raytrace width height primitive surface_integrator =
     , x<-[0..width-1]]
     where trace_pixel u v = 
             let ray = Ray.Ray (Point 0 0 0) (D.direction (u-0.5) (v-0.5) 1)
-            in surface_integrator primitive ray
+                (sR, sG, sB) = from_XYZ_to_sRGB . Spectrum.toXYZ $ surface_integrator primitive ray
+            in RGB sR sG sB
 
 
 

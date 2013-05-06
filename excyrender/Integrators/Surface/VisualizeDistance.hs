@@ -17,8 +17,8 @@ import Intersection
 import RealNum
 
 
-visualizeDistance :: RealNum -> RealNum               -- configure: minT, maxT 
-                  -> Primitive -> Ray -> RGB    -- integrator
+visualizeDistance :: RealNum -> RealNum              -- configure: minT, maxT 
+                  -> Primitive -> Ray -> Spectrum    -- integrator
 
 visualizeDistance minT maxT primitive ray =
     let intersection = intersect primitive ray
@@ -26,7 +26,7 @@ visualizeDistance minT maxT primitive ray =
        Just i -> let (Point x y z) = poi $ differentialGeometry i
                      f' = (sqrt (x^2+y^2+z^2) - minT) / (maxT - minT)
                      f = max 0 $ min 1 f'
-                 in RGB f f f
+                 in Spectrum.stretch $ spectrum 100 800 1 [1] $ f
        Nothing -> let dir = Ray.direction ray
-                  in RGB (D.u dir) (D.v dir) 0
+                  in spectrum 100 800 1 [0]
 

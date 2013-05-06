@@ -41,24 +41,20 @@ lightFrom world at@(P.Point x y z) n (Directional dir spec) =
             f = if s then 0 else max 0 $ n `N.dot` dir
         in (Spectrum.stretch spec) f
 
-whitted :: Primitive -> Ray -> RGB RealNum
+whitted :: Primitive -> Ray -> Spectrum
 
 whitted primitive ray =
     case intersect primitive ray of
-        Just i -> let                        
-                      dg   = differentialGeometry i 
-                      poi' = DG.poi dg
-                      normal = nn dg
-                      poi  = poi' `P.add` (normal `N.stretch` 0.0001)
+        Just i -> let
+                      poi'   = DG.poi $ differentialGeometry i
+                      normal = nn $ differentialGeometry i
+                      poi    = poi' `P.add` (normal `N.stretch` 0.0001)
 
                       bsdf = Intersection.bsdf i
                       (f, pdf) = (BSDF.f bsdf, BSDF.pdf bsdf)
 
-                      tosRGB spec   = let (r,g,b) = from_XYZ_to_sRGB . Spectrum.toXYZ $ spec
-                                      in RGB r g b
-                      incomingLight = map (tosRGB . lightFrom primitive poi normal) lightSources
+                      incomingLight = map (lightFrom primitive poi normal) lightSources
                   in
-                      foldr RGB.add (RGB 0 0 0) incomingLight
-        Nothing -> let dir = Ray.direction ray
-                   in RGB (D.u dir) (D.v dir) 0
+                      foldr1 Spectrum.add incomingLight
+        Nothing -> spectrum 100 700 [0]
 
