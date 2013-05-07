@@ -6,7 +6,7 @@ module Photometry.Spectrum
 ( Spectrum, spectrum,
   spectrumFromSPD,
   Photometry.Spectrum.toXYZ,
-  add, sub, Photometry.Spectrum.stretch, pow
+  add, sub, mul, Photometry.Spectrum.stretch, pow
 ) where
 
 import Photometry.SPD.SPD
@@ -33,6 +33,7 @@ toXYZ           :: Spectrum -> (RealNum,RealNum,RealNum)
 
 add     :: Spectrum -> Spectrum -> Spectrum
 sub     :: Spectrum -> Spectrum -> Spectrum
+mul     :: Spectrum -> Spectrum -> Spectrum
 stretch :: Spectrum -> RealNum -> Spectrum
 pow     :: Spectrum -> RealNum -> Spectrum
 
@@ -50,6 +51,7 @@ toXYZ (Spectrum min max s) = Photometry.SPD.SPD.toXYZ $ regularSPD min max $ V.t
 
 add = binary (+)
 sub = binary (-)
+mul = binary (*)
 stretch s x = map' (x*) s
 pow s x     = map' (**x) s
 

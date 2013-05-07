@@ -26,7 +26,8 @@ occludesFromShape  :: Shape -> Point -> Point -> Bool
 
 primitiveFromShape shape = 
         let bsdf = BSDF {
-                      f = \_ _ -> spectrumFromSPD 100 600 3 $ regularSPD 100 600 [1]
+                      f = \_ _ -> spectrumFromSPD 100 600 1 $ regularSPD 100 600 [1],
+                      pdf = \_ _ -> 1
                    }
         in Primitive { 
             Primitives.Primitive.intersect = isectFromShape shape bsdf,

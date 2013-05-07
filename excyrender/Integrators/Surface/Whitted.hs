@@ -27,19 +27,22 @@ import qualified Photometry.RGB as RGB
 import RealNum
 
 
-data LightSource = Directional N.Normal Spectrum
+data LightSource = Directional D.Direction Spectrum
 
 lightSources :: [LightSource]
-lightSources = [Directional (N.normal 1 0.0 0) (spectrumFromSPD 100 600 1 $ regularSPD 100 600 [3]),
-                Directional (N.normal 0 1.0 0) (spectrumFromSPD 100 600 1 $ regularSPD 100 600 [3])]
+lightSources = [Directional (D.direction 1 0.0 0) (spectrumFromSPD 100 600 1 $ regularSPD 100 600 [3]),
+                Directional (D.direction 0 1.0 0) (spectrumFromSPD 100 600 1 $ regularSPD 100 600 [3])]
 
 
-lightFrom :: Primitive -> P.Point -> N.Normal -> LightSource -> Spectrum
-lightFrom world at@(P.Point x y z) n (Directional dir spec) =  
-        let s = occludes world at $
-                   (at `P.add` (dir `N.stretch` 1000000)) 
-            f = if s then 0 else max 0 $ n `N.dot` dir
-        in (Spectrum.stretch spec) f
+lightFrom :: D.Direction -> BSDF -> Primitive -> P.Point -> N.Normal -> LightSource -> Spectrum
+lightFrom wo bsdf primitive at@(P.Point x y z) n (Directional wi lSpec) =
+        let s = if occludes primitive at (at `P.add` (wi `D.stretch` 1000000))
+                then 0
+                else 1    
+            dot = max 0 $ n `N.dot'` wi
+            f   = (BSDF.f bsdf) wo wi
+
+        in f `Spectrum.mul` (Spectrum.stretch lSpec dot)
 
 
 whitted :: Primitive -> Ray -> Spectrum
@@ -54,7 +57,7 @@ whitted primitive ray =
                       (f, pdf) = (BSDF.f bsdf, BSDF.pdf bsdf)
 
                       directLighting = foldr1 Spectrum.add . 
-                                        map (lightFrom primitive poi normal) $
+                                        map (lightFrom (Ray.direction ray) bsdf primitive poi normal) $
                                         lightSources
                       specularReflection   = spectrum 100 600 [0]
                       specularTransmission = spectrum 100 600 [0]
