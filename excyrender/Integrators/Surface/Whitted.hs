@@ -46,7 +46,12 @@ lightFrom wo bsdf primitive at@(P.Point x y z) n (Directional wi lSpec) =
 
 
 whitted :: Primitive -> Ray -> Spectrum
-whitted primitive ray =
+whitted = whitted_impl 14
+
+
+whitted_impl :: Int -> Primitive -> Ray -> Spectrum
+whitted_impl 0 _ _ = spectrum 100 600 [0]
+whitted_impl depth primitive ray@(Ray _ direction) =
     case intersect primitive ray of
         Just i -> let
                       poi'   = DG.poi $ differentialGeometry i
@@ -59,11 +64,14 @@ whitted primitive ray =
                       directLighting = foldr1 Spectrum.add . 
                                         map (lightFrom (Ray.direction ray) bsdf primitive poi normal) $
                                         lightSources
-                      specularReflection   = spectrum 100 600 [0]
+                                        
+                      (r_d, r_pdf) = (BSDF.sample_f bsdf) direction normal
+                      specularReflection   = (whitted_impl (depth-1) primitive (Ray poi r_d))
+                                               `Spectrum.stretch` (0.7 * 1 / r_pdf)   
                       specularTransmission = spectrum 100 600 [0]
                   in
                       directLighting
                         `Spectrum.add` specularReflection
                         `Spectrum.add` specularTransmission
-        Nothing -> spectrum 100 700 [0]
+        Nothing -> spectrum 100 600 [3]
 

@@ -9,7 +9,6 @@ module Primitives.PrimitiveFromShape
 import DifferentialGeometry(DifferentialGeometry)
 import Shapes.Shape
 import Photometry.SPD.SPD
-import Photometry.SPD.Regular
 import Photometry.BSDF.BSDF
 import Photometry.Spectrum
 import Geometry.Ray
@@ -25,10 +24,10 @@ isectFromShape     :: Shape -> BSDF -> Ray -> Maybe Intersection
 occludesFromShape  :: Shape -> Point -> Point -> Bool
 
 primitiveFromShape shape = 
-        let bsdf = BSDF {
-                      f = \_ _ -> spectrumFromSPD 100 600 1 $ regularSPD 100 600 [1],
-                      pdf = \_ _ -> 1
-                   }
+        let bsdf = specularReflect --BSDF {
+                   --   f = \_ _ -> spectrumFromSPD 100 600 1 $ regularSPD 100 600 [1],
+                   --   pdf = \_ _ -> 1
+                   -- }
         in Primitive { 
             Primitives.Primitive.intersect = isectFromShape shape bsdf,
             Primitives.Primitive.occludes = occludesFromShape shape

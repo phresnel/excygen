@@ -12,7 +12,7 @@ module Photometry.Spectrum
 import Photometry.SPD.SPD
 import Photometry.SPD.Regular
 
-import Data.Vector.Unboxed as V
+import qualified Data.Vector.Unboxed as V
 import RealNum
 
 
@@ -59,7 +59,11 @@ pow s x     = map' (**x) s
 binary o (Spectrum min max l) (Spectrum min_r max_r r)
   | min==min_r && max==max_r && V.length l==V.length r
         =  Spectrum min max $ V.zipWith o l r
-  | otherwise = error "Tried to operate on Spectrums of different topology"
+  | otherwise = error ("Tried to operate on Spectrums of different topology ("
+                 ++ "[" ++ show min ++ " " ++ show max ++ " " ++ show (V.length l) ++ "]"
+                 ++ " vs. "
+                 ++ "[" ++ show min_r ++ " " ++ show max_r ++ " " ++ show (V.length r) ++ "]"
+                 ++ ")")
 
 map' o (Spectrum min max bands) = Spectrum min max $ V.map o bands
 
