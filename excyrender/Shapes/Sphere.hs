@@ -37,10 +37,10 @@ isectRaySphere center radius ray =
     (origin, direction) = ((R.origin ray), (R.direction ray))
     (V.Vector a b c) = origin `P.diff` center
     d0  = a*(D.u direction) + b*(D.v direction) + c*(D.w direction)
-    d1  = d0**2
-    d2  = (D.u direction)**2 + (D.v direction)**2 + (D.w direction)**2
-    d3  = a**2 + b**2 + c**2
-    discriminant = d1 - d2*(d3 - radius**2)
+    d1  = d0*d0
+    d2  = (D.u direction)*(D.u direction) + (D.v direction)*(D.v direction) + (D.w direction)*(D.w direction)
+    d3  = a*a + b*b + c*c
+    discriminant = d1 - d2*(d3 - radius*radius)
   in if discriminant<0 then Nothing
      else let
        solA = -d0 - (sqrt discriminant)
@@ -75,10 +75,10 @@ occl center radius origin target =
                 where (V.Vector u v w) = target `P.diff` origin 
     (V.Vector a b c) = origin `P.diff` center
     d0  = a*(D.u direction) + b*(D.v direction) + c*(D.w direction)
-    d1  = d0**2
-    d2  = (D.u direction)**2 + (D.v direction)**2 + (D.w direction)**2
-    d3  = a**2 + b**2 + c**2
-    discriminant = d1 - d2*(d3 - radius**2)    
+    d1  = d0*d0
+    d2  = (D.u direction)*(D.u direction) + (D.v direction)*(D.v direction) + (D.w direction)*(D.w direction)
+    d3  = a*a + b*b + c*c
+    discriminant = d1 - d2*(d3 - radius*radius)
   in if discriminant<0 then False
      else let
        solA = -d0 - (sqrt discriminant)
