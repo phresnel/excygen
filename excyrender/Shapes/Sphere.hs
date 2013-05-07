@@ -7,18 +7,17 @@ module Shapes.Sphere(
 )where
 
 import Shapes.Shape
-import Geometry.Geometry
-import Geometry.Point as P
-import Geometry.Direction as D
-import Geometry.Normal as N
-import Geometry.Vector as V
-import Geometry.Ray as Ray
-import DifferentialGeometry
+import qualified Geometry.Point as P
+import qualified Geometry.Direction as D
+import qualified Geometry.Normal as N
+import qualified Geometry.Vector as V
+import qualified Geometry.Ray as R
+import qualified DifferentialGeometry as DG
 import RealNum
 
 
 -- Sphere ----------------------------------------------------------------------
-sphere :: Point -> RealNum -> Shape
+sphere :: P.Point -> RealNum -> Shape
 
 
 
@@ -31,55 +30,55 @@ sphere center radius
                   }
 
 
-isectRaySphere :: Point -> RealNum -> Ray -> Maybe DifferentialGeometry
+isectRaySphere :: P.Point -> RealNum -> R.Ray -> Maybe DG.DifferentialGeometry
 
 isectRaySphere center radius ray =
   let
-    (origin, direction) = ((Ray.origin ray), (Ray.direction ray))
-    (Vector a b c) = origin `P.diff` center
+    (origin, direction) = ((R.origin ray), (R.direction ray))
+    (V.Vector a b c) = origin `P.diff` center
     d0  = a*(D.u direction) + b*(D.v direction) + c*(D.w direction)
-    d1  = d0^2
-    d2  = (D.u direction)^2 + (D.v direction)^2 + (D.w direction)^2
-    d3  = a^2 + b^2 + c^2
-    discriminant = d1 - d2*(d3 - radius^2)    
+    d1  = d0**2
+    d2  = (D.u direction)**2 + (D.v direction)**2 + (D.w direction)**2
+    d3  = a**2 + b**2 + c**2
+    discriminant = d1 - d2*(d3 - radius**2)
   in if discriminant<0 then Nothing
      else let
        solA = -d0 - (sqrt discriminant)
        solB = -d0 + (sqrt discriminant)
      in if solA>0 then
             let dd   = solA/d2
-                poi' = Ray.point ray dd
-            in Just DifferentialGeometry {d=dd,
-                                          poi=poi',
-                                          nn=let (Vector x y z) = poi' `diff` center
-                                             in normal x y z,
-                                          DifferentialGeometry.u=0,
-                                          DifferentialGeometry.v=0 }
+                poi' = R.point ray dd
+            in Just DG.DifferentialGeometry {DG.d=dd,
+                                             DG.poi=poi',
+                                             DG.nn=let (V.Vector x y z) = poi' `P.diff` center
+                                                   in N.normal x y z,
+                                             DG.u=0,
+                                             DG.v=0 }
         else if solB>0 then
             let dd   = solB/d2
-                poi' = Ray.point ray dd
-            in Just DifferentialGeometry {d=dd,
-                                          poi=poi',
-                                          nn=let (Vector x y z) = poi' `diff` center
-                                             in normal x y z,
-                                          DifferentialGeometry.u=0,
-                                          DifferentialGeometry.v=0 }
+                poi' = R.point ray dd
+            in Just DG.DifferentialGeometry {DG.d=dd,
+                                             DG.poi=poi',
+                                             DG.nn=let (V.Vector x y z) = poi' `P.diff` center
+                                                   in N.normal x y z,
+                                             DG.u=0,
+                                             DG.v=0 }
         else Nothing
 
 
 
-occl :: Point -> RealNum -> Point -> Point -> Bool
+occl :: P.Point -> RealNum -> P.Point -> P.Point -> Bool
 
 occl center radius origin target = 
   let     
     direction = D.direction u v w
-                where (Vector u v w) = target `P.diff` origin 
-    (Vector a b c) = origin `P.diff` center
+                where (V.Vector u v w) = target `P.diff` origin 
+    (V.Vector a b c) = origin `P.diff` center
     d0  = a*(D.u direction) + b*(D.v direction) + c*(D.w direction)
-    d1  = d0^2
-    d2  = (D.u direction)^2 + (D.v direction)^2 + (D.w direction)^2
-    d3  = a^2 + b^2 + c^2
-    discriminant = d1 - d2*(d3 - radius^2)    
+    d1  = d0**2
+    d2  = (D.u direction)**2 + (D.v direction)**2 + (D.w direction)**2
+    d3  = a**2 + b**2 + c**2
+    discriminant = d1 - d2*(d3 - radius**2)    
   in if discriminant<0 then False
      else let
        solA = -d0 - (sqrt discriminant)

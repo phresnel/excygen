@@ -11,12 +11,12 @@ module Geometry.Ray (
 ) where
 
 
-import Geometry.Point as P
-import Geometry.Direction as D
+import qualified Geometry.Point as P
+import qualified Geometry.Direction as D
 import RealNum
 
 
-data Ray = Ray P.Point Direction
+data Ray = Ray P.Point D.Direction
            deriving (Show)
 
 ray       :: P.Point -> D.Direction -> Ray
@@ -24,10 +24,10 @@ direction :: Ray -> D.Direction
 origin    :: Ray -> P.Point
 point     :: Ray -> RealNum -> P.Point
 
-ray origin direction = Ray origin direction
-direction (Ray _ direction) = direction
-origin    (Ray origin _)    = origin
+ray o d = Ray o d
+direction (Ray _ d) = d
+origin    (Ray o _) = o
 
-point (Ray point direction) f
+point (Ray p d) f
     | f<0       = error "ray_point undefined for negative f"
-    | otherwise = P.add point (stretch direction f)
+    | otherwise = P.add p (d `D.stretch` f)

@@ -27,7 +27,7 @@ toPPM width height pixels =
       "255\n" ++
       showRowWise 0 pixels
   where     
-      showRowWise w [] = "\n"
+      showRowWise _ [] = "\n"
       showRowWise w (x:xs)
         | w==width-1  = printRGB x ++ "\n" ++ showRowWise 0 xs
         | otherwise   = printRGB x ++         showRowWise (w+1) xs
@@ -35,6 +35,6 @@ toPPM width height pixels =
       printRGB rgb = show r ++ " " ++
                      show g ++ " " ++
                      show b ++ "  "
-               where scaled = stretch rgb 255
-                     (RGB r g b) = Photometry.RGB.floor $ saturate scaled 0 255
+               where scaled = stretch rgb 255.0
+                     (RGB r g b) = (Photometry.RGB.floor $ saturate scaled 0.0 255.0) :: RGB Int
 

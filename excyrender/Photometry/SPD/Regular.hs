@@ -6,14 +6,14 @@ module Photometry.SPD.Regular
 ( regularSPD
 ) where
 
-import Photometry.SPD.SPD
+import qualified Photometry.SPD.SPD as SPD
 import Photometry.CIEMatchingCurves
 import Data.Vector.Unboxed as V
 import RealNum
 
 
 -- Regular -------------------------------------------------------------------------------------
-regularSPD    :: RealNum -> RealNum -> [RealNum] -> SPD
+regularSPD    :: RealNum -> RealNum -> [RealNum] -> SPD.SPD
 
 
 
@@ -24,13 +24,14 @@ regularSPD lambdaMin' lambdaMax' spectrum'' =
                  (fromIntegral ((V.length spectrum') - 1))
         inverseDelta = 1.0 / delta'
         sample' = sampleRegular lambdaMin' lambdaMax' spectrum' inverseDelta
-    in SPD {
-        sample  = sample',
-        toXYZ   = toXYZRegular lambdaMin' inverseDelta sample',
-        stretch = \f -> regularSPD lambdaMin' lambdaMax' $ V.toList $ V.map (f*) spectrum'
+    in SPD.SPD {
+        SPD.sample  = sample',
+        SPD.toXYZ   = toXYZRegular lambdaMin' inverseDelta sample',
+        SPD.stretch = \f -> regularSPD lambdaMin' lambdaMax' $ V.toList $ V.map (f*) spectrum'
     }
 
 
+sampleRegular :: RealNum -> RealNum -> V.Vector RealNum -> RealNum -> RealNum -> RealNum
 sampleRegular lambdaMin lambdaMax spectrum inverseDelta lambda
     | lambda < lambdaMin = 0
     | lambda > lambdaMax = 0

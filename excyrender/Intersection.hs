@@ -8,7 +8,6 @@ module Intersection
 ) where
 
 import DifferentialGeometry
-import Photometry.SPD.SPD
 import Photometry.BSDF.BSDF
 import RealNum
 

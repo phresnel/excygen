@@ -6,7 +6,6 @@ module DifferentialGeometry
 ( DifferentialGeometry(..)
 ) where
 
-import Distance
 import Geometry.Point
 import Geometry.Normal
 import RealNum

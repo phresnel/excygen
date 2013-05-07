@@ -7,9 +7,6 @@ module Geometry.Geometry
 ) where
 
 
-import Geometry.Vector as V
-import Geometry.Point as P
-
 
 -- Normal ----------------------------------------------------------------------
 

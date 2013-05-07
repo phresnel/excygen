@@ -3,7 +3,7 @@
 -- See COPYING in the root-folder of the excygen project folder.
 
 module RealNum
-( RealNum(..)
+( RealNum
 ) where
 
 

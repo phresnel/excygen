@@ -6,40 +6,35 @@ module Primitives.PrimitiveFromShape
 ( primitiveFromShape
 ) where
 
-import DifferentialGeometry(DifferentialGeometry)
-import Shapes.Shape
-import Photometry.SPD.SPD
-import Photometry.BSDF.BSDF
-import Photometry.Spectrum
-import Geometry.Ray
-import Geometry.Point
-import Intersection
-import Primitives.Primitive
+import qualified Shapes.Shape as Sh
+import qualified Photometry.BSDF.BSDF as BSDF
+import qualified Geometry.Ray as R
+import qualified Geometry.Point as P
+import qualified Intersection as I
+import qualified Primitives.Primitive as Pr
 
 
 ---------------------------------------------------------------------------------------------------
 
-primitiveFromShape :: Shape -> Primitive
-isectFromShape     :: Shape -> BSDF -> Ray -> Maybe Intersection
-occludesFromShape  :: Shape -> Point -> Point -> Bool
+primitiveFromShape :: Sh.Shape -> Pr.Primitive
+isectFromShape     :: Sh.Shape -> BSDF.BSDF -> R.Ray -> Maybe I.Intersection
+occludesFromShape  :: Sh.Shape -> P.Point -> P.Point -> Bool
 
 primitiveFromShape shape = 
-        let bsdf = specularReflect --BSDF {
+        let bsdf = BSDF.specularReflect --BSDF {
                    --   f = \_ _ -> spectrumFromSPD 100 600 1 $ regularSPD 100 600 [1],
                    --   pdf = \_ _ -> 1
                    -- }
-        in Primitive { 
-            Primitives.Primitive.intersect = isectFromShape shape bsdf,
-            Primitives.Primitive.occludes = occludesFromShape shape
+        in Pr.Primitive { 
+            Pr.intersect = isectFromShape shape bsdf,
+            Pr.occludes = occludesFromShape shape
         }
 
 
 isectFromShape shape bsdf' ray =
-        let dg = Shapes.Shape.intersect shape ray
-        in case dg of
-            Just dg -> Just Intersection { differentialGeometry = dg,
-                                           bsdf = bsdf'
-                                         }
+        case Sh.intersect shape ray of
+            Just dg -> Just I.Intersection { I.differentialGeometry = dg,
+                                             I.bsdf = bsdf' }
             Nothing -> Nothing
 
-occludesFromShape = Shapes.Shape.occludes
+occludesFromShape = Sh.occludes

@@ -9,6 +9,7 @@ module Photometry.Spectrum
   add, sub, mul, Photometry.Spectrum.stretch, pow
 ) where
 
+import Prelude hiding(min, max)
 import Photometry.SPD.SPD
 import Photometry.SPD.Regular
 
@@ -56,6 +57,7 @@ stretch s x = map' (x*) s
 pow s x     = map' (**x) s
 
 
+binary :: (RealNum -> RealNum -> RealNum) -> Spectrum -> Spectrum -> Spectrum
 binary o (Spectrum min max l) (Spectrum min_r max_r r)
   | min==min_r && max==max_r && V.length l==V.length r
         =  Spectrum min max $ V.zipWith o l r
@@ -65,5 +67,6 @@ binary o (Spectrum min max l) (Spectrum min_r max_r r)
                  ++ "[" ++ show min_r ++ " " ++ show max_r ++ " " ++ show (V.length r) ++ "]"
                  ++ ")")
 
+map' :: (RealNum -> RealNum) -> Spectrum -> Spectrum
 map' o (Spectrum min max bands) = Spectrum min max $ V.map o bands
 

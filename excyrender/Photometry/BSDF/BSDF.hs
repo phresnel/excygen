@@ -23,12 +23,14 @@ data BSDF = BSDF {
 }
 
 
+diffuse :: BSDF
 diffuse = BSDF {
              pdf = \_ _ -> 1,
              f   = \_ _ -> spectrumFromSPD 100 600 1 $ regularSPD 100 600 [1],
              sample_f = \_ _ -> (direction 0 1 0, 0)
           }
-          
+
+specularReflect :: BSDF
 specularReflect = BSDF {
              pdf = \_ _ -> 0,
              f   = \_ _ -> spectrum 100 600 [0],

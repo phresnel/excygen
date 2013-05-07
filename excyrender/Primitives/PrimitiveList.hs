@@ -6,46 +6,41 @@ module Primitives.PrimitiveList
 ( primitiveList
 ) where
 
-import DifferentialGeometry(DifferentialGeometry)
-import Shapes.Shape
-import Photometry.SPD.SPD
-import Photometry.SPD.Regular
-import Photometry.BSDF.BSDF
-import Geometry.Ray
-import Geometry.Point
-import Intersection
-import Primitives.Primitive
+import qualified Geometry.Ray as R
+import qualified Geometry.Point as P
+import qualified Intersection as I
+import qualified Primitives.Primitive as Pr
 
 
 
 ---------------------------------------------------------------------------------------------------
 
-primitiveList :: [Primitive] -> Primitive
+primitiveList :: [Pr.Primitive] -> Pr.Primitive
 
 
 
 ---------------------------------------------------------------------------------------------------
 
 primitiveList primitives = 
-        Primitive { 
-            Primitives.Primitive.intersect = isect primitives,
-            Primitives.Primitive.occludes = occl primitives
+        Pr.Primitive { 
+            Pr.intersect = isect primitives,
+            Pr.occludes = occl primitives
         }
 
 
 
 ---------------------------------------------------------------------------------------------------
 
-isect     :: [Primitive] -> Ray -> Maybe Intersection
-occl      :: [Primitive] -> Point -> Point -> Bool
+isect     :: [Pr.Primitive] -> R.Ray -> Maybe I.Intersection
+occl      :: [Pr.Primitive] -> P.Point -> P.Point -> Bool
 
 isect [] _ = Nothing
 
 isect (x:xs) ray =
     let other' = isect xs ray
-    in case Primitives.Primitive.intersect x ray of
+    in case Pr.intersect x ray of
      Just current -> case other' of
-                       Just other -> if distance current < distance other
+                       Just other -> if I.distance current < I.distance other
                                      then Just current
                                      else other'
                        Nothing -> Just current
@@ -54,6 +49,6 @@ isect (x:xs) ray =
 
 occl [] _ _ = False
 occl (x:xs) p q 
-   | Primitives.Primitive.occludes x p q = True
+   | Pr.occludes x p q = True
    | otherwise = occl xs p q
 
