@@ -6,10 +6,10 @@ module Photometry.Spectrum
 ( Spectrum, spectrum,
   spectrumFromSPD,
   Photometry.Spectrum.toXYZ,
-  add, sub, mul, Photometry.Spectrum.stretch, pow
+  add, sub, mul, Photometry.Spectrum.stretch, pow, sum
 ) where
 
-import Prelude hiding(min, max)
+import Prelude hiding(min, max, sum)
 import Photometry.SPD.SPD
 import Photometry.SPD.Regular
 
@@ -38,7 +38,7 @@ mul     :: Spectrum -> Spectrum -> Spectrum
 stretch :: Spectrum -> RealNum -> Spectrum
 pow     :: Spectrum -> RealNum -> Spectrum
 
-
+sum     :: [Spectrum] -> Spectrum
 
 ---------------------------------------------------------------------------------------------------
 spectrumFromSPD min max res spd = 
@@ -55,6 +55,11 @@ sub = binary (-)
 mul = binary (*)
 stretch s x = map' (x*) s
 pow s x     = map' (**x) s
+
+
+sum []     = spectrum 100 600 [0]
+sum [x]    = x
+sum (x:xs) = x `add` sum xs
 
 
 binary :: (RealNum -> RealNum -> RealNum) -> Spectrum -> Spectrum -> Spectrum

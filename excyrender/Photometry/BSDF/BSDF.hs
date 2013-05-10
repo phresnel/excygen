@@ -7,7 +7,7 @@ module Photometry.BSDF.BSDF
   f, pdf, sample_f -- TODO: sample_f should probably take a DifferentialGeometry
 ) where
 
-import Photometry.Spectrum as Sp
+import qualified Photometry.Spectrum as Sp
 import RealNum
 import qualified Photometry.BSDF.BxDF as X 
 
@@ -15,33 +15,44 @@ import Geometry.Direction as D
 import Geometry.Normal as N
 
 
----------------------------------------------------------------------------------------------------
 
-
+-- interface --------------------------------------------------------------------------------------
 data BSDF = BSDF [X.BxDF]
 
 bsdf     :: [X.BxDF] -> BSDF
 pdf      :: BSDF -> Direction -> Direction -> RealNum
-f        :: BSDF -> Direction -> Direction -> Spectrum
-sample_f :: BSDF -> Direction -> Normal -> (Direction, Spectrum, RealNum) -- TODO: those should all return Maybe
+f        :: BSDF -> Direction -> Direction -> Sp.Spectrum
+sample_f :: BSDF -> Direction -> Normal -> (Direction, Sp.Spectrum, RealNum) -- TODO: those should all return Maybe
 
+
+
+-- implementation ---------------------------------------------------------------------------------
 bsdf [] = error "BSDF must have one or more BxDFs"
 bsdf xs = BSDF xs
 
-f (BSDF xs) wo wi =
-    let bxdfs = filter (\bxdf -> X.distribution bxdf == X.Continuous) xs
-    in if null bxdfs then (Sp.spectrum 100 600 [0])
-       else foldr1 Sp.add . map (\bxdf -> X.f bxdf wo wi) $ bxdfs
 
-pdf (BSDF xs) wo wi =
-    let bxdfs = filter (\bxdf -> X.distribution bxdf == X.Continuous) xs
-    in if null bxdfs then 0
-       else sum $ map (\bxdf -> (X.pdf bxdf wo wi)) $ bxdfs
+f (BSDF xs) wo wi = Sp.sum
+                  . map (\bxdf -> X.f bxdf wo wi)
+                  . continuous $ xs
+
+
+pdf (BSDF xs) wo wi = sum
+                    . map (\bxdf -> (X.pdf bxdf wo wi))
+                    . continuous $ xs
+
 
 sample_f (BSDF xs) wo n =
-   let bxdfs = filter (\bxdf -> X.distribution bxdf == X.Specular) xs
+   let bxdfs = specular xs
    in if null bxdfs then (direction 0 1 0, Sp.spectrum 100 600 [0], 0)
       else if length bxdfs /= 1 then error "BSDF currently supports up to 1 specular BxDFs"
       else let bxdf = head bxdfs
            in X.sample_f bxdf wo n
+
+
+
+-- internal ---------------------------------------------------------------------------------------
+continuous :: [X.BxDF] -> [X.BxDF]
+specular   :: [X.BxDF] -> [X.BxDF]
+continuous = filter (\bxdf -> X.distribution bxdf == X.Continuous)
+specular   = filter (\bxdf -> X.distribution bxdf == X.Specular)
 
