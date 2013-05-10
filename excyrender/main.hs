@@ -52,9 +52,11 @@ ppm =
       height = 128 
       primitive  = primitiveList [
                      primitiveFromShape (sphere (P.Point (-1.0) 0.0 5) 1)
-                                        (BSDF.bsdf ([(X.lambertian (spectrum 100 600 [1]), 1.0)])),
+                                        (BSDF.bsdf [X.lambertian (spectrum 100 600 [1])]),
                      primitiveFromShape (sphere (P.Point 1.0 0.5 5) 1)
-                                        (BSDF.bsdf [(X.specularReflect, 0.5)])
+                                        (BSDF.bsdf [X.lambertian (spectrum 100 600 [0.75]),
+                                                    X.specularReflect (spectrum 100 600 [0.25])
+                                                   ])
                    ]
       pixels = raytrace width height primitive
                         whitted

@@ -30,13 +30,14 @@ lightSources = [Directional (D.direction 1 0.0 0) (spectrumFromSPD 100 600 1 $ r
 
 lightFrom :: D.Direction -> BSDF.BSDF -> Primitive -> P.Point -> N.Normal -> LightSource -> Spectrum
 lightFrom wo bsdf primitive at n (Directional wi lSpec) =
-        let s = if occludes primitive at (at `P.add` (wi `D.stretch` 1000000))
-                then 0
-                else 1    
-            dot = s * (max 0 $ n `N.dot'` wi)
-            f   = (BSDF.f bsdf) wo wi
-
-        in f `Spectrum.mul` (Spectrum.stretch lSpec dot)
+    let pdf = BSDF.pdf bsdf wo wi
+    in if pdf<=0 then spectrum 100 600 [0]
+       else let s = if occludes primitive at (at `P.add` (wi `D.stretch` 1000000))
+                    then 0
+                    else 1
+                dot = s * (max 0 $ n `N.dot'` wi)
+                f   = (BSDF.f bsdf) wo wi
+            in f `Spectrum.mul` (lSpec `Spectrum.stretch` (dot / pdf))
 
 
 whitted :: Primitive -> Ray.Ray -> Spectrum
@@ -55,13 +56,14 @@ whitted_impl depth primitive ray@(Ray.Ray _ direction) =
                       bsdf = I.bsdf i
 
                       directLighting = foldr1 Spectrum.add . 
-                                        map (lightFrom (Ray.direction ray) bsdf primitive poi_outside normal) $
+                                        map (lightFrom direction bsdf primitive poi_outside normal) $
                                         lightSources
 
-                      (r_direction, r_pdf) = (BSDF.sample_f bsdf) direction normal
+                      (r_direction, r_spec, r_pdf) = (BSDF.sample_f bsdf) direction normal
                       specularReflection   = if r_pdf<=0 then spectrum 100 600 [0]
-                                                         else (whitted_impl (depth-1) primitive (Ray.Ray poi_outside r_direction))
-                                                               `Spectrum.stretch` r_pdf
+                                                         else r_spec
+                                                              `Spectrum.mul` (whitted_impl (depth-1) primitive (Ray.Ray poi_outside r_direction))
+                                                              `Spectrum.stretch` (1.0 / r_pdf)
                       specularTransmission = spectrum 100 600 [0]
                   in
                       directLighting

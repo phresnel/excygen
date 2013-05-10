@@ -4,7 +4,7 @@
 
 module Photometry.BSDF.BSDF
 ( BSDF, bsdf,
-  f, sample_f -- TODO: sample_f should probably take a DifferentialGeometry
+  f, pdf, sample_f -- TODO: sample_f should probably take a DifferentialGeometry
 ) where
 
 import Photometry.Spectrum as Sp
@@ -18,35 +18,30 @@ import Geometry.Normal as N
 ---------------------------------------------------------------------------------------------------
 
 
-type Probability = RealNum
-data BSDF = BSDF [(X.BxDF, Probability)]
+data BSDF = BSDF [X.BxDF]
 
-bsdf     :: [(X.BxDF,Probability)] -> BSDF
---pdf      :: BSDF -> Direction -> Direction -> RealNum
+bsdf     :: [X.BxDF] -> BSDF
+pdf      :: BSDF -> Direction -> Direction -> RealNum
 f        :: BSDF -> Direction -> Direction -> Spectrum
-sample_f :: BSDF -> Direction -> Normal -> (Direction, RealNum) -- TODO: those should all return Maybe
+sample_f :: BSDF -> Direction -> Normal -> (Direction, Spectrum, RealNum) -- TODO: those should all return Maybe
 
-bsdf xs
-  | length xs == 0           = error "BSDF must have one or more BxDFs"
-  | totalPdf<0 || totalPdf>1 = error "BSDF probability must sum up to [0..1]" 
-  | otherwise                = BSDF xs
-  where totalPdf = foldr (\(_, p) a -> a+p) 0 xs
+bsdf [] = error "BSDF must have one or more BxDFs"
+bsdf xs = BSDF xs
 
-f (BSDF xs) wo wi    = f' xs wo wi
+f (BSDF xs) wo wi =
+    let bxdfs = filter (\bxdf -> X.distribution bxdf == X.Continuous) xs
+    in if null bxdfs then (Sp.spectrum 100 600 [0])
+       else foldr1 Sp.add . map (\bxdf -> X.f bxdf wo wi) $ bxdfs
 
-f' :: [(X.BxDF, Probability)] -> Direction -> Direction -> Spectrum
-f' [] _ _ = error "BSDF.hs: <f' [] wo wi> should not be reachable at all for the outside world"
-f' [(bxdf, p)] wo wi
-  | isContinuous = X.f bxdf wo wi `Sp.stretch` p
-  | otherwise    = Sp.spectrum 100 600 [0]
-  where isContinuous = (X.distribution bxdf) == X.Continuous
-f' (x:xs) wo wi = f' [x] wo wi `Sp.add` f' xs wo wi
+pdf (BSDF xs) wo wi =
+    let bxdfs = filter (\bxdf -> X.distribution bxdf == X.Continuous) xs
+    in if null bxdfs then 0
+       else sum $ map (\bxdf -> (X.pdf bxdf wo wi)) $ bxdfs
 
-
-sample_f (BSDF pbxdfs) wo n =
-   let bxdfs = filter (\(bxdf, _) -> X.distribution bxdf == X.Specular) pbxdfs
-   in if null bxdfs then (direction 0 1 0, 0)
-                    else let (bxdf, p') = head bxdfs
-                             (wi, p) = X.sample_f bxdf wo n
-                         in (wi, p' * p)
+sample_f (BSDF xs) wo n =
+   let bxdfs = filter (\bxdf -> X.distribution bxdf == X.Specular) xs
+   in if null bxdfs then (direction 0 1 0, Sp.spectrum 100 600 [0], 0)
+      else if length bxdfs /= 1 then error "BSDF currently supports up to 1 specular BxDFs"
+      else let bxdf = head bxdfs
+           in X.sample_f bxdf wo n
 
