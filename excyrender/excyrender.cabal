@@ -16,7 +16,18 @@ build-type:          Simple
 cabal-version:       >=1.8
 
 executable excyrender
-  ghc-options: -Wall -O2 -auto-all -fllvm 
+  ghc-options: -Wall -O2 -auto-all -Odph -fllvm -optlo-O3
+                -optlo-disable-inlining -optlo-basicaa -optlo-basiccg
+                -optlo-count-aa -optlo-domfrontier -optlo-domtree
+                -optlo-globalsmodref-aa -optlo-memdep -optlo-no-aa
+                -optlo-postdomtree -optlo-codegenprepare
+                -optlo-functionattrs -optlo-block-placement -optlo-constmerge
+                -optlo-constprop -optlo-die -optlo-dse -optlo-globaldce
+                -optlo-globalopt -optlo-indvars -optlo-inline -optlo-ipconstprop
+                -optlo-ipsccp -optlo-lcssa -optlo-loop-deletion
+                -optlo-loop-unroll -optlo-loop-unswitch -optlo-loop-simplify
+                -optlo-mem2reg -optlo-memcpyopt -optlo-scalarrepl
+                -optlo-tailcallelim
   main-is: main.hs             
   -- other-modules:       
   build-depends:       base ==4.5.*, vector
