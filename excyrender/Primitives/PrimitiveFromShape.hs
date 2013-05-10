@@ -16,16 +16,12 @@ import qualified Primitives.Primitive as Pr
 
 ---------------------------------------------------------------------------------------------------
 
-primitiveFromShape :: Sh.Shape -> Pr.Primitive
+primitiveFromShape :: Sh.Shape -> BSDF.BSDF -> Pr.Primitive
 isectFromShape     :: Sh.Shape -> BSDF.BSDF -> R.Ray -> Maybe I.Intersection
 occludesFromShape  :: Sh.Shape -> P.Point -> P.Point -> Bool
 
-primitiveFromShape shape = 
-        let bsdf = BSDF.specularReflect --BSDF {
-                   --   f = \_ _ -> spectrumFromSPD 100 600 1 $ regularSPD 100 600 [1],
-                   --   pdf = \_ _ -> 1
-                   -- }
-        in Pr.Primitive { 
+primitiveFromShape shape bsdf = 
+        Pr.Primitive { 
             Pr.intersect = isectFromShape shape bsdf,
             Pr.occludes = occludesFromShape shape
         }

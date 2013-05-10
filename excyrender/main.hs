@@ -9,6 +9,8 @@ import qualified Geometry.Point as P
 import ImageFormat.PPM(toPPM)
 
 import Photometry.RGB
+import qualified Photometry.BSDF.BSDF as BSDF
+import qualified Photometry.BSDF.BxDF as X
 import Photometry.ColorSpace
 import Photometry.Spectrum as Spectrum
 
@@ -48,8 +50,12 @@ ppm :: String
 ppm = 
   let width  = 128 
       height = 128 
-      primitive  = primitiveList [primitiveFromShape $ sphere (P.Point (-1.0) 0.0 5) 1
-                                 ,primitiveFromShape $ sphere (P.Point 1.0 0.5 5) 1]
+      primitive  = primitiveList [
+                     primitiveFromShape (sphere (P.Point (-1.0) 0.0 5) 1)
+                                        (BSDF.bsdf ([(X.lambertian (spectrum 100 600 [1]), 1.0)])),
+                     primitiveFromShape (sphere (P.Point 1.0 0.5 5) 1)
+                                        (BSDF.bsdf [(X.specularReflect, 0.5)])
+                   ]
       pixels = raytrace width height primitive
                         whitted
   in  toPPM width height pixels

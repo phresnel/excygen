@@ -3,42 +3,50 @@
 -- See COPYING in the root-folder of the excygen project folder.
 
 module Photometry.BSDF.BSDF
-( BSDF(..),
-  diffuse,        -- TODO: just temporarily here
-  specularReflect -- TOOD: just temporarily
+( BSDF, bsdf,
+  f, sample_f -- TODO: sample_f should probably take a DifferentialGeometry
 ) where
 
-import Geometry.Direction as D
-import Geometry.Vector as V
-import Geometry.Normal as N
-import Photometry.Spectrum
+import Photometry.Spectrum as Sp
 import RealNum
-import Photometry.SPD.Regular
+import qualified Photometry.BSDF.BxDF as X 
+
+import Geometry.Direction as D
+import Geometry.Normal as N
 
 
-data BSDF = BSDF {
-    pdf :: Direction -> Direction -> RealNum,
-    f   :: Direction -> Direction -> Spectrum,
-    sample_f :: Direction -> Normal -> (Direction, RealNum)
-}
+---------------------------------------------------------------------------------------------------
 
 
-diffuse :: BSDF
-diffuse = BSDF {
-             pdf = \_ _ -> 1,
-             f   = \_ _ -> spectrumFromSPD 100 600 1 $ regularSPD 100 600 [1],
-             sample_f = \_ _ -> (direction 0 1 0, 0)
-          }
+type Probability = RealNum
+data BSDF = BSDF [(X.BxDF, Probability)]
 
-specularReflect :: BSDF
-specularReflect = BSDF {
-             pdf = \_ _ -> 0,
-             f   = \_ _ -> spectrum 100 600 [0],
-             sample_f = \wo n -> (let cosI = -(n `N.dot'` wo)
-                                      wo' = Vector (D.u wo) (D.v wo) (D.w wo)
-                                      (Vector ix iy iz) = wo' `V.add` (N.stretch n (cosI*2))
-                                  in direction ix iy iz
-                                  , 1)
-          }
+bsdf     :: [(X.BxDF,Probability)] -> BSDF
+--pdf      :: BSDF -> Direction -> Direction -> RealNum
+f        :: BSDF -> Direction -> Direction -> Spectrum
+sample_f :: BSDF -> Direction -> Normal -> (Direction, RealNum) -- TODO: those should all return Maybe
 
+bsdf xs
+  | length xs == 0           = error "BSDF must have one or more BxDFs"
+  | totalPdf<0 || totalPdf>1 = error "BSDF probability must sum up to [0..1]" 
+  | otherwise                = BSDF xs
+  where totalPdf = foldr (\(_, p) a -> a+p) 0 xs
+
+f (BSDF xs) wo wi    = f' xs wo wi
+
+f' :: [(X.BxDF, Probability)] -> Direction -> Direction -> Spectrum
+f' [] _ _ = error "BSDF.hs: <f' [] wo wi> should not be reachable at all for the outside world"
+f' [(bxdf, p)] wo wi
+  | isContinuous = X.f bxdf wo wi `Sp.stretch` p
+  | otherwise    = Sp.spectrum 100 600 [0]
+  where isContinuous = (X.distribution bxdf) == X.Continuous
+f' (x:xs) wo wi = f' [x] wo wi `Sp.add` f' xs wo wi
+
+
+sample_f (BSDF pbxdfs) wo n =
+   let bxdfs = filter (\(bxdf, _) -> X.distribution bxdf == X.Specular) pbxdfs
+   in if null bxdfs then (direction 0 1 0, 0)
+                    else let (bxdf, p') = head bxdfs
+                             (wi, p) = X.sample_f bxdf wo n
+                         in (wi, p' * p)
 
