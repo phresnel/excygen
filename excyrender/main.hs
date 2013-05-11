@@ -24,6 +24,10 @@ import Integrators.Surface.Whitted
 
 import RealNum
 
+import Control.Parallel.Strategies
+import Control.Parallel
+--import qualified Data.Array.Repa as Repa
+
 --data Radiance t = Radiance t t t
 --radianceFromRGB :: RGB t -> Radiance t
 --radianceFromRGB (RGB r g b) = Radiance r g b 
@@ -34,22 +38,28 @@ import RealNum
 -- simple renderer -------------------------------------------------------------
 raytrace :: Int -> Int -> Primitive -> (Primitive -> Ray.Ray -> Spectrum) -> [RGB RealNum]
 raytrace width height primitive surface_integrator =
-    [let u = fromIntegral(x) / fromIntegral(width)
-         v = 1 - fromIntegral(y) / fromIntegral(height)
-     in trace_pixel u v
-    | y<-[0..height-1]
-    , x<-[0..width-1]]
-    where trace_pixel u v = 
-            let ray = Ray.Ray (P.Point 0 0 0) (D.direction (u-0.5) (v-0.5) 1)
+    --[trace_pixel x y 
+    -- | y<-[0..height-1]
+    -- , x<-[0..width-1]]
+    --let trace_row y = map (trace_pixel y) [0..width-1]
+    --    rows = map trace_row [0..height-1]
+    --    flattened = concat rows
+    --in flattened
+    let raw = (parMap rdeepseq) trace_pixel [0..(width*height)-1]
+    in map (\(r,g,b) -> RGB r g b) raw
+    where trace_pixel p =             
+            let u = fromIntegral (p `mod` width) / fromIntegral width
+                v = 1 - fromIntegral (p `div` width) / fromIntegral height
+                ray = Ray.Ray (P.Point 0 0 0) (D.direction (u-0.5) (v-0.5) 1)
                 (sR, sG, sB) = from_XYZ_to_sRGB . Spectrum.toXYZ $ surface_integrator primitive ray
-            in RGB sR sG sB
+            in (sR,sG,sB)
 
 
 
 ppm :: String
 ppm = 
-  let width  = 512 
-      height = 512 
+  let width  = 128 
+      height = 128
       primitive  = primitiveList [
                      primitiveFromShape (sphere (P.Point (-1.0) 0.0 5) 1)
                                         (BSDF.bsdf [X.lambertian (spectrum 100 600 [1])]),
