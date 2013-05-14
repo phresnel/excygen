@@ -7,6 +7,8 @@ module ImageFormat.PPM (
 ) where
 
 import Photometry.RGB
+import Control.Parallel.Strategies
+
 
 
 -- PPM -------------------------------------------------------------------------
@@ -24,7 +26,7 @@ toPPM width height pixels =
       "P3\n" ++
       show width ++ " " ++ show height ++ "\n" ++
       "255\n" ++
-      showRowWise 0 pixels
+      showRowWise 0 (pixels `using` rdeepseq)
   where     
       showRowWise _ [] = "\n"
       showRowWise w (x:xs)

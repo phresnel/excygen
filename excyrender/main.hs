@@ -23,8 +23,6 @@ import Primitives.PrimitiveList
 import Integrators.Surface.Whitted
 
 import Control.Parallel.Strategies
-import Control.Parallel
---import qualified Data.Array.Repa as Repa
 
 --data Radiance t = Radiance t t t
 --radianceFromRGB :: RGB t -> Radiance t
@@ -57,7 +55,7 @@ raytrace width height primitive surface_integrator =
 ppm :: String
 ppm = 
   let width  = 128
-      height = 64
+      height = 128
       primitive  = primitiveList [
                      primitiveFromShape (sphere (P.Point (-1.0) 0.0 5) 1)
                                         (BSDF.bsdf [X.lambertian (spectrum 100 600 [1])]),
@@ -66,8 +64,8 @@ ppm =
                                                     X.specularReflect (spectrum 100 600 [0.25])
                                                    ])
                    ]
-      pixels = (raytrace width height primitive
-                         whitted) -- `using` rdeepseq
+      pixels = raytrace width height primitive whitted
+  
   in  toPPM width height pixels
 
 main :: IO ()

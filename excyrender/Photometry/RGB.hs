@@ -21,8 +21,8 @@ import RealNum
 data RGB = RGB Float Float Float
            deriving(Show)
 
---instance NFData RGB where
---    rnf (RGB r g b) = rnf r `seq` rnf g `seq` rnf b `seq` ()
+instance NFData RGB where
+    rnf (RGB r g b) = rnf r `seq` rnf g `seq` rnf b `seq` ()
 
 saturate :: RGB -> RealNum -> RealNum -> RGB
 stretch  :: RGB -> RealNum -> RGB 
