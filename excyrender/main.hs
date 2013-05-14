@@ -22,8 +22,6 @@ import Primitives.PrimitiveList
 
 import Integrators.Surface.Whitted
 
-import RealNum
-
 import Control.Parallel.Strategies
 import Control.Parallel
 --import qualified Data.Array.Repa as Repa
@@ -36,7 +34,7 @@ import Control.Parallel
 
 
 -- simple renderer -------------------------------------------------------------
-raytrace :: Int -> Int -> Primitive -> (Primitive -> Ray.Ray -> Spectrum) -> [RGB RealNum]
+raytrace :: Int -> Int -> Primitive -> (Primitive -> Ray.Ray -> Spectrum) -> [RGB]
 raytrace width height primitive surface_integrator =
     --[trace_pixel x y 
     -- | y<-[0..height-1]
@@ -58,8 +56,8 @@ raytrace width height primitive surface_integrator =
 
 ppm :: String
 ppm = 
-  let width  = 128 
-      height = 128
+  let width  = 128
+      height = 64
       primitive  = primitiveList [
                      primitiveFromShape (sphere (P.Point (-1.0) 0.0 5) 1)
                                         (BSDF.bsdf [X.lambertian (spectrum 100 600 [1])]),
@@ -68,8 +66,8 @@ ppm =
                                                     X.specularReflect (spectrum 100 600 [0.25])
                                                    ])
                    ]
-      pixels = raytrace width height primitive
-                        whitted
+      pixels = (raytrace width height primitive
+                         whitted) -- `using` rdeepseq
   in  toPPM width height pixels
 
 main :: IO ()

@@ -7,11 +7,10 @@ module ImageFormat.PPM (
 ) where
 
 import Photometry.RGB
-import RealNum
 
 
 -- PPM -------------------------------------------------------------------------
-toPPM :: Int -> Int -> [RGB RealNum] -> String
+toPPM :: Int -> Int -> [RGB] -> String
 
 
 
@@ -32,9 +31,12 @@ toPPM width height pixels =
         | w==width-1  = printRGB x ++ "\n" ++ showRowWise 0 xs
         | otherwise   = printRGB x ++         showRowWise (w+1) xs
   
-      printRGB rgb = show r ++ " " ++
-                     show g ++ " " ++
-                     show b ++ "  "
+      printRGB rgb = show ir ++ " " ++
+                     show ig ++ " " ++
+                     show ib ++ "  "
                where scaled = stretch rgb 255.0
-                     (RGB r g b) = (Photometry.RGB.floor $ saturate scaled 0.0 255.0) :: RGB Int
+                     (RGB r g b) = (saturate scaled 0.0 255.0)
+                     (ir, ig, ib) = (Prelude.floor r :: Int, 
+                                     Prelude.floor g :: Int,
+                                     Prelude.floor b :: Int)
 

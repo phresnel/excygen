@@ -16,7 +16,7 @@ build-type:          Simple
 cabal-version:       >=1.8
 
 executable excyrender
-  ghc-options: -Wall -O2 -auto-all -Odph -fllvm -optlo-O3
+  ghc-options: -Wall -O3 -auto-all -caf-all -Odph -fllvm -optlo-O3
                 -optlo-disable-inlining -optlo-basicaa -optlo-basiccg
                 -optlo-count-aa -optlo-domfrontier -optlo-domtree
                 -optlo-globalsmodref-aa -optlo-memdep -optlo-no-aa
@@ -30,5 +30,5 @@ executable excyrender
                 -optlo-tailcallelim
   main-is: main.hs             
   -- other-modules:       
-  build-depends:       base ==4.5.*, vector, parallel
+  build-depends:       base ==4.5.*, vector, deepseq, parallel
 
