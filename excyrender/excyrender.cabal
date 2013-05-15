@@ -14,9 +14,14 @@ maintainer:          phresnel@gmail.com
 category:            Graphics
 build-type:          Simple
 cabal-version:       >=1.8
+             
+-- -threaded -Odph -fvectorise -package dph-lifted-vseg -rtsopts
 
 executable excyrender
-  ghc-options: -Wall -O3 -auto-all -caf-all -Odph -fllvm -optlo-O3
+  ghc-options: -Wall -O2 -auto-all -caf-all
+                -fexpose-all-unfoldings
+                -threaded -funbox-strict-fields 
+                -fllvm -optlo-O3
                 -optlo-disable-inlining -optlo-basicaa -optlo-basiccg
                 -optlo-count-aa -optlo-domfrontier -optlo-domtree
                 -optlo-globalsmodref-aa -optlo-memdep -optlo-no-aa
