@@ -26,7 +26,7 @@ regularSPD lambdaMin' lambdaMax' spectrum'' =
         sample' = sampleRegular lambdaMin' lambdaMax' spectrum' inverseDelta
     in SPD.SPD {
         SPD.sample  = sample',
-        SPD.toXYZ   = toXYZRegular lambdaMin' inverseDelta sample',
+        SPD.toXYZ   = toXYZRegular lambdaMin' spectrum' inverseDelta,
         SPD.stretch = \f -> regularSPD lambdaMin' lambdaMax' $ V.toList $ V.map (f*) spectrum'
     }
 
@@ -35,18 +35,24 @@ sampleRegular :: RealNum -> RealNum -> V.Vector RealNum -> RealNum -> RealNum ->
 sampleRegular lambdaMin lambdaMax spectrum inverseDelta lambda
     | lambda < lambdaMin = 0
     | lambda > lambdaMax = 0
-    | otherwise = let
-        x = (lambda - lambdaMin) * inverseDelta
-        b0 = floor x
-        b1 = min (b0+1) ((V.length spectrum) - 1)
-        dx = x - fromIntegral b0
-      in (1.0 - dx) * spectrum!b0 + dx * spectrum!b1
+    | otherwise = sampleRegular_unchecked lambdaMin spectrum inverseDelta lambda
 
 
-toXYZRegular :: RealNum -> RealNum -> (RealNum->RealNum) -> (RealNum,RealNum,RealNum)
-toXYZRegular lambdaMin inverseDelta sample =  
+sampleRegular_unchecked :: RealNum -> V.Vector RealNum -> RealNum -> RealNum -> RealNum
+sampleRegular_unchecked lambdaMin spectrum inverseDelta lambda =
+    let
+      x = (lambda - lambdaMin) * inverseDelta
+      b0 = floor x
+      b1 = min (b0+1) ((V.length spectrum) - 1)
+      dx = x - fromIntegral b0
+    in (1.0 - dx) * spectrum!b0 + dx * spectrum!b1
+
+
+toXYZRegular :: RealNum -> V.Vector RealNum -> RealNum -> (RealNum,RealNum,RealNum)
+toXYZRegular lambdaMin spectrum inverseDelta =  
     let samples = V.map f (V.enumFromN 0 cie_length)
-                   where f i = sample $ lambdaMin + inverseDelta * i 
+                   where f i = sampleRegular_unchecked lambdaMin spectrum inverseDelta 
+                                                       $ lambdaMin + inverseDelta * i 
     in (cie_inverse_length * V.sum (V.zipWith (*) cie_x' samples),
         cie_inverse_length * V.sum (V.zipWith (*) cie_y' samples),
         cie_inverse_length * V.sum (V.zipWith (*) cie_z' samples))
