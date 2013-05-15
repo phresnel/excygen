@@ -41,14 +41,13 @@ raytrace width height primitive surface_integrator =
     --    rows = map trace_row [0..height-1]
     --    flattened = concat rows
     --in flattened
-    let raw = map trace_pixel [0..(width*height)-1]
-    in (parMap rdeepseq) (\(r,g,b) -> RGB r g b) raw
+    (parMap rdeepseq) trace_pixel [0..(width*height)-1]
     where trace_pixel p =             
             let u = fromIntegral (p `mod` width) / fromIntegral width
                 v = 1 - fromIntegral (p `div` width) / fromIntegral height
                 ray = Ray.Ray (P.Point 0 0 0) (D.direction (u-0.5) (v-0.5) 1)
                 (sR, sG, sB) = from_XYZ_to_sRGB . Spectrum.toXYZ $ surface_integrator primitive ray
-            in (sR,sG,sB)
+            in (RGB sR sG sB)
 
 
 
