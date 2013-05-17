@@ -20,8 +20,10 @@ cabal-version:       >=1.8
 executable excyrender
   ghc-options: -Wall -O2 -auto-all -caf-all
                 -fexpose-all-unfoldings
+                -eventlog -rtsopts
                 -threaded -funbox-strict-fields 
-                -fllvm -optlo-O3
+                -fllvm -optlo-O3 
+                -optlo-enable-unsafe-fp-math
                 -optlo-disable-inlining -optlo-basicaa -optlo-basiccg
                 -optlo-count-aa -optlo-domfrontier -optlo-domtree
                 -optlo-globalsmodref-aa -optlo-memdep -optlo-no-aa
