@@ -24,23 +24,10 @@ import Integrators.Surface.Whitted
 
 import Control.Parallel.Strategies
 
---data Radiance t = Radiance t t t
---radianceFromRGB :: RGB t -> Radiance t
---radianceFromRGB (RGB r g b) = Radiance r g b 
---radianceToRGB :: Radiance t -> RGB t
---radianceToRGB (Radiance r g b) = RGB r g b
-
 
 -- simple renderer -------------------------------------------------------------
 raytrace :: Int -> Int -> Primitive -> (Primitive -> Ray.Ray -> Spectrum) -> [RGB]
 raytrace width height primitive surface_integrator =
-    --[trace_pixel x y 
-    -- | y<-[0..height-1]
-    -- , x<-[0..width-1]]
-    --let trace_row y = map (trace_pixel y) [0..width-1]
-    --    rows = map trace_row [0..height-1]
-    --    flattened = concat rows
-    --in flattened
     map trace_pixel [0..(width*height)-1]
     where trace_pixel p =             
             let u = fromIntegral (p `mod` width) / fromIntegral width
