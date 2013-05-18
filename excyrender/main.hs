@@ -42,14 +42,15 @@ ppm :: String
 ppm = 
   let width  = 1024
       height = 1024
-      primitive  = primitiveList [
+      primitive'  = primitiveList [
                      primitiveFromShape (sphere (P.Point (-1.0) 0.0 5) 1)
                                         (BSDF.bsdf [X.lambertian (spectrum 100 600 [1])]),
                      primitiveFromShape (sphere (P.Point 1.0 0.5 5) 1)
                                         (BSDF.bsdf [X.lambertian (spectrum 100 600 [0.75]),
                                                     X.specularReflect (spectrum 100 600 [0.25])
                                                    ])
-                   ]
+                    ]
+      !primitive = primitive'
       pixels = raytrace width height primitive whitted `using` parListChunk (512) rdeepseq
   
   in  toPPM width height pixels

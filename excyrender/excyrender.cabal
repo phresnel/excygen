@@ -16,11 +16,14 @@ build-type:          Simple
 cabal-version:       >=1.8
              
 -- -threaded -Odph -fvectorise -package dph-lifted-vseg -rtsopts
+-- -eventlog
 
 executable excyrender
-  ghc-options: -Wall -O2 -auto-all -caf-all
+  extensions: BangPatterns
+  ghc-options: -Wall -O2 
+                -auto-all -caf-all
                 -fexpose-all-unfoldings
-                -eventlog -rtsopts
+                -rtsopts
                 -threaded -funbox-strict-fields 
                 -fllvm -optlo-O3 
                 -optlo-enable-unsafe-fp-math
