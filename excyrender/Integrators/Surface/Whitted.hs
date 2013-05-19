@@ -24,9 +24,9 @@ import Photometry.Spectrum as Spectrum
 data LightSource = Directional D.Direction Spectrum
 
 lightSources :: [LightSource]
-lightSources = [Directional (D.direction 1 0.0 0) (spectrumFromSPD 100 600 1 $ regularSPD 100 600 [3]),
-                Directional (D.direction 0 1.0 0) (spectrumFromSPD 100 600 1 $ regularSPD 100 600 [3])]
-
+lightSources = [Directional (D.direction 1 1 0) (spectrumFromSPD 100 600 1 $ regularSPD 100 600 [3])
+                -- ,Directional (D.direction 0 1.0 0) (spectrumFromSPD 100 600 1 $ regularSPD 100 600 [3])]
+               ]
 
 lightFrom :: D.Direction -> BSDF.BSDF -> Primitive -> P.Point -> N.Normal -> LightSource -> Spectrum
 lightFrom wo bsdf primitive at n (Directional wi lSpec) =

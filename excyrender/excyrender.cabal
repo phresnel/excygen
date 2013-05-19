@@ -17,11 +17,11 @@ cabal-version:       >=1.8
              
 -- -threaded -Odph -fvectorise -package dph-lifted-vseg -rtsopts
 -- -eventlog
-
+-- -auto-all -caf-all
+                
 executable excyrender
   extensions: BangPatterns
   ghc-options: -Wall -O2 
-                -auto-all -caf-all
                 -fexpose-all-unfoldings
                 -rtsopts
                 -threaded -funbox-strict-fields 

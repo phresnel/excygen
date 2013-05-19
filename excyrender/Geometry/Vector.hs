@@ -7,7 +7,8 @@ module Geometry.Vector (
   add, sub,
   len, len_sq,
   stretch, shrink,
-  normalize
+  normalize,
+  dot
 ) where
 
 import RealNum
@@ -22,6 +23,7 @@ len       :: Vector -> RealNum
 stretch   :: Vector -> RealNum -> Vector
 shrink    :: Vector -> RealNum -> Vector
 normalize :: Vector -> Vector
+dot       :: Vector -> Vector -> RealNum
 
 add       (Vector a b c) (Vector x y z) = Vector (a+x) (b+y) (c+z) 
 sub       (Vector a b c) (Vector x y z) = Vector (a-x) (b-y) (c-z) 
@@ -30,5 +32,5 @@ len                                     = sqrt . len_sq
 stretch   (Vector a b c) f              = Vector (a*f) (b*f) (c*f)
 shrink    (Vector a b c) f              = Vector (a/f) (b/f) (c/f)
 normalize v                             = v `shrink` (len v)
-
+dot       (Vector a b c) (Vector x y z) = a*x + b*y + c*z
 

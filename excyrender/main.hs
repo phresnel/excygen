@@ -5,6 +5,7 @@
 import qualified Geometry.Ray as Ray
 import qualified Geometry.Direction as D
 import qualified Geometry.Point as P
+import qualified Geometry.Normal as N
 
 import ImageFormat.PPM(toPPM)
 
@@ -15,6 +16,7 @@ import Photometry.ColorSpace
 import Photometry.Spectrum as Spectrum
 
 import Shapes.Sphere
+import qualified Shapes.Plane as Plane
 
 import Primitives.Primitive
 import Primitives.PrimitiveFromShape
@@ -40,13 +42,17 @@ raytrace width height primitive surface_integrator =
 
 ppm :: String
 ppm = 
-  let width  = 1024
-      height = 1024
+  let width  = 128
+      height = 128
       primitive'  = primitiveList [
                      primitiveFromShape (sphere (P.Point (-1.0) 0.0 5) 1)
                                         (BSDF.bsdf [X.lambertian (spectrum 100 600 [1])]),
                      primitiveFromShape (sphere (P.Point 1.0 0.5 5) 1)
                                         (BSDF.bsdf [X.lambertian (spectrum 100 600 [0.75]),
+                                                    X.specularReflect (spectrum 100 600 [0.25])
+                                                   ]),
+                     primitiveFromShape (Plane.fromPointNormal (P.Point (0) (-1) 0) (N.normal 0 1 0))
+                                        (BSDF.bsdf [X.lambertian (spectrum 100 600 [0.5]),
                                                     X.specularReflect (spectrum 100 600 [0.25])
                                                    ])
                     ]

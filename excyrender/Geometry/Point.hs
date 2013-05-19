@@ -6,7 +6,8 @@ module Geometry.Point (
   Point(..),
   Geometry.Point.add,
   Geometry.Point.sub,
-  Geometry.Point.diff
+  Geometry.Point.diff,
+  asVector
 ) where
 
 import Geometry.Vector as V
@@ -18,8 +19,9 @@ data Point = Point RealNum RealNum RealNum
 add  :: Point -> V.Vector -> Point
 sub  :: Point -> V.Vector -> Point
 diff :: Point -> Point    -> V.Vector
+asVector :: Point -> V.Vector
 
 add  (Point a b c) (V.Vector x y z) = Point  (a+x) (b+y) (c+z)
 sub  (Point a b c) (V.Vector x y z) = Point  (a-x) (b-y) (c-z)
 diff (Point a b c) (Point  x y z)   = V.Vector (a-x) (b-y) (c-z)
-
+asVector (Point a b c) = (V.Vector a b c)
