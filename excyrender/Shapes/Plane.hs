@@ -33,7 +33,7 @@ fromPointNormal p n =
 
 
 isect :: Hessian -> R.Ray -> Maybe DG.DifferentialGeometry
-isect plane@(Hessian n d) ray@(R.Ray orig dir) =
+isect plane@(Hessian n _) ray@(R.Ray orig dir) =
   let denom = n `N.dot'` dir
       p = signedDistance plane orig
       t = if denom==0 then 0 else -p/denom
