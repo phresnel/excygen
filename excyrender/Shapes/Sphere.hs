@@ -48,21 +48,25 @@ isectRaySphere center radius ray =
      in if solA>0 then
             let dd   = solA/d2
                 poi' = R.point ray dd
+                V.Vector px py pz = poi' `P.diff` center
             in Just DG.DifferentialGeometry {DG.d=dd,
                                              DG.poi=poi',
-                                             DG.nn=let (V.Vector x y z) = poi' `P.diff` center
-                                                   in N.normal x y z,
+                                             DG.nn= N.normal px py pz,
                                              DG.u=0,
-                                             DG.v=0 }
+                                             DG.v=0,
+                                             DG.dpdu=V.Vector (-pz) 0 px
+                                            }
         else if solB>0 then
             let dd   = solB/d2
                 poi' = R.point ray dd
+                V.Vector px py pz = poi' `P.diff` center
             in Just DG.DifferentialGeometry {DG.d=dd,
                                              DG.poi=poi',
-                                             DG.nn=let (V.Vector x y z) = poi' `P.diff` center
-                                                   in N.normal x y z,
+                                             DG.nn= N.normal px py pz,
                                              DG.u=0,
-                                             DG.v=0 }
+                                             DG.v=0,
+                                             DG.dpdu=V.Vector (-pz) 0 px
+                                            }
         else Nothing
 
 

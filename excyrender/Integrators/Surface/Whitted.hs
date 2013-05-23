@@ -59,7 +59,7 @@ whitted_impl depth primitive ray@(Ray.Ray _ direction) =
                                         map (lightFrom direction bsdf primitive poi_outside normal) $
                                         lightSources
 
-                      (r_direction, r_spec, r_pdf) = (BSDF.sample_f bsdf) direction normal
+                      (r_direction, r_spec, r_pdf) = (BSDF.sample_f bsdf) (I.differentialGeometry i) (D.neg direction)
                       specularReflection   = if r_pdf<=0 then spectrum 100 600 [0]
                                                          else r_spec
                                                               `Spectrum.mul` (whitted_impl (depth-1) primitive (Ray.Ray poi_outside r_direction))

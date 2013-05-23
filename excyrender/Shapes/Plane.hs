@@ -37,13 +37,15 @@ isect plane@(Hessian n _) ray@(R.Ray orig dir) =
   let denom = n `N.dot'` dir
       p = signedDistance plane orig
       t = if denom==0 then 0 else -p/denom
+      nn = if p >= 0 then n else N.neg n
   in if t<=0
      then Nothing
      else Just DG.DifferentialGeometry {
         DG.d = t,
         DG.poi = ray `R.point` t,
-        DG.nn = if p >= 0 then n else N.neg n,
-        DG.u = 0, DG.v = 0        
+        DG.nn = nn,
+        DG.u = 0, DG.v = 0,
+        DG.dpdu = N.asVector $ N.createOrthogonal nn
      }
 
  

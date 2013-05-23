@@ -11,8 +11,6 @@ module Photometry.BSDF.BxDF
 ) where
 
 import Geometry.Direction as D
-import Geometry.Vector as V
-import Geometry.Normal as N
 import Photometry.Spectrum as Sp
 import RealNum
 
@@ -22,7 +20,7 @@ data ReflectionClass = Reflective | Transmissive
 data BxDF = BxDF {
     pdf :: Direction -> Direction -> RealNum,
     f   :: Direction -> Direction -> Spectrum,
-    sample_f :: Direction -> Normal -> (Direction, Spectrum, RealNum), -- TODO: instead of passing surface geometry, do everything locally
+    sample_f :: Direction -> (Direction, Spectrum, RealNum),
     distribution :: Distribution,
     reflection :: ReflectionClass    
 }
@@ -32,7 +30,7 @@ lambertian :: Spectrum -> BxDF
 lambertian s = BxDF {
              pdf = \_ _ -> 1 / pi,
              f   = \_ _ -> s `Sp.stretch` (1.0 / pi),
-             sample_f = \_ _ -> (direction 0 1 0, s, 0),
+             sample_f = \_ -> (direction 0 1 0, s, 0),
              distribution = Continuous,
              reflection = Reflective
           }
@@ -41,12 +39,11 @@ specularReflect :: Spectrum -> BxDF
 specularReflect s = BxDF {
              pdf = \_ _ -> 0,
              f   = \_ _ -> spectrum 100 600 [0],
-             sample_f = \wo n -> (let cosI = -(n `N.dot'` wo)
-                                      wo' = Vector (D.u wo) (D.v wo) (D.w wo)
-                                      (Vector ix iy iz) = wo' `V.add` (N.stretch n (cosI*2))
-                                  in direction ix iy iz,
-                                  s,
-                                  1),
+             sample_f = \wo -> --(let cosI = -(n `N.dot'` wo)
+                               --     wo' = Vector (D.u wo) (D.v wo) (D.w wo)
+                               --     (Vector ix iy iz) = wo' `V.add` (N.stretch n (cosI*2))
+                               -- in direction ix iy iz,
+                               (D.direction (-(D.u wo)) (D.v wo) (-(D.w wo)), s, 1),
              distribution = Specular,
              reflection = Reflective
           }

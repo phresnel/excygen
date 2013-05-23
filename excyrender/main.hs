@@ -42,8 +42,8 @@ raytrace width height primitive surface_integrator =
 
 ppm :: String
 ppm = 
-  let width  = 128
-      height = 128
+  let width  = 320 
+      height = 320 
       primitive'  = primitiveList [
                      primitiveFromShape (sphere (P.Point (-1.0) 0.0 5) 1)
                                         (BSDF.bsdf [X.lambertian (spectrum 100 600 [1])]),

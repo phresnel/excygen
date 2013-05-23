@@ -12,8 +12,7 @@ import RealNum
 import qualified Photometry.BSDF.BxDF as X 
 
 import Geometry.Direction as D
-import Geometry.Normal as N
-
+import DifferentialGeometry
 
 
 -- interface --------------------------------------------------------------------------------------
@@ -22,7 +21,8 @@ data BSDF = BSDF [X.BxDF]
 bsdf     :: [X.BxDF] -> BSDF
 pdf      :: BSDF -> Direction -> Direction -> RealNum
 f        :: BSDF -> Direction -> Direction -> Sp.Spectrum
-sample_f :: BSDF -> Direction -> Normal -> (Direction, Sp.Spectrum, RealNum) -- TODO: those should all return Maybe
+sample_f :: BSDF -> DifferentialGeometry -> Direction -> (Direction, Sp.Spectrum, RealNum) -- TODO: those should all return Maybe
+            -- Note: For sample_f, the direction points away of the point of intersection.
 
 
 
@@ -41,12 +41,14 @@ pdf (BSDF xs) wo wi = sum
                     . continuous $ xs
 
 
-sample_f (BSDF xs) wo n =
+sample_f (BSDF xs) dg wo =
    let bxdfs = specular xs
+       wo' = (worldToLocalDirection dg) wo
    in if null bxdfs then (direction 0 1 0, Sp.spectrum 100 600 [0], 0)
       else if length bxdfs /= 1 then error "BSDF currently supports up to 1 specular BxDFs"
       else let bxdf = head bxdfs
-           in X.sample_f bxdf wo n
+               (dir, spec, pdf') = X.sample_f bxdf wo'
+           in ((localToWorldDirection dg) dir, spec, pdf')
 
 
 
