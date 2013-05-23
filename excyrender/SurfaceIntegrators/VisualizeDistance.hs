@@ -2,7 +2,7 @@
 -- GNU General Public License, Version 3 (a.k.a. GPLv3).
 -- See COPYING in the root-folder of the excygen project folder.
 
-module Integrators.Surface.VisualizeDistance (
+module SurfaceIntegrators.VisualizeDistance (
   visualizeDistance
 ) where
 

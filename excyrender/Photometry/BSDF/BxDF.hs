@@ -15,35 +15,52 @@ import Photometry.Spectrum as Sp
 import RealNum
 
 data Distribution = Continuous | Specular deriving(Eq)
-data ReflectionClass = Reflective | Transmissive
+data ReflectionClass = Reflective | Transmissive deriving(Eq)
 
 data BxDF = BxDF {
     pdf :: Direction -> Direction -> RealNum,
     f   :: Direction -> Direction -> Spectrum,
-    sample_f :: Direction -> (Direction, Spectrum, RealNum),
+    sample_f :: Direction -> [RealNum] -> (Direction, Spectrum, RealNum, [RealNum]),
     distribution :: Distribution,
     reflection :: ReflectionClass    
 }
 
 
+--randomDir :: [RealNum] -> (Direction, [RealNum])
+--randomDir (x:y:z:rest) =
+--  let (x',y',z') = (x*2-1,y*2-1,z*2-1)
+--  in if x'*x'+y'*y'+z'*z'<1
+--  then (direction x' y' z', rest)
+--  else randomDir rest
+--randomDir _ = error "not enough pseudo random numbers left"
+
+
 lambertian :: Spectrum -> BxDF
-lambertian s = BxDF {
-             pdf = \_ _ -> 1 / pi,
-             f   = \_ _ -> s `Sp.stretch` (1.0 / pi),
-             sample_f = \_ -> (direction 0 1 0, s, 0),
-             distribution = Continuous,
-             reflection = Reflective
-          }
+lambertian s = let s' = s `Sp.stretch` (1.0 / pi)
+                   pdf' = \_ wi -> abs (D.v wi) / pi
+               in BxDF {
+                    pdf = pdf',
+                    f   = \_ _ -> s',
+                    sample_f = \wo randoms -> 
+                                let (wi, randoms') = D.cosineWeightedHemisphere randoms
+                                in (wi,
+                                    s',
+                                    pdf' wo wi,
+                                    randoms'),
+                    distribution = Continuous,
+                    reflection = Reflective
+                 }
 
 specularReflect :: Spectrum -> BxDF
 specularReflect s = BxDF {
              pdf = \_ _ -> 0,
              f   = \_ _ -> spectrum 100 600 [0],
-             sample_f = \wo -> --(let cosI = -(n `N.dot'` wo)
-                               --     wo' = Vector (D.u wo) (D.v wo) (D.w wo)
-                               --     (Vector ix iy iz) = wo' `V.add` (N.stretch n (cosI*2))
-                               -- in direction ix iy iz,
-                               (D.direction (-(D.u wo)) (D.v wo) (-(D.w wo)), s, 1),
+             sample_f = \wo randoms -> 
+                          let rdir = D.direction (-(D.u wo)) (D.v wo) (-(D.w wo)) 
+                          in (rdir,
+                              s `Sp.stretch` (1 / abs (D.v rdir)),
+                              1,
+                              randoms),
              distribution = Specular,
              reflection = Reflective
           }

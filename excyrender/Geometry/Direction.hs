@@ -8,7 +8,8 @@ module Geometry.Direction (
   u, v, w,
   dot,
   asVector,
-  neg
+  neg,
+  cosineWeightedHemisphere
 ) where
 
 import qualified Geometry.Vector as V
@@ -25,6 +26,7 @@ v       :: Direction -> RealNum
 w       :: Direction -> RealNum
 dot     :: Direction -> Direction -> RealNum
 neg     :: Direction -> Direction
+cosineWeightedHemisphere :: [RealNum] -> (Direction, [RealNum])
 
 direction a b c = 
     let direction_from_vec (V.Vector x y z) = Direction x y z
@@ -40,3 +42,15 @@ w (Direction _ _ f) = f
 dot (Direction a b c) (Direction x y z) = a*x + b*y + c*z
 
 neg (Direction a b c) = Direction (-a) (-b) (-c)
+
+cosineWeightedHemisphere (x1:x2:xs) =
+    let phi = 2*pi*x1
+        cosTheta = sqrt x2
+        sinTheta = sqrt (1-x2)
+    in (Direction (cos(phi) * sinTheta)
+                  (cosTheta)
+                  (sin(phi) * sinTheta)
+       ,xs)
+
+cosineWeightedHemisphere _ = error "not enough pseudo random numbers"
+   

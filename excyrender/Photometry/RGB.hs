@@ -10,7 +10,7 @@ module Photometry.RGB(
     saturate,
     stretch, shrink,
     Photometry.RGB.floor,
-    add
+    add, Photometry.RGB.sum
 )where
 
 import Prelude as P
@@ -29,6 +29,7 @@ stretch  :: RGB -> RealNum -> RGB
 shrink   :: RGB -> RealNum -> RGB
 floor    :: RGB -> RGB
 add      :: RGB -> RGB -> RGB
+sum      :: [RGB] -> RGB
 
 
 -- impl ------------------------------------------------------------------------
@@ -43,3 +44,4 @@ floor   (RGB r g b)   = RGB (fromIntegral (P.floor r :: Int))
                             (fromIntegral (P.floor b :: Int))
 
 add (RGB a b c) (RGB x y z) = RGB (a+x) (b+y) (c+z)
+sum rgbs = foldr add (RGB 0 0 0) rgbs

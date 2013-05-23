@@ -21,7 +21,8 @@ data BSDF = BSDF [X.BxDF]
 bsdf     :: [X.BxDF] -> BSDF
 pdf      :: BSDF -> Direction -> Direction -> RealNum
 f        :: BSDF -> Direction -> Direction -> Sp.Spectrum
-sample_f :: BSDF -> DifferentialGeometry -> Direction -> (Direction, Sp.Spectrum, RealNum) -- TODO: those should all return Maybe
+sample_f :: BSDF -> Maybe X.Distribution -> Maybe X.ReflectionClass -> [RealNum] ->
+            DifferentialGeometry -> Direction -> (Direction, Sp.Spectrum, RealNum, [RealNum]) -- TODO: those should all return Maybe
             -- Note: For sample_f, the direction points away of the point of intersection.
 
 
@@ -41,20 +42,29 @@ pdf (BSDF xs) wo wi = sum
                     . continuous $ xs
 
 
-sample_f (BSDF xs) dg wo =
-   let bxdfs = specular xs
+sample_f (BSDF xs) dist refl randoms dg wo =
+   let bxdfs = only dist refl xs
        wo' = (worldToLocalDirection dg) wo
-   in if null bxdfs then (direction 0 1 0, Sp.spectrum 100 600 [0], 0)
+   in if null bxdfs then (direction 0 1 0, Sp.spectrum 100 600 [0], 0, randoms)
       else if length bxdfs /= 1 then error "BSDF currently supports up to 1 specular BxDFs"
       else let bxdf = head bxdfs
-               (dir, spec, pdf') = X.sample_f bxdf wo'
-           in ((localToWorldDirection dg) dir, spec, pdf')
+               (dir, spec, pdf', randoms') = X.sample_f bxdf wo' randoms
+           in ((localToWorldDirection dg) dir, spec, pdf', randoms')
 
 
 
 -- internal ---------------------------------------------------------------------------------------
+only :: Maybe X.Distribution -> Maybe X.ReflectionClass -> [X.BxDF] -> [X.BxDF]
+only dist refl = filter (let df = case dist of
+                                   Just dist' -> \bxdf -> (X.distribution bxdf == dist')
+                                   Nothing -> \_ -> True
+                             rf = case refl of
+                                   Just refl' -> \bxdf -> (X.reflection bxdf == refl')
+                                   Nothing -> \_ -> True
+                         in \bxdf -> df bxdf && rf bxdf)
+
 continuous :: [X.BxDF] -> [X.BxDF]
-specular   :: [X.BxDF] -> [X.BxDF]
+--specular   :: [X.BxDF] -> [X.BxDF]
 continuous = filter (\bxdf -> X.distribution bxdf == X.Continuous)
-specular   = filter (\bxdf -> X.distribution bxdf == X.Specular)
+--specular   = filter (\bxdf -> X.distribution bxdf == X.Specular)
 

@@ -40,5 +40,5 @@ executable excyrender
                 -optlo-tailcallelim
   main-is: main.hs             
   -- other-modules:       
-  build-depends:       base ==4.5.*, vector, deepseq, parallel
+  build-depends:       base ==4.5.*, vector, deepseq, parallel, random
 

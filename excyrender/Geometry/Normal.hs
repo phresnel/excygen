@@ -5,7 +5,8 @@
 module Geometry.Normal (
   Normal,
   normal,
-  stretch, asVector,
+  stretch, 
+  asVector, asDirection,
   dot, dot',
   u, v, w,
   neg,
@@ -22,6 +23,7 @@ data Normal = Normal RealNum RealNum RealNum
 normal  :: RealNum -> RealNum -> RealNum -> Normal
 stretch :: Normal -> RealNum -> V.Vector
 asVector:: Normal -> V.Vector
+asDirection:: Normal -> D.Direction
 dot     :: Normal -> Normal -> RealNum
 dot'    :: Normal -> D.Direction -> RealNum
 u       :: Normal -> RealNum
@@ -36,6 +38,7 @@ normal a b c =
 
 stretch (Normal x y z) = V.stretch (V.Vector x y z)
 asVector (Normal x y z) = V.Vector x y z
+asDirection (Normal x y z) = D.direction x y z
 
 dot (Normal a b c) (Normal x y z) = a*x + b*y + c*z
 dot' a b = dot a (Normal (D.u b) (D.v b) (D.w b))
