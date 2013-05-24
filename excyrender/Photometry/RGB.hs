@@ -18,7 +18,7 @@ import Control.DeepSeq
 import RealNum
 
 -- RGB -------------------------------------------------------------------------
-data RGB = RGB Float Float Float
+data RGB = RGB RealNum RealNum RealNum
            deriving(Show)
 
 instance NFData RGB where

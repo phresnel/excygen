@@ -3,10 +3,10 @@
 -- See COPYING in the root-folder of the excygen project folder.
 
 module RealNum
-( RealNum
+( RealNum, epsilon
 ) where
 
 
 -- Shape -----------------------------------------------------------------------
 type RealNum = Float
-
+epsilon = 0.0001 :: RealNum
