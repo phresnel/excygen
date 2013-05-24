@@ -5,14 +5,17 @@
 module Photometry.Spectrum
 ( Spectrum, spectrum,
   spectrumFromSPD,
+  spectrumFromRGB,
+  gray,
   Photometry.Spectrum.toXYZ,
   add, sub, mul, Photometry.Spectrum.stretch, pow, sum
 ) where
 
 import Prelude hiding(min, max, sum)
 import Photometry.SPD.SPD
+import Photometry.SPD.Regular (regularSPDFromRGB)
 import Photometry.CIEMatchingCurves
-
+import Photometry.RGB (RGB(..))
 import qualified Data.Vector.Unboxed as V
 import RealNum
 
@@ -31,6 +34,8 @@ type Resolution    = Int
 
 spectrum        :: WavelengthMin -> WavelengthMax -> [RealNum] -> Spectrum
 spectrumFromSPD :: WavelengthMin -> WavelengthMax -> Resolution -> SPD -> Spectrum
+spectrumFromRGB :: WavelengthMin -> WavelengthMax -> Resolution -> RGB -> Spectrum
+gray            :: WavelengthMin -> WavelengthMax -> Resolution -> RealNum -> Spectrum
 toXYZ           :: Spectrum -> (RealNum,RealNum,RealNum)
 
 
@@ -43,6 +48,12 @@ pow     :: Spectrum -> RealNum -> Spectrum
 sum     :: [Spectrum] -> Spectrum
 
 ---------------------------------------------------------------------------------------------------
+gray min max res g =
+    spectrumFromRGB min max res (RGB g g g)
+
+spectrumFromRGB min max res rgb = 
+    spectrumFromSPD min max res $ regularSPDFromRGB rgb
+
 spectrumFromSPD min max res spd = 
     let range = max - min
         f i = sample spd $ (i / fromIntegral res) * range + min
@@ -64,13 +75,17 @@ sampleRegular_unchecked lambdaMin !spec inverseDelta lambda =
                b = ((V.length spec) - 1)
            in if a<b then a else b
       dx = x - fromIntegral b0
-    in (1.0 - dx) * spec V.! b0 + dx * spec V.! b1
+    in (1.0 - dx) * (spec V.! b0) + dx * (spec V.! b1)
 
 
-toXYZ (Spectrum min _ s _ inverseDelta) =  
-    let samples = V.map f (V.enumFromN 0 cie_length)
-                   where f i = sampleRegular_unchecked min s inverseDelta 
-                                                       $ min + inverseDelta * i 
+sampleToCIELength :: Spectrum -> V.Vector RealNum
+sampleToCIELength (Spectrum min max s _ inverseDelta) = 
+   V.map f (V.enumFromN 0 cie_length)
+   where f i = sampleRegular_unchecked min s inverseDelta 
+                 (min + (i/fromIntegral cie_length) * (max-min))
+
+toXYZ s =  
+    let samples = sampleToCIELength s
     in (cie_inverse_length * V.sum (V.zipWith (*) cie_x' samples),
         cie_inverse_length * V.sum (V.zipWith (*) cie_y' samples),
         cie_inverse_length * V.sum (V.zipWith (*) cie_z' samples))
@@ -83,7 +98,7 @@ stretch s x = map' (x*) s
 pow s x     = map' (**x) s
 
 
-sum []     = spectrum 100 600 [0]
+sum []     = gray 400 800 6 0
 sum [x]    = x
 sum (x:xs) = x `add` sum xs
 

@@ -37,7 +37,7 @@ directLighting lightSources primitive intersection wo =
       poi_outside = (DG.poi diffGeom) `P.add` (normal `N.stretch` epsilon)
       normal      = DG.nn diffGeom
   in 
-      foldr Spectrum.add (spectrum 100 600 [0]) . 
+      foldr Spectrum.add (gray 400 800 6 0) . 
        map (lightFrom wo bsdf primitive poi_outside normal) $
        lightSources
 

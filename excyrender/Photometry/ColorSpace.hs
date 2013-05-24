@@ -16,3 +16,4 @@ from_XYZ_to_sRGB (x, y, z) =
       0.055648*x - 0.204043*y + 1.057311*z)
     -- see: http://www.brucelindbloom.com/index.html?Eqn_RGB_XYZ_Matrix.html
     --      https://github.com/mmp/pbrt-v2/blob/master/src/core/spectrum.h#L51
+

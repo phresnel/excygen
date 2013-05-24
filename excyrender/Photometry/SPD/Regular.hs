@@ -3,24 +3,65 @@
 -- See COPYING in the root-folder of the excygen project folder.
 
 module Photometry.SPD.Regular
-( regularSPD
+( regularSPD,
+  regularSPDFromRGB
 ) where
 
 import qualified Photometry.SPD.SPD as SPD
 import Photometry.CIEMatchingCurves
+import Photometry.RGBToSpectrumCurves
 import Data.Vector.Unboxed as V
 import RealNum
+import Photometry.RGB(RGB(..))
 
 
 -- Regular -------------------------------------------------------------------------------------
 regularSPD    :: RealNum -> RealNum -> [RealNum] -> SPD.SPD
+regularSPDFromRGB :: RGB -> SPD.SPD
 
 
 
 -- impl -------------------------------------------------------------------------------------------
-regularSPD lambdaMin' lambdaMax' spectrum'' =
-    let spectrum' = V.fromList spectrum''
-        delta' = (lambdaMax' - lambdaMin') /
+
+-- This function was ported from PBRT, v2
+regularSPDFromRGB (RGB r g b)
+    | r<=g && r<=b = 
+        -- Compute reflectance _SampledSpectrum_ with _r_ as minimum
+        let u     = V.map (r*) rgbRefl2SpectWhite'             -- r += r * rgbRefl2SpectWhite
+            (v,w) = if g<=b
+                    then (V.map ((g-r)*) rgbRefl2SpectCyan',   -- r += (g - r) * rgbRefl2SpectCyan;
+                          V.map ((b-g)*) rgbRefl2SpectBlue')   -- r += (b - g) * rgbRefl2SpectBlue;
+                    else (V.map ((b-r)*) rgbRefl2SpectCyan',   -- r += (b - r) * rgbRefl2SpectCyan;
+                          V.map ((g-b)*) rgbRefl2SpectGreen')  -- r += (g - b) * rgbRefl2SpectGreen;
+        in ret u v w
+    | g<=r && g<=b =
+        -- Compute reflectance _SampledSpectrum_ with _g_ as minimum
+        let u     = V.map (g*) rgbRefl2SpectWhite'              -- r += g * rgbRefl2SpectWhite;
+            (v,w) = if r<=b
+                    then (V.map ((r-g)*) rgbRefl2SpectMagenta', -- r += (r - g) * rgbRefl2SpectMagenta;
+                          V.map ((b-r)*) rgbRefl2SpectBlue')    -- r += (b - r) * rgbRefl2SpectBlue;
+                    else (V.map ((b-g)*) rgbRefl2SpectMagenta', -- r += (b - g) * rgbRefl2SpectMagenta;
+                          V.map ((r-b)*) rgbRefl2SpectRed')     -- r += (r - b) * rgbRefl2SpectRed;
+        in ret u v w
+    | otherwise = 
+        -- Compute reflectance _SampledSpectrum_ with _b_ as minimum
+        let u     = V.map (b*) rgbRefl2SpectWhite'             -- r += b * rgbRefl2SpectWhite;
+            (v,w) = if r<=b
+                    then (V.map ((r-b)*) rgbRefl2SpectYellow', -- r += (r - b) * rgbRefl2SpectYellow;
+                          V.map ((g-r)*) rgbRefl2SpectGreen')  -- r += (g - r) * rgbRefl2SpectGreen;
+                    else (V.map ((g-b)*) rgbRefl2SpectYellow', -- r += (g - b) * rgbRefl2SpectYellow;
+                          V.map ((r-g)*) rgbRefl2SpectRed')    -- r += (r - g) * rgbRefl2SpectRed;
+        in ret u v w
+  where ret u v w = regularSPD' rgbToSpectrumCurves_start rgbToSpectrumCurves_end $
+                                   V.zipWith3 (\x y z -> 0.94*(x+y+z)) u v w
+
+
+regularSPD lambdaMin lambdaMax spectrum =
+    regularSPD' lambdaMin lambdaMax $ V.fromList spectrum
+
+regularSPD'   :: RealNum -> RealNum -> V.Vector RealNum -> SPD.SPD
+regularSPD' lambdaMin' lambdaMax' spectrum' =
+    let delta' = (lambdaMax' - lambdaMin') /
                  (fromIntegral ((V.length spectrum') - 1))
         inverseDelta = 1.0 / delta'
         sample' = sampleRegular lambdaMin' lambdaMax' spectrum' inverseDelta

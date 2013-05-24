@@ -23,7 +23,6 @@ import Primitives.PrimitiveList
 
 import SurfaceIntegrators.Path
 import Photometry.Lighting as Lighting
-import Photometry.SPD.Regular
 
 import Control.Parallel.Strategies
 import System.Random
@@ -55,20 +54,22 @@ ppm =
       height = 256
       primitive'  = primitiveList [
                      primitiveFromShape (sphere (P.Point (-1.0) 0.0 5) 1)
-                                        (BSDF.bsdf [X.lambertian (spectrum 100 600 [0.8])]),
+                                        (BSDF.bsdf [X.lambertian (spectrumFromRGB 400 800 6 (RGB 1 0.3 0.3))]),
                      primitiveFromShape (sphere (P.Point 1.0 0.5 5) 1)
                                         (BSDF.bsdf [--X.lambertian (spectrum 100 600 [1.0])
-                                                   X.specularReflect (spectrum 100 600 [0.8])
+                                                   X.specularReflect (spectrumFromRGB 400 800 6 (RGB 0.3 1 0.3))
                                                    ]),
-                     primitiveFromShape (Plane.fromPointNormal (P.Point (0) (-1) 0) (N.normal 0 1 0)) (BSDF.bsdf [X.lambertian (spectrum 100 600 [0.8])]),
-                     primitiveFromShape (Plane.fromPointNormal (P.Point (-1) (-1) 0) (N.normal 1 0 0)) (BSDF.bsdf [X.lambertian (spectrum 100 600 [0.8])])
+                     primitiveFromShape (Plane.fromPointNormal (P.Point (0) (-1) 0) (N.normal 0 1 0))
+                                        (BSDF.bsdf [X.lambertian (gray 400 800 6 1)]),
+                     primitiveFromShape (Plane.fromPointNormal (P.Point (-1) (-1) 0) (N.normal 1 0 0)) 
+                                        (BSDF.bsdf [X.lambertian (spectrumFromRGB 400 800 6 (RGB 1 1 1))])
                     ]
-      lightSources = [Directional (D.direction 1 1 0) (spectrumFromSPD 100 600 1 $ regularSPD 100 600 [7])
-                      -- ,Directional (D.direction 0 1.0 0) (spectrumFromSPD 100 600 1 $ regularSPD 100 600 [3])]
+      lightSources = [Directional (D.direction 1 1 0) (gray 400 800 6 3.4)
+                      -- ,Directional (D.direction 0 1.0 0) (spectrumFromSPD 400 800 6 $ regularSPD 100 600 [3])]
                      ] :: [LightSource]
 
       !primitive = primitive'
-      integrator = path 5 primitive lightSources
+      integrator = path 7 primitive lightSources
 
       pixels = raytrace width height integrator `using` parListChunk (512) rdeepseq
   
