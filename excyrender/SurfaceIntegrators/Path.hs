@@ -16,37 +16,14 @@ import qualified Intersection as I
 import qualified Photometry.BSDF.BSDF as BSDF
 import qualified DifferentialGeometry as DG
 
-import Photometry.SPD.Regular
 import Photometry.Spectrum as Spectrum
 import RealNum
+import Photometry.Lighting as Lighting
 
 
-
-data LightSource = Directional D.Direction Spectrum
-
-lightSources :: [LightSource]
-lightSources = [Directional (D.direction 1 1 0) (spectrumFromSPD 100 600 1 $ regularSPD 100 600 [7])
-                -- ,Directional (D.direction 0 1.0 0) (spectrumFromSPD 100 600 1 $ regularSPD 100 600 [3])]
-               ]
-
-lightFrom :: D.Direction -> BSDF.BSDF -> Primitive -> P.Point -> N.Normal -> LightSource -> Spectrum
-lightFrom wo bsdf primitive at n (Directional wi lightSpec) =
-    let transmittance = if occludes primitive at (at `P.add` (wi `D.stretch` 1000000))
-                        then 0
-                        else 1
-        dot = max 0 $ n `N.dot'` wi
-        f   = BSDF.f bsdf wo wi
-    in
-        f `Spectrum.mul` lightSpec `Spectrum.stretch` (dot * transmittance)
-
-
-path :: Primitive -> Ray.Ray -> [RealNum] -> (Spectrum, [RealNum])
-path = path_impl 4
-
-
-path_impl :: Int -> Primitive -> Ray.Ray -> [RealNum] -> (Spectrum, [RealNum])
-path_impl 0 _ _ randoms = (spectrum 100 600 [2], randoms)
-path_impl depth primitive ray@(Ray.Ray _ direction) randoms =
+path :: Int -> Primitive -> [LightSource] -> Ray.Ray -> [RealNum] -> (Spectrum, [RealNum])
+path 0 _ _ _ randoms = (spectrum 100 600 [0], randoms)
+path depth primitive lightSources ray@(Ray.Ray _ direction) randoms =
     case intersect primitive ray of
         Just i -> let
                       diffGeom = I.differentialGeometry i
@@ -60,11 +37,9 @@ path_impl depth primitive ray@(Ray.Ray _ direction) randoms =
 
                       (wi, r_surf, r_pdf, randoms') = sample_f randoms diffGeom wo
 
-                      directLighting = foldr Spectrum.add (spectrum 100 600 [0]) . 
-                                        map (lightFrom wo bsdf primitive poi_outside normal) $
-                                        lightSources
+                      direct = Lighting.directLighting lightSources primitive i wo
 
-                      (r_incoming, randoms'') = path_impl (depth-1) primitive (Ray.Ray poi_outside wi) randoms'
+                      (r_incoming, randoms'') = path (depth-1) primitive lightSources (Ray.Ray poi_outside wi) randoms'
 
                       reflection = if r_pdf<=0
                                    then spectrum 100 600 [0]
@@ -72,7 +47,7 @@ path_impl depth primitive ray@(Ray.Ray _ direction) randoms =
                                      `Spectrum.mul`     r_incoming
                                      `Spectrum.stretch` (wi `D.dot` (N.asDirection normal) / r_pdf)
                   in 
-                     (directLighting `Spectrum.add` reflection,
+                     (direct `Spectrum.add` reflection,
                       randoms'')
         Nothing -> (spectrum 100 600 [2], randoms)
 

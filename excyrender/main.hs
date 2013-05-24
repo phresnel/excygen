@@ -18,11 +18,12 @@ import Photometry.Spectrum as Spectrum
 import Shapes.Sphere
 import qualified Shapes.Plane as Plane
 
-import Primitives.Primitive
 import Primitives.PrimitiveFromShape
 import Primitives.PrimitiveList
 
 import SurfaceIntegrators.Path
+import Photometry.Lighting as Lighting
+import Photometry.SPD.Regular
 
 import Control.Parallel.Strategies
 import System.Random
@@ -30,8 +31,8 @@ import RealNum
 
 
 -- simple renderer -------------------------------------------------------------
-raytrace :: Int -> Int -> Primitive -> (Primitive -> Ray.Ray -> [RealNum] -> (Spectrum,[RealNum])) -> [RGB]
-raytrace width height primitive surface_integrator =
+raytrace :: Int -> Int -> (Ray.Ray -> [RealNum] -> (Spectrum,[RealNum])) -> [RGB]
+raytrace width height surface_integrator =
     map (trace_pixel (4::Int)) [0..(width*height)-1]
     where trace_pixel samples p =
            RGB.sum $ map 
@@ -41,7 +42,7 @@ raytrace width height primitive surface_integrator =
                            u = (fromIntegral x) / (fromIntegral width)
                            v = 1 - (fromIntegral y) / (fromIntegral height)
                            ray = Ray.Ray (P.Point 0 0 0) (D.direction (u-0.5) (v-0.5) 1)
-                           (incoming, _) = surface_integrator primitive ray (randoms $ mkStdGen (i*104327+y*4909+x*60331))
+                           (incoming, _) = surface_integrator ray (randoms $ mkStdGen (i*104327+y*4909+x*60331))
                            (sR, sG, sB) = from_XYZ_to_sRGB . Spectrum.toXYZ $ incoming
                        in (RGB sR sG sB) `shrink` fromIntegral samples)
                       [0..samples]
@@ -62,8 +63,14 @@ ppm =
                      primitiveFromShape (Plane.fromPointNormal (P.Point (0) (-1) 0) (N.normal 0 1 0)) (BSDF.bsdf [X.lambertian (spectrum 100 600 [0.8])]),
                      primitiveFromShape (Plane.fromPointNormal (P.Point (-1) (-1) 0) (N.normal 1 0 0)) (BSDF.bsdf [X.lambertian (spectrum 100 600 [0.8])])
                     ]
+      lightSources = [Directional (D.direction 1 1 0) (spectrumFromSPD 100 600 1 $ regularSPD 100 600 [7])
+                      -- ,Directional (D.direction 0 1.0 0) (spectrumFromSPD 100 600 1 $ regularSPD 100 600 [3])]
+                     ] :: [LightSource]
+
       !primitive = primitive'
-      pixels = raytrace width height primitive path `using` parListChunk (512) rdeepseq
+      integrator = path 5 primitive lightSources
+
+      pixels = raytrace width height integrator `using` parListChunk (512) rdeepseq
   
   in  toPPM width height pixels
 
