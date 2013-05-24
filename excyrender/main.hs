@@ -32,7 +32,7 @@ import RealNum
 -- simple renderer -------------------------------------------------------------
 raytrace :: Int -> Int -> Primitive -> (Primitive -> Ray.Ray -> [RealNum] -> (Spectrum,[RealNum])) -> [RGB]
 raytrace width height primitive surface_integrator =
-    map (trace_pixel (2::Int)) [0..(width*height)-1]
+    map (trace_pixel (4::Int)) [0..(width*height)-1]
     where trace_pixel samples p =
            RGB.sum $ map 
                       (\i -> 
@@ -50,8 +50,8 @@ raytrace width height primitive surface_integrator =
 
 ppm :: String
 ppm = 
-  let width  = 320
-      height = 320
+  let width  = 256
+      height = 256
       primitive'  = primitiveList [
                      primitiveFromShape (sphere (P.Point (-1.0) 0.0 5) 1)
                                         (BSDF.bsdf [X.lambertian (spectrum 100 600 [0.8])]),

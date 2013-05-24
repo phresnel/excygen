@@ -25,20 +25,19 @@ import RealNum
 data LightSource = Directional D.Direction Spectrum
 
 lightSources :: [LightSource]
-lightSources = [Directional (D.direction 1 1 0) (spectrumFromSPD 100 600 1 $ regularSPD 100 600 [5])
+lightSources = [Directional (D.direction 1 1 0) (spectrumFromSPD 100 600 1 $ regularSPD 100 600 [7])
                 -- ,Directional (D.direction 0 1.0 0) (spectrumFromSPD 100 600 1 $ regularSPD 100 600 [3])]
                ]
 
 lightFrom :: D.Direction -> BSDF.BSDF -> Primitive -> P.Point -> N.Normal -> LightSource -> Spectrum
-lightFrom wo bsdf primitive at n (Directional wi lSpec) =
-    let pdf = BSDF.pdf bsdf wo wi
-    in if pdf<=0 then spectrum 100 600 [0]
-       else let s = if occludes primitive at (at `P.add` (wi `D.stretch` 1000000))
-                    then 0
-                    else 1
-                dot = s * (max 0 $ n `N.dot'` wi)
-                f   = (BSDF.f bsdf) wo wi
-            in f `Spectrum.mul` (lSpec `Spectrum.stretch` dot)
+lightFrom wo bsdf primitive at n (Directional wi lightSpec) =
+    let transmittance = if occludes primitive at (at `P.add` (wi `D.stretch` 1000000))
+                        then 0
+                        else 1
+        dot = max 0 $ n `N.dot'` wi
+        f   = BSDF.f bsdf wo wi
+    in
+        f `Spectrum.mul` lightSpec `Spectrum.stretch` (dot * transmittance)
 
 
 path :: Primitive -> Ray.Ray -> [RealNum] -> (Spectrum, [RealNum])
@@ -50,28 +49,30 @@ path_impl 0 _ _ randoms = (spectrum 100 600 [2], randoms)
 path_impl depth primitive ray@(Ray.Ray _ direction) randoms =
     case intersect primitive ray of
         Just i -> let
-                      poi_exact   = DG.poi $ I.differentialGeometry i
-                      normal      = DG.nn $ I.differentialGeometry i
-                      poi_outside = poi_exact `P.add` (normal `N.stretch` 0.0001)
-                      wo = D.neg direction
+                      diffGeom = I.differentialGeometry i
+                      normal   = DG.nn diffGeom
+                      wo       = D.neg direction
+                      bsdf     = I.bsdf i
+                      sample_f = BSDF.sample_f bsdf Nothing Nothing
 
-                      bsdf = I.bsdf i
+                      (poi_outside, poi_inside) = ((DG.poi diffGeom) `P.add` (normal `N.stretch` epsilon),
+                                                   (DG.poi diffGeom) `P.sub` (normal `N.stretch` epsilon))
+
+                      (wi, r_surf, r_pdf, randoms') = sample_f randoms diffGeom wo
 
                       directLighting = foldr Spectrum.add (spectrum 100 600 [0]) . 
-                                        map (lightFrom wi bsdf primitive poi_outside normal) $
+                                        map (lightFrom wo bsdf primitive poi_outside normal) $
                                         lightSources
 
-                      (wi, r_surf, r_pdf, randoms') = (BSDF.sample_f bsdf Nothing Nothing randoms) (I.differentialGeometry i) wo
-                      (r_incoming, randoms'')       = (path_impl (depth-1) primitive (Ray.Ray poi_outside wi) randoms')
+                      (r_incoming, randoms'') = path_impl (depth-1) primitive (Ray.Ray poi_outside wi) randoms'
+
                       reflection = if r_pdf<=0
                                    then spectrum 100 600 [0]
                                    else r_surf
                                      `Spectrum.mul`     r_incoming
                                      `Spectrum.stretch` (wi `D.dot` (N.asDirection normal) / r_pdf)
-                  in
-                      (directLighting 
-                       `Spectrum.add`
-                       reflection
-                      , randoms'')
+                  in 
+                     (directLighting `Spectrum.add` reflection,
+                      randoms'')
         Nothing -> (spectrum 100 600 [2], randoms)
 
