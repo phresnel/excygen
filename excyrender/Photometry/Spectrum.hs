@@ -4,7 +4,7 @@
 
 module Photometry.Spectrum
 ( Spectrum, spectrum,
-  spectrumFromSPD,
+  spectrumFromSPD, spectrumFromSpectrum,
   spectrumFromRGB,
   gray, black,
   Photometry.Spectrum.toXYZ, toY,
@@ -13,7 +13,7 @@ module Photometry.Spectrum
 
 import Prelude hiding(min, max, sum)
 import Photometry.SPD.SPD
-import Photometry.SPD.Regular (regularSPDFromRGB)
+import Photometry.SPD.Regular (regularSPDFromRGB, regularSPD)
 import Photometry.CIEMatchingCurves
 import Photometry.RGB (RGB(..))
 import qualified Data.Vector.Unboxed as V
@@ -34,6 +34,7 @@ type Resolution    = Int
 
 spectrum        :: WavelengthMin -> WavelengthMax -> [RealNum] -> Spectrum
 spectrumFromSPD :: WavelengthMin -> WavelengthMax -> Resolution -> SPD -> Spectrum
+spectrumFromSpectrum :: WavelengthMin -> WavelengthMax -> Resolution -> Spectrum -> Spectrum
 spectrumFromRGB :: WavelengthMin -> WavelengthMax -> Resolution -> RGB -> Spectrum
 gray            :: WavelengthMin -> WavelengthMax -> Resolution -> RealNum -> Spectrum
 black           :: WavelengthMin -> WavelengthMax -> Resolution -> Spectrum
@@ -63,6 +64,9 @@ spectrumFromSPD min max res spd =
         f i = sample spd $ (i / fromIntegral res) * range + min
         delta = ((max - min) / (fromIntegral (res - 1)))
     in Spectrum min max (V.map f (V.enumFromN 0 res)) delta (1.0/delta)
+
+spectrumFromSpectrum min max res (Spectrum min' max' bins' _ _)  =
+    spectrumFromSPD min max res (regularSPD min' max' (V.toList bins'))
 
 spectrum min max bands = Spectrum min max bands' delta (1.0/delta)
                          where delta = (max - min) / (fromIntegral (V.length bands' - 1))

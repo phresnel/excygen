@@ -45,7 +45,7 @@ pdf (BSDF xs) wo wi = sum
 sample_f (BSDF xs) dist refl randoms dg wo =
    let bxdfs = only dist refl xs
        wo' = (worldToLocalDirection dg) wo
-   in if null bxdfs then (direction 0 1 0, Sp.gray 300 830 54 0, 0, randoms)
+   in if null bxdfs then (direction 0 1 0, Sp.gray 400 800 8 0, 0, randoms)
       else if length bxdfs /= 1 then error "BSDF currently supports up to 1 specular BxDFs"
       else let bxdf = head bxdfs
                (dir, spec, pdf', randoms') = X.sample_f bxdf wo' randoms
