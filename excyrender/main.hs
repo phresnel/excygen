@@ -15,7 +15,7 @@ import qualified Photometry.BSDF.BxDF as X
 import Photometry.ColorSpace
 import Photometry.Spectrum as Spectrum
 
-import Photometry.Background.Constant
+import Photometry.Background.Preetham.Preetham
 
 import Shapes.Sphere
 import qualified Shapes.Plane as Plane
@@ -34,7 +34,7 @@ import RealNum
 -- simple renderer -------------------------------------------------------------
 raytrace :: Int -> Int -> (Ray.Ray -> [RealNum] -> (Spectrum,[RealNum])) -> [RGB]
 raytrace width height surface_integrator =
-    map (trace_pixel (5::Int)) [0..(width*height)-1]
+    map (trace_pixel (7::Int)) [0..(width*height)-1]
     where trace_pixel samples p =
            RGB.sum $ map 
                       (\i -> 
@@ -56,21 +56,21 @@ ppm =
       height = 200
       primitive'  = primitiveList [
                      primitiveFromShape (sphere (P.Point (-1.0) 0.0 5) 1)
-                                        (BSDF.bsdf [X.lambertian (spectrumFromRGB 400 800 6 (RGB 1 0.3 0.3))]),
+                                        (BSDF.bsdf [X.lambertian (spectrumFromRGB 300 830 54 (RGB 1 0.3 0.3))]),
                      primitiveFromShape (sphere (P.Point 1.0 0.5 5) 1)
                                         (BSDF.bsdf [--X.lambertian (spectrum 100 600 [1.0])
-                                                   X.specularReflect (spectrumFromRGB 400 800 6 (RGB 0.3 1 0.3))
+                                                   X.specularReflect (spectrumFromRGB 300 830 54 (RGB 1 1 1))
                                                    ]),
                      primitiveFromShape (Plane.fromPointNormal (P.Point (0) (-1) 0) (N.normal 0 1 0))
-                                        (BSDF.bsdf [X.lambertian (gray 400 800 6 1)]),
-                     primitiveFromShape (Plane.fromPointNormal (P.Point (-1) (-1) 0) (N.normal 1 0 0)) 
-                                        (BSDF.bsdf [X.lambertian (spectrumFromRGB 400 800 6 (RGB 1 1 1))])
+                                        (BSDF.bsdf [X.lambertian (gray 300 830 54 1)])
+                     --primitiveFromShape (Plane.fromPointNormal (P.Point (-1) (-1) 0) (N.normal 1 0 0)) 
+                     --                   (BSDF.bsdf [X.lambertian (spectrumFromRGB 300 830 54 (RGB 1 1 1))])
                     ]
-      lightSources = [Directional (D.direction 1 1 0) (gray 400 800 6 3.4)
-                      -- ,Directional (D.direction 0 1.0 0) (spectrumFromSPD 400 800 6 $ regularSPD 100 600 [3])]
+      lightSources = [--Directional (D.direction 0 0 0) (gray 300 830 54 3.4)
+                      -- ,Directional (D.direction 0 1.0 0) (spectrumFromSPD 300 830 6 $ regularSPD 100 600 [3])]
                      ] :: [LightSource]
 
-      background = Photometry.Background.Constant.constant $ spectrumFromRGB 400 800 6 (RGB 1 1.5 2)
+      background ray = Spectrum.stretch (Photometry.Background.Preetham.Preetham.preetham ray) 0.0001
 
       !primitive = primitive'
       integrator = path 7 primitive lightSources background

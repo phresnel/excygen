@@ -22,7 +22,7 @@ import Photometry.Lighting as Lighting
 
 
 path :: Int -> Primitive -> [LightSource] -> (Ray.Ray -> Spectrum) -> Ray.Ray -> [RealNum] -> (Spectrum, [RealNum])
-path 0 _ _ _ _ randoms = (gray 400 800 6 0, randoms)
+path 0 _ _ _ _ randoms = (black 300 830 54, randoms)
 path depth primitive lightSources background ray@(Ray.Ray _ direction) randoms =
     case intersect primitive ray of
         Just i -> let
@@ -42,7 +42,7 @@ path depth primitive lightSources background ray@(Ray.Ray _ direction) randoms =
                       (r_incoming, randoms'') = path (depth-1) primitive lightSources background (Ray.Ray poi_outside wi) randoms'
 
                       reflection = if r_pdf<=0
-                                   then gray 400 800 6 0
+                                   then black 300 830 54
                                    else r_surf
                                      `Spectrum.mul`     r_incoming
                                      `Spectrum.stretch` (wi `D.dot` (N.asDirection normal) / r_pdf)

@@ -54,7 +54,7 @@ lambertian s = let s' = s `Sp.stretch` (1.0 / pi)
 specularReflect :: Spectrum -> BxDF
 specularReflect s = BxDF {
              pdf = \_ _ -> 0,
-             f   = \_ _ -> gray 400 800 6 0,
+             f   = \_ _ -> gray 300 830 54 0,
              sample_f = \wo randoms -> 
                           let rdir = D.direction (-(D.u wo)) (D.v wo) (-(D.w wo)) 
                           in (rdir,

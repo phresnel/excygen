@@ -6,8 +6,8 @@ module Photometry.Spectrum
 ( Spectrum, spectrum,
   spectrumFromSPD,
   spectrumFromRGB,
-  gray,
-  Photometry.Spectrum.toXYZ,
+  gray, black,
+  Photometry.Spectrum.toXYZ, toY,
   add, sub, mul, Photometry.Spectrum.stretch, pow, sum
 ) where
 
@@ -36,7 +36,9 @@ spectrum        :: WavelengthMin -> WavelengthMax -> [RealNum] -> Spectrum
 spectrumFromSPD :: WavelengthMin -> WavelengthMax -> Resolution -> SPD -> Spectrum
 spectrumFromRGB :: WavelengthMin -> WavelengthMax -> Resolution -> RGB -> Spectrum
 gray            :: WavelengthMin -> WavelengthMax -> Resolution -> RealNum -> Spectrum
+black           :: WavelengthMin -> WavelengthMax -> Resolution -> Spectrum
 toXYZ           :: Spectrum -> (RealNum,RealNum,RealNum)
+toY             :: Spectrum -> RealNum -- sorry, the name is a bit bogus
 
 
 add     :: Spectrum -> Spectrum -> Spectrum
@@ -50,6 +52,8 @@ sum     :: [Spectrum] -> Spectrum
 ---------------------------------------------------------------------------------------------------
 gray min max res g =
     spectrumFromRGB min max res (RGB g g g)
+
+black min max res = gray min max res 0
 
 spectrumFromRGB min max res rgb = 
     spectrumFromSPD min max res $ regularSPDFromRGB rgb
@@ -90,6 +94,10 @@ toXYZ s =
         cie_inverse_length * V.sum (V.zipWith (*) cie_y' samples),
         cie_inverse_length * V.sum (V.zipWith (*) cie_z' samples))
 
+toY s =  
+    let samples = sampleToCIELength s
+    in cie_inverse_length * V.sum (V.zipWith (*) cie_y' samples)
+
 
 add = binary (+)
 sub = binary (-)
@@ -98,7 +106,7 @@ stretch s x = map' (x*) s
 pow s x     = map' (**x) s
 
 
-sum []     = gray 400 800 6 0
+sum []     = gray 300 830 54 0
 sum [x]    = x
 sum (x:xs) = x `add` sum xs
 
