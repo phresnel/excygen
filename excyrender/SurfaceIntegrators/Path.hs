@@ -21,9 +21,9 @@ import RealNum
 import Photometry.Lighting as Lighting
 
 
-path :: Int -> Primitive -> [LightSource] -> Ray.Ray -> [RealNum] -> (Spectrum, [RealNum])
-path 0 _ _ _ randoms = (gray 400 800 6 0, randoms)
-path depth primitive lightSources ray@(Ray.Ray _ direction) randoms =
+path :: Int -> Primitive -> [LightSource] -> (Ray.Ray -> Spectrum) -> Ray.Ray -> [RealNum] -> (Spectrum, [RealNum])
+path 0 _ _ _ _ randoms = (gray 400 800 6 0, randoms)
+path depth primitive lightSources background ray@(Ray.Ray _ direction) randoms =
     case intersect primitive ray of
         Just i -> let
                       diffGeom = I.differentialGeometry i
@@ -39,7 +39,7 @@ path depth primitive lightSources ray@(Ray.Ray _ direction) randoms =
 
                       direct = Lighting.directLighting lightSources primitive i wo
 
-                      (r_incoming, randoms'') = path (depth-1) primitive lightSources (Ray.Ray poi_outside wi) randoms'
+                      (r_incoming, randoms'') = path (depth-1) primitive lightSources background (Ray.Ray poi_outside wi) randoms'
 
                       reflection = if r_pdf<=0
                                    then gray 400 800 6 0
@@ -49,5 +49,5 @@ path depth primitive lightSources ray@(Ray.Ray _ direction) randoms =
                   in 
                      (direct `Spectrum.add` reflection,
                       randoms'')
-        Nothing -> (gray 400 800 6 2, randoms)
+        Nothing -> (background ray, randoms)
 

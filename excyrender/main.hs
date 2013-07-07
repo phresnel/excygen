@@ -15,6 +15,8 @@ import qualified Photometry.BSDF.BxDF as X
 import Photometry.ColorSpace
 import Photometry.Spectrum as Spectrum
 
+import Photometry.Background.Constant
+
 import Shapes.Sphere
 import qualified Shapes.Plane as Plane
 
@@ -32,7 +34,7 @@ import RealNum
 -- simple renderer -------------------------------------------------------------
 raytrace :: Int -> Int -> (Ray.Ray -> [RealNum] -> (Spectrum,[RealNum])) -> [RGB]
 raytrace width height surface_integrator =
-    map (trace_pixel (4::Int)) [0..(width*height)-1]
+    map (trace_pixel (5::Int)) [0..(width*height)-1]
     where trace_pixel samples p =
            RGB.sum $ map 
                       (\i -> 
@@ -50,8 +52,8 @@ raytrace width height surface_integrator =
 
 ppm :: String
 ppm = 
-  let width  = 256
-      height = 256
+  let width  = 200
+      height = 200
       primitive'  = primitiveList [
                      primitiveFromShape (sphere (P.Point (-1.0) 0.0 5) 1)
                                         (BSDF.bsdf [X.lambertian (spectrumFromRGB 400 800 6 (RGB 1 0.3 0.3))]),
@@ -68,8 +70,10 @@ ppm =
                       -- ,Directional (D.direction 0 1.0 0) (spectrumFromSPD 400 800 6 $ regularSPD 100 600 [3])]
                      ] :: [LightSource]
 
+      background = Photometry.Background.Constant.constant $ spectrumFromRGB 400 800 6 (RGB 1 1.5 2)
+
       !primitive = primitive'
-      integrator = path 7 primitive lightSources
+      integrator = path 7 primitive lightSources background
 
       pixels = raytrace width height integrator `using` parListChunk (512) rdeepseq
   
