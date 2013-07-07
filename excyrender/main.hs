@@ -34,7 +34,7 @@ import RealNum
 -- simple renderer -------------------------------------------------------------
 raytrace :: Int -> Int -> (Ray.Ray -> [RealNum] -> (Spectrum,[RealNum])) -> [RGB]
 raytrace width height surface_integrator =
-    map (trace_pixel (20::Int)) [0..(width*height)-1]
+    map (trace_pixel (100::Int)) [0..(width*height)-1]
     where trace_pixel samples p =
            RGB.sum $ map 
                       (\i -> 
@@ -43,7 +43,7 @@ raytrace width height surface_integrator =
                            u = (fromIntegral x) / (fromIntegral width)
                            v = 1 - (fromIntegral y) / (fromIntegral height)
                            ray = Ray.Ray (P.Point 0 0 0) (D.direction (u-0.5) (v-0.5) 1)
-                           (incoming, _) = surface_integrator ray (randoms $ mkStdGen (i*104327+y*4909+x*60331))
+                           (incoming, _) = surface_integrator ray (randoms $ mkStdGen (i*1812+x+y*77))
                            (sR, sG, sB) = from_XYZ_to_sRGB . Spectrum.toXYZ $ incoming
                        in (RGB sR sG sB) `shrink` fromIntegral samples)
                       [0..samples]
