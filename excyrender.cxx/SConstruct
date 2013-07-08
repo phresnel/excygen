@@ -1,0 +1,7 @@
+env = Environment(CPPPATH = ['.'],
+                  CXXFLAGS="-std=c++0x"
+                  )
+
+env.Program(['main.cc',
+             'ImageFormat/PPM.cc'
+             ])
