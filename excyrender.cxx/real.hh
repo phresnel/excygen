@@ -11,6 +11,8 @@ namespace excyrender {
     T saturate(T v, T min, T max) {
         return v<min?min : v>max?max : v;
     }
+
+    static const real pi = static_cast<real>(3.14159265358979323846);
 }
 
 #endif // REAL_HH_INCLUDED_20130708

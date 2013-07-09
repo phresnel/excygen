@@ -11,6 +11,7 @@ namespace excyrender {
         struct RGB {
             real r = 0, g = 0, b = 0;
             constexpr RGB(real r, real g, real b) : r(r), g(g), b(b) {}
+            constexpr RGB() = default;
         };
 
         constexpr
