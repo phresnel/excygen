@@ -3,7 +3,7 @@
 
 #include "real.hh"
 
-namespace excygen {
+namespace excyrender {
     namespace Photometry {
         struct RGB {
             real r = 0, g = 0, b = 0;
@@ -17,9 +17,9 @@ namespace excygen {
 
         constexpr
         RGB saturate (RGB const &rgb, real min, real max) {
-            return {excygen::saturate(rgb.r, min, max),
-                    excygen::saturate(rgb.g, min, max),
-                    excygen::saturate(rgb.b, min, max)};
+            return {excyrender::saturate(rgb.r, min, max),
+                    excyrender::saturate(rgb.g, min, max),
+                    excyrender::saturate(rgb.b, min, max)};
         }
     }
 }

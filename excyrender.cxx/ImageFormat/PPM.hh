@@ -5,7 +5,7 @@
 #include <vector>
 #include <iosfwd>
 
-namespace excygen {
+namespace excyrender {
     namespace Photometry {
         struct RGB;
     }

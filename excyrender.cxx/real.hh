@@ -1,7 +1,7 @@
 #ifndef REAL_HH_INCLUDED_20130708
 #define REAL_HH_INCLUDED_20130708
 
-namespace excygen {
+namespace excyrender {
     typedef float real;
 
     template <typename T> constexpr inline

@@ -3,7 +3,7 @@
 #include <ostream>
 #include <stdexcept>
 
-namespace excygen { namespace ImageFormat {
+namespace excyrender { namespace ImageFormat {
 
     void ppm (std::ostream &os, int width, int height, std::vector<Photometry::RGB> const &pixels) {
         if (width * height != pixels.size())

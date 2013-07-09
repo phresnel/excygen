@@ -8,7 +8,7 @@
 
 
 int main () {
-    using namespace excygen;
+    using namespace excyrender;
     std::vector<Photometry::RGB> pixels;
     int s = 256;
     for (int y=0; y!=s; ++y) {
