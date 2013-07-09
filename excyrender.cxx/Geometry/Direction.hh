@@ -17,33 +17,33 @@ namespace excyrender {
             {
                 assert(std::fabs(x*x + y*y + z*z)-1 < 0.00001);
             }
-            
+
             explicit operator Vector () const {
                 return {x,y,z};
-            }            
+            }
         };
-        
+
         inline real dot (Direction const &lhs, Direction const &rhs) {
             return lhs.x*rhs.x + lhs.y*rhs.y + lhs.z*rhs.z;
         }
-        
+
         inline Direction direction(real x, real y, real z) {
             const auto l = std::sqrt(x*x + y*y + z*z);
             return {x/l, y/l, z/l};
         }
-        
+
         inline Direction direction(Vector const &v) {
             return direction(v.x, v.y, v.z);
         }
-        
+
         inline Vector operator* (Direction const &lhs, real f) {
             return {lhs.x*f, lhs.y*f, lhs.z*f};
         }
-        
+
         inline Direction operator- (Direction const &v) {
             return {-v.x, -v.y, -v.z};
         }
-        
+
         template <typename RNG>
         inline Direction cosineWeightedHemisphere (RNG &rng) {
             const auto x1 = rng();
@@ -55,7 +55,7 @@ namespace excyrender {
                     cosTheta,
                     std::sin(phi) * sinTheta};
         }
-        
+
         inline std::ostream& operator<< (std::ostream &os, Direction const &v) {
             return os << "direction{" << v.x << "," << v.y << "," << v.z << '}';
         }

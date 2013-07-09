@@ -11,7 +11,7 @@
 #include <vector>
 
 namespace excyrender {
-    void raytrace (int width, int height, 
+    void raytrace (int width, int height,
                    std::function<Photometry::RGB(Geometry::Ray const &)> integrate,
                    std::vector<Photometry::RGB> &pixels)
     {
@@ -41,6 +41,6 @@ int main () {
 
     raytrace (width, height, integrator, pixels);
 
-    ImageFormat::ppm (std::cout, width, height, pixels);    
+    ImageFormat::ppm (std::cout, width, height, pixels);
 }
 

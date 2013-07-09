@@ -17,37 +17,37 @@ namespace excyrender {
             {
                 assert(std::fabs(x*x + y*y + z*z)-1 < 0.00001);
             }
-            
+
             explicit operator Vector () const {
                 return {x,y,z};
-            }            
-            
+            }
+
             explicit operator Direction () const {
                 return {x,y,z};
             }
         };
-        
+
         inline real dot (Normal const &lhs, Normal const &rhs) {
             return lhs.x*rhs.x + lhs.y*rhs.y + lhs.z*rhs.z;
         }
-        
+
         inline Normal normal(real x, real y, real z) {
             const auto l = std::sqrt(x*x + y*y + z*z);
             return {x/l, y/l, z/l};
         }
-        
+
         inline Normal normal(Vector const &v) {
             return normal(v.x, v.y, v.z);
         }
-        
+
         inline Vector operator* (Normal const &lhs, real f) {
             return {lhs.x*f, lhs.y*f, lhs.z*f};
         }
-        
+
         inline Normal operator- (Normal const &v) {
             return {-v.x, -v.y, -v.z};
         }
-        
+
         template <typename RNG>
         inline Normal cosineWeightedHemisphere (RNG &rng) {
             const auto x1 = rng();
@@ -59,7 +59,7 @@ namespace excyrender {
                     cosTheta,
                     std::sin(phi) * sinTheta};
         }
-        
+
         inline std::ostream& operator<< (std::ostream &os, Normal const &v) {
             return os << "normal{" << v.x << "," << v.y << "," << v.z << '}';
         }

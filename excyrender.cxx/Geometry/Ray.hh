@@ -12,13 +12,13 @@ namespace excyrender {
         struct Ray {
             Point origin;
             Direction direction;
-            
+
             Point operator() (real f) const {
                 assert(f>=0);
                 return origin + direction * f;
             }
         };
-        
+
         inline std::ostream& operator<< (std::ostream &os, Ray const &v) {
             return os << "ray{" << v.origin << "," << v.direction << '}';
         }

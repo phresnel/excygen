@@ -10,27 +10,27 @@ namespace excyrender {
     namespace Geometry {
         struct Point {
             real x = 0, y = 0, z = 0;
-            
+
             Point() = default;
             Point(real x, real y, real z) : x(x), y(y), z(z) {}
-            
+
             explicit operator Vector () const {
                 return {x,y,z};
             }
         };
-        
+
         Point operator+ (Point const &lhs, Vector const &rhs) {
             return {lhs.x+rhs.x, lhs.y+rhs.y, lhs.z+rhs.z};
         }
-        
+
         Point operator- (Point const &lhs, Vector const &rhs) {
             return {lhs.x-rhs.x, lhs.y-rhs.y, lhs.z-rhs.z};
         }
-        
+
         Vector operator- (Point const &lhs, Point const &rhs) {
             return {lhs.x-rhs.x, lhs.y-rhs.y, lhs.z-rhs.z};
         }
-        
+
         inline std::ostream& operator<< (std::ostream &os, Point const &v) {
             return os << "point{" << v.x << "," << v.y << "," << v.z << '}';
         }
