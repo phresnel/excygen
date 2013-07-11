@@ -15,7 +15,7 @@ namespace excyrender {
             Direction() = delete;
             Direction(real x, real y, real z) noexcept : x(x), y(y), z(z)
             {
-                assert(std::fabs(x*x + y*y + z*z)-1 < 0.00001);
+                assert(excyrender::fabs(x*x + y*y + z*z)-1 < 0.00001);
             }
 
             explicit operator Vector () const noexcept {

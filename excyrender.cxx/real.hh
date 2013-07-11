@@ -7,12 +7,18 @@
 namespace excyrender {
     typedef float real;
 
-    template <typename T> constexpr inline
-    T saturate(T v, T min, T max) {
+    template <typename T>
+    constexpr inline
+    T saturate(T v, T min, T max) noexcept {
         return v<min?min : v>max?max : v;
     }
 
     static const real pi = static_cast<real>(3.14159265358979323846);
+    
+    constexpr inline
+    real fabs(real n) noexcept {
+        return n<0 ? -n : n;
+    }
 }
 
 #endif // REAL_HH_INCLUDED_20130708
