@@ -5,7 +5,7 @@
 #define NORMAL_HH_INCLUDED_20130709
 
 #include "Vector.hh"
-#include "Direction.hh"
+#include "Normal.hh"
 
 namespace excyrender {
     namespace Geometry {
@@ -13,17 +13,25 @@ namespace excyrender {
             const real x, y, z;
 
             Normal() = delete;
-            Normal(real x, real y, real z) : x(x), y(y), z(z) noexcept 
+
+            constexpr Normal(real x, real y, real z) noexcept
+            : x(ensure_normalized(x, excyrender::fabs(x*x + y*y + z*z)-1 <= 0.00001)),
+              y(y), z(z)
             {
-                assert(excyrender::fabs(x*x + y*y + z*z)-1 < 0.00001);
             }
 
             explicit operator Vector () const noexcept {
                 return {x,y,z};
             }
 
-            explicit operator Direction () const noexcept {
+            explicit operator Normal () const noexcept {
                 return {x,y,z};
+            }
+
+        private:
+            static constexpr real ensure_normalized(real x, bool c) {
+                return c ? x :
+                        throw std::runtime_error("|x*x+y*y+z*z| > 0.00001 in Normal(x,y,z)");
             }
         };
 
@@ -44,7 +52,7 @@ namespace excyrender {
             return {lhs.x*f, lhs.y*f, lhs.z*f};
         }
 
-        inline Normal operator- (Normal const &v) noexcept {
+        constexpr inline Normal operator- (Normal const &v) noexcept {
             return {-v.x, -v.y, -v.z};
         }
 

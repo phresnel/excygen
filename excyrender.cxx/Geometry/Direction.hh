@@ -6,6 +6,7 @@
 
 #include "Vector.hh"
 #include <cassert>
+#include <stdexcept>
 
 namespace excyrender {
     namespace Geometry {
@@ -13,13 +14,21 @@ namespace excyrender {
             const real x, y, z;
 
             Direction() = delete;
-            Direction(real x, real y, real z) noexcept : x(x), y(y), z(z)
+
+            constexpr Direction(real x, real y, real z) noexcept
+            : x(ensure_normalized(x, excyrender::fabs(x*x + y*y + z*z)-1 <= 0.00001)),
+              y(y), z(z)
             {
-                assert(excyrender::fabs(x*x + y*y + z*z)-1 < 0.00001);
             }
 
             explicit operator Vector () const noexcept {
                 return {x,y,z};
+            }
+
+        private:
+            static constexpr real ensure_normalized(real x, bool c) {
+                return c ? x :
+                        throw std::runtime_error("|x*x+y*y+z*z| > 0.00001 in Direction(x,y,z)");
             }
         };
 
@@ -40,7 +49,7 @@ namespace excyrender {
             return {lhs.x*f, lhs.y*f, lhs.z*f};
         }
 
-        inline Direction operator- (Direction const &v) noexcept {
+        constexpr inline Direction operator- (Direction const &v) noexcept {
             return {-v.x, -v.y, -v.z};
         }
 
