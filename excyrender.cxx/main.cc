@@ -5,6 +5,7 @@
 #include "Photometry/RGB.hh"
 #include "ImageFormat/PPM.hh"
 #include "Geometry/Ray.hh"
+#include "Photometry/CIEMatchingCurves.hh"
 
 #include <iostream>
 #include <functional>

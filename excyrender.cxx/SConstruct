@@ -3,5 +3,7 @@ env = Environment(CPPPATH = ['.'],
                   )
 
 env.Program(['main.cc',
-             'ImageFormat/PPM.cc'
+             'ImageFormat/PPM.cc',
+             'Photometry/SPD/Regular.cc',
+             'Photometry/SPD/Constant.cc'
              ])
