@@ -18,16 +18,16 @@ namespace excyrender {
                 assert(std::fabs(x*x + y*y + z*z)-1 < 0.00001);
             }
 
-            explicit operator Vector () const {
+            constexpr explicit operator Vector () const {
                 return {x,y,z};
             }
 
-            explicit operator Direction () const {
+            constexpr explicit operator Direction () const {
                 return {x,y,z};
             }
         };
 
-        inline real dot (Normal const &lhs, Normal const &rhs) {
+        constexpr inline real dot (Normal const &lhs, Normal const &rhs) {
             return lhs.x*rhs.x + lhs.y*rhs.y + lhs.z*rhs.z;
         }
 
@@ -40,7 +40,7 @@ namespace excyrender {
             return normal(v.x, v.y, v.z);
         }
 
-        inline Vector operator* (Normal const &lhs, real f) {
+        constexpr inline Vector operator* (Normal const &lhs, real f) {
             return {lhs.x*f, lhs.y*f, lhs.z*f};
         }
 

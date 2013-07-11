@@ -23,7 +23,7 @@ namespace excyrender {
             }
         };
 
-        inline real dot (Direction const &lhs, Direction const &rhs) {
+        constexpr inline real dot (Direction const &lhs, Direction const &rhs) {
             return lhs.x*rhs.x + lhs.y*rhs.y + lhs.z*rhs.z;
         }
 
@@ -36,7 +36,7 @@ namespace excyrender {
             return direction(v.x, v.y, v.z);
         }
 
-        inline Vector operator* (Direction const &lhs, real f) {
+        constexpr inline Vector operator* (Direction const &lhs, real f) {
             return {lhs.x*f, lhs.y*f, lhs.z*f};
         }
 

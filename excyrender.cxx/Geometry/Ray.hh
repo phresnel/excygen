@@ -14,7 +14,7 @@ namespace excyrender {
             Direction direction;
 
             Point operator() (real f) const {
-                assert(f>=0);
+                //assert(f>=0);
                 return origin + direction * f;
             }
         };

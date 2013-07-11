@@ -12,22 +12,22 @@ namespace excyrender {
             real x = 0, y = 0, z = 0;
 
             Point() = default;
-            Point(real x, real y, real z) : x(x), y(y), z(z) {}
+            constexpr Point(real x, real y, real z) : x(x), y(y), z(z) {}
 
-            explicit operator Vector () const {
+            constexpr explicit operator Vector () const {
                 return {x,y,z};
             }
         };
 
-        Point operator+ (Point const &lhs, Vector const &rhs) {
+        constexpr inline Point operator+ (Point const &lhs, Vector const &rhs) {
             return {lhs.x+rhs.x, lhs.y+rhs.y, lhs.z+rhs.z};
         }
 
-        Point operator- (Point const &lhs, Vector const &rhs) {
+        constexpr inline Point operator- (Point const &lhs, Vector const &rhs) {
             return {lhs.x-rhs.x, lhs.y-rhs.y, lhs.z-rhs.z};
         }
 
-        Vector operator- (Point const &lhs, Point const &rhs) {
+        constexpr inline Vector operator- (Point const &lhs, Point const &rhs) {
             return {lhs.x-rhs.x, lhs.y-rhs.y, lhs.z-rhs.z};
         }
 
