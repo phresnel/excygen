@@ -14,17 +14,13 @@ namespace excyrender {
 
             Normal() = delete;
 
-            constexpr Normal(real x, real y, real z) noexcept
+            constexpr Normal(real x, real y, real z)
             : x(ensure_normalized(x, excyrender::fabs(x*x + y*y + z*z)-1 <= 0.00001)),
               y(y), z(z)
             {
             }
 
             explicit operator Vector () const noexcept {
-                return {x,y,z};
-            }
-
-            explicit operator Normal () const noexcept {
                 return {x,y,z};
             }
 
@@ -53,6 +49,9 @@ namespace excyrender {
         }
 
         constexpr inline Normal operator- (Normal const &v) noexcept {
+            // Note: Even though this uses a non-noexcept constructor,
+            //       it never throws because it only negates an
+            //       already constructed Normal.
             return {-v.x, -v.y, -v.z};
         }
 

@@ -15,7 +15,7 @@ namespace excyrender {
 
             Direction() = delete;
 
-            constexpr Direction(real x, real y, real z) noexcept
+            constexpr Direction(real x, real y, real z)
             : x(ensure_normalized(x, excyrender::fabs(x*x + y*y + z*z)-1 <= 0.00001)),
               y(y), z(z)
             {
@@ -50,6 +50,9 @@ namespace excyrender {
         }
 
         constexpr inline Direction operator- (Direction const &v) noexcept {
+            // Note: Even though this uses a non-noexcept constructor,
+            //       it never throws because it only negates an
+            //       already constructed Normal.
             return {-v.x, -v.y, -v.z};
         }
 
