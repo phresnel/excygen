@@ -13,49 +13,49 @@ namespace excyrender {
         struct Vector {
             real x = 0, y = 0, z = 0;
 
-            constexpr Vector() = default;
-            constexpr Vector(real x, real y, real z) : x(x), y(y), z(z) {}
+            constexpr Vector() noexcept = default;
+            constexpr Vector(real x, real y, real z) noexcept : x(x), y(y), z(z) {}
         };
 
-        constexpr inline Vector operator+ (Vector const &lhs, Vector const &rhs) {
+        constexpr inline Vector operator+ (Vector const &lhs, Vector const &rhs) noexcept {
             return {lhs.x+rhs.x, lhs.y+rhs.y, lhs.z+rhs.z};
         }
 
-        constexpr inline Vector operator- (Vector const &lhs, Vector const &rhs) {
+        constexpr inline Vector operator- (Vector const &lhs, Vector const &rhs) noexcept {
             return {lhs.x-rhs.x, lhs.y-rhs.y, lhs.z-rhs.z};
         }
 
-        constexpr inline real dot (Vector const &lhs, Vector const &rhs) {
+        constexpr inline real dot (Vector const &lhs, Vector const &rhs) noexcept {
             return lhs.x*rhs.x + lhs.y*rhs.y + lhs.z*rhs.z;
         }
 
-        constexpr inline real len_sq (Vector const &v) {
+        constexpr inline real len_sq (Vector const &v) noexcept {
             return dot(v,v);
         }
 
-        constexpr inline real len (Vector const &v) {
+        constexpr inline real len (Vector const &v) noexcept {
             return std::sqrt(len_sq(v));
         }
 
-        constexpr inline Vector operator* (Vector const &v, real f) {
+        constexpr inline Vector operator* (Vector const &v, real f) noexcept {
             return {v.x*f, v.y*f, v.z*f};
         }
 
-        constexpr inline Vector operator/ (Vector const &v, real f) {
+        constexpr inline Vector operator/ (Vector const &v, real f) noexcept {
             return {v.x/f, v.y/f, v.z/f};
         }
 
-        constexpr inline Vector normalize (Vector const &v) {
+        constexpr inline Vector normalize (Vector const &v) noexcept {
             return v / len(v);
         }
 
-        constexpr inline Vector cross (Vector const &lhs, Vector const &rhs) {
+        constexpr inline Vector cross (Vector const &lhs, Vector const &rhs) noexcept {
             return {lhs.y*rhs.z - lhs.z*rhs.y,
                     lhs.z*rhs.x - lhs.x*rhs.z,
                     lhs.x*rhs.y - lhs.y*rhs.x};
         }
 
-        inline Vector createOrthogonal (Vector const &v) {
+        inline Vector createOrthogonal (Vector const &v) noexcept {
             const auto n = normalize(v);
             if (std::fabs(n.x) > std::fabs(n.y)) {
                 const auto l = 1 / std::sqrt(n.x*n.x + n.z*n.z);
@@ -66,7 +66,7 @@ namespace excyrender {
             }
         }
 
-        inline std::ostream& operator<< (std::ostream &os, Vector const &v) {
+        inline std::ostream& operator<< (std::ostream &os, Vector const &v) noexcept {
             return os << "vector{" << v.x << "," << v.y << "," << v.z << '}';
         }
     }

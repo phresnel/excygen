@@ -13,39 +13,39 @@ namespace excyrender {
             const real x, y, z;
 
             Direction() = delete;
-            Direction(real x, real y, real z) : x(x), y(y), z(z)
+            Direction(real x, real y, real z) noexcept : x(x), y(y), z(z)
             {
                 assert(std::fabs(x*x + y*y + z*z)-1 < 0.00001);
             }
 
-            explicit operator Vector () const {
+            explicit operator Vector () const noexcept {
                 return {x,y,z};
             }
         };
 
-        constexpr inline real dot (Direction const &lhs, Direction const &rhs) {
+        constexpr inline real dot (Direction const &lhs, Direction const &rhs) noexcept {
             return lhs.x*rhs.x + lhs.y*rhs.y + lhs.z*rhs.z;
         }
 
-        inline Direction direction(real x, real y, real z) {
+        inline Direction direction(real x, real y, real z) noexcept {
             const auto l = std::sqrt(x*x + y*y + z*z);
             return {x/l, y/l, z/l};
         }
 
-        inline Direction direction(Vector const &v) {
+        inline Direction direction(Vector const &v) noexcept {
             return direction(v.x, v.y, v.z);
         }
 
-        constexpr inline Vector operator* (Direction const &lhs, real f) {
+        constexpr inline Vector operator* (Direction const &lhs, real f) noexcept {
             return {lhs.x*f, lhs.y*f, lhs.z*f};
         }
 
-        inline Direction operator- (Direction const &v) {
+        inline Direction operator- (Direction const &v) noexcept {
             return {-v.x, -v.y, -v.z};
         }
 
         template <typename RNG>
-        inline Direction cosineWeightedHemisphere (RNG &rng) {
+        inline Direction cosineWeightedHemisphere (RNG &rng) noexcept {
             const auto x1 = rng();
             const auto x2 = rng();
             const auto phi = 2*pi*x1,
@@ -56,7 +56,7 @@ namespace excyrender {
                     std::sin(phi) * sinTheta};
         }
 
-        inline std::ostream& operator<< (std::ostream &os, Direction const &v) {
+        inline std::ostream& operator<< (std::ostream &os, Direction const &v) noexcept {
             return os << "direction{" << v.x << "," << v.y << "," << v.z << '}';
         }
     }

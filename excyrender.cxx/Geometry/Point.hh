@@ -11,27 +11,27 @@ namespace excyrender {
         struct Point {
             real x = 0, y = 0, z = 0;
 
-            Point() = default;
-            constexpr Point(real x, real y, real z) : x(x), y(y), z(z) {}
+            constexpr Point() noexcept = default;
+            constexpr Point(real x, real y, real z) noexcept : x(x), y(y), z(z) {}
 
-            constexpr explicit operator Vector () const {
+            constexpr explicit operator Vector () const noexcept {
                 return {x,y,z};
             }
         };
 
-        constexpr inline Point operator+ (Point const &lhs, Vector const &rhs) {
+        constexpr inline Point operator+ (Point const &lhs, Vector const &rhs) noexcept {
             return {lhs.x+rhs.x, lhs.y+rhs.y, lhs.z+rhs.z};
         }
 
-        constexpr inline Point operator- (Point const &lhs, Vector const &rhs) {
+        constexpr inline Point operator- (Point const &lhs, Vector const &rhs) noexcept {
             return {lhs.x-rhs.x, lhs.y-rhs.y, lhs.z-rhs.z};
         }
 
-        constexpr inline Vector operator- (Point const &lhs, Point const &rhs) {
+        constexpr inline Vector operator- (Point const &lhs, Point const &rhs) noexcept {
             return {lhs.x-rhs.x, lhs.y-rhs.y, lhs.z-rhs.z};
         }
 
-        inline std::ostream& operator<< (std::ostream &os, Point const &v) {
+        inline std::ostream& operator<< (std::ostream &os, Point const &v) noexcept {
             return os << "point{" << v.x << "," << v.y << "," << v.z << '}';
         }
     }

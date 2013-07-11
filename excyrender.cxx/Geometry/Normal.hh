@@ -13,43 +13,43 @@ namespace excyrender {
             const real x, y, z;
 
             Normal() = delete;
-            Normal(real x, real y, real z) : x(x), y(y), z(z)
+            Normal(real x, real y, real z) : x(x), y(y), z(z) noexcept 
             {
                 assert(std::fabs(x*x + y*y + z*z)-1 < 0.00001);
             }
 
-            constexpr explicit operator Vector () const {
+            explicit operator Vector () const noexcept {
                 return {x,y,z};
             }
 
-            constexpr explicit operator Direction () const {
+            explicit operator Direction () const noexcept {
                 return {x,y,z};
             }
         };
 
-        constexpr inline real dot (Normal const &lhs, Normal const &rhs) {
+        constexpr inline real dot (Normal const &lhs, Normal const &rhs) noexcept {
             return lhs.x*rhs.x + lhs.y*rhs.y + lhs.z*rhs.z;
         }
 
-        inline Normal normal(real x, real y, real z) {
+        inline Normal normal(real x, real y, real z) noexcept {
             const auto l = std::sqrt(x*x + y*y + z*z);
             return {x/l, y/l, z/l};
         }
 
-        inline Normal normal(Vector const &v) {
+        inline Normal normal(Vector const &v) noexcept {
             return normal(v.x, v.y, v.z);
         }
 
-        constexpr inline Vector operator* (Normal const &lhs, real f) {
+        constexpr inline Vector operator* (Normal const &lhs, real f) noexcept {
             return {lhs.x*f, lhs.y*f, lhs.z*f};
         }
 
-        inline Normal operator- (Normal const &v) {
+        inline Normal operator- (Normal const &v) noexcept {
             return {-v.x, -v.y, -v.z};
         }
 
         template <typename RNG>
-        inline Normal cosineWeightedHemisphere (RNG &rng) {
+        inline Normal cosineWeightedHemisphere (RNG &rng) noexcept {
             const auto x1 = rng();
             const auto x2 = rng();
             const auto phi = 2*pi*x1,
@@ -60,7 +60,7 @@ namespace excyrender {
                     std::sin(phi) * sinTheta};
         }
 
-        inline std::ostream& operator<< (std::ostream &os, Normal const &v) {
+        inline std::ostream& operator<< (std::ostream &os, Normal const &v) noexcept {
             return os << "normal{" << v.x << "," << v.y << "," << v.z << '}';
         }
     }
