@@ -4,8 +4,20 @@
 #ifndef REAL_HH_INCLUDED_20130708
 #define REAL_HH_INCLUDED_20130708
 
+#include <tuple>
+
 namespace excyrender {
     typedef float real;
+
+    using std::get;
+    
+    template <typename T=real>
+      using triple = std::tuple<T,T,T>;
+    
+    template <typename T>
+    triple<T> make_triple(T const &a, T const &b, T const &c) {
+        return std::make_tuple(a,b,c);
+    }
 
     template <typename T>
     constexpr inline
