@@ -5,7 +5,7 @@
 #define NORMAL_HH_INCLUDED_20130709
 
 #include "Vector.hh"
-#include "Normal.hh"
+#include "Direction.hh"
 
 namespace excyrender {
     namespace Geometry {
@@ -19,9 +19,22 @@ namespace excyrender {
               y(y), z(z)
             {
             }
+            
+            static Normal Normalize(Vector v) noexcept {
+                v = normalize(v);
+                return {v.x, v.y, v.z};
+            }
 
-            explicit operator Vector () const noexcept {
+            explicit constexpr operator Vector () const noexcept {
                 return {x,y,z};
+            }
+            
+            explicit constexpr operator Direction () const noexcept {
+                return {x,y,z};
+            }
+            
+            explicit constexpr Normal(Direction const &dir) : x(dir.x), y(dir.y), z(dir.z)
+            {
             }
 
         private:

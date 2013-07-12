@@ -8,6 +8,9 @@
 #include "Photometry/CIEMatchingCurves.hh"
 #include "Photometry/ColorSpace.hh"
 
+#include "Shapes/Sphere.hh"
+#include "Shapes/Plane.hh"
+
 #include <iostream>
 #include <functional>
 #include <vector>

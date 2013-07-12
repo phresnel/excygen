@@ -11,6 +11,12 @@
 
 namespace excyrender {
     struct DifferentialGeometry {
+        DifferentialGeometry(real d, Geometry::Point const &poi, Geometry::Normal const &nn,
+                             real u, real v, Geometry::Vector dpdu)
+           : d(d), poi(poi), nn(nn), u(u), v(v), dpdu(dpdu)
+        {
+        }
+
         real d;
         Geometry::Point poi;
         Geometry::Normal nn;
