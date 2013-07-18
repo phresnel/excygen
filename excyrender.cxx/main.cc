@@ -10,6 +10,7 @@
 
 #include "Shapes/Sphere.hh"
 #include "Shapes/Plane.hh"
+#include "FiniteShapes/FiniteShape.hh"
 
 #include <iostream>
 #include <functional>
