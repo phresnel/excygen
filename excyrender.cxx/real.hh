@@ -5,11 +5,17 @@
 #define REAL_HH_INCLUDED_20130708
 
 #include <tuple>
+#include <algorithm>
 
 namespace excyrender {
     typedef float real;
+    static constexpr real epsilon = real(0.0001);
+    static constexpr real pi = real(3.14159265358979323846);
 
     using std::get;
+    using std::tuple;
+    using std::min;
+    using std::max;
     
     template <typename T=real>
       using triple = std::tuple<T,T,T>;
@@ -25,8 +31,6 @@ namespace excyrender {
         return v<min?min : v>max?max : v;
     }
 
-    static const real pi = static_cast<real>(3.14159265358979323846);
-    
     constexpr inline
     real fabs(real n) noexcept {
         return n<0 ? -n : n;

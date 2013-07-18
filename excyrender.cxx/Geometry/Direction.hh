@@ -49,6 +49,10 @@ namespace excyrender {
             return {lhs.x*f, lhs.y*f, lhs.z*f};
         }
 
+        constexpr inline Vector operator* (real f, Direction const &lhs) noexcept {
+            return {f*lhs.x, f*lhs.y, f*lhs.z};
+        }
+
         constexpr inline Direction operator- (Direction const &v) noexcept {
             // Note: Even though this uses a non-noexcept constructor,
             //       it never throws because it only negates an

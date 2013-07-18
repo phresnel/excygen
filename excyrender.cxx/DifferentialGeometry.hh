@@ -17,6 +17,7 @@ namespace excyrender {
         {
         }
 
+        // TODO: use better variable names
         real d;
         Geometry::Point poi;
         Geometry::Normal nn;

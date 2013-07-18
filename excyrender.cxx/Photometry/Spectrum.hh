@@ -14,7 +14,7 @@
 #include <sstream>
 #include <stdexcept>
 
-namespace excyrender { namespace Photometry { namespace Spectrum {
+namespace excyrender { namespace Photometry {
 
     class Spectrum final {
     public:
@@ -45,6 +45,7 @@ namespace excyrender { namespace Photometry { namespace Spectrum {
         Spectrum operator-= (Spectrum const &rhs);
         Spectrum operator*= (Spectrum const &rhs);
         Spectrum operator*= (real rhs);
+        Spectrum operator/= (real rhs);
         Spectrum pow(real exponent) const;
         
         // -- conversion ----------------------------------------------------------------        
@@ -129,6 +130,10 @@ namespace excyrender { namespace Photometry { namespace Spectrum {
         bins_ *= rhs;
         return *this;
     }
+    inline Spectrum Spectrum::operator/= (real rhs) {
+        bins_ /= rhs;
+        return *this;
+    }
     inline Spectrum Spectrum::pow(real exponent) const {
         Spectrum ret = *this;
         ret.bins_ = std::pow(bins_, exponent);
@@ -154,7 +159,7 @@ namespace excyrender { namespace Photometry { namespace Spectrum {
                                cie_inverse_length * (cie_z * samples).sum());
     }
 
-    real Spectrum::toY() const {
+    inline real Spectrum::toY() const {
         using namespace CIEMatchingCurves;
         const auto &samples = FromSpectrum(lambdaMin_, lambdaMax_, cie_length, *this).bins_;
         return cie_inverse_length * (cie_y * samples).sum();
@@ -166,7 +171,8 @@ namespace excyrender { namespace Photometry { namespace Spectrum {
     inline Spectrum operator+ (Spectrum lhs, Spectrum const &rhs) { return lhs += rhs; }
     inline Spectrum operator- (Spectrum lhs, Spectrum const &rhs) { return lhs -= rhs; }    
     inline Spectrum operator* (Spectrum lhs, Spectrum const &rhs) { return lhs *= rhs; }    
-    inline Spectrum operator* (Spectrum lhs, real rhs) { return lhs *= rhs;  }    
+    inline Spectrum operator* (Spectrum lhs, real rhs) { return lhs *= rhs;  }
+    inline Spectrum operator/ (Spectrum lhs, real rhs) { return lhs /= rhs;  }
     inline Spectrum pow       (Spectrum lhs, real exponent) { return lhs.pow(exponent); }
     
     inline Spectrum sum(std::initializer_list<Spectrum> const &spectra) {
@@ -177,7 +183,7 @@ namespace excyrender { namespace Photometry { namespace Spectrum {
     }   
 
 
-} } }
+} }
 
 #endif
 

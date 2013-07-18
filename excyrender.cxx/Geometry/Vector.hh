@@ -41,6 +41,10 @@ namespace excyrender {
             return {v.x*f, v.y*f, v.z*f};
         }
 
+        constexpr inline Vector operator* (real f, Vector const &v) noexcept {
+            return {f*v.x, f*v.y, f*v.z};
+        }
+
         constexpr inline Vector operator/ (Vector const &v, real f) noexcept {
             return {v.x/f, v.y/f, v.z/f};
         }

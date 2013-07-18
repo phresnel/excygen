@@ -61,23 +61,15 @@ namespace excyrender {
             return {lhs.x*f, lhs.y*f, lhs.z*f};
         }
 
+        constexpr inline Vector operator* (real f, Normal const &lhs) noexcept {
+            return {f*lhs.x, f*lhs.y, f*lhs.z};
+        }
+
         constexpr inline Normal operator- (Normal const &v) noexcept {
             // Note: Even though this uses a non-noexcept constructor,
             //       it never throws because it only negates an
             //       already constructed Normal.
             return {-v.x, -v.y, -v.z};
-        }
-
-        template <typename RNG>
-        inline Normal cosineWeightedHemisphere (RNG &rng) noexcept {
-            const auto x1 = rng();
-            const auto x2 = rng();
-            const auto phi = 2*pi*x1,
-                       cosTheta = std::sqrt(x2),
-                       sinTheta = std::sqrt(1-x2);
-            return {std::cos(phi) * sinTheta,
-                    cosTheta,
-                    std::sin(phi) * sinTheta};
         }
 
         inline std::ostream& operator<< (std::ostream &os, Normal const &v) noexcept {
