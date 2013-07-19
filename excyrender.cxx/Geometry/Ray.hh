@@ -12,6 +12,10 @@ namespace excyrender {
         struct Ray {
             Point origin;
             Direction direction;
+            
+            Ray(Point const &origin, Direction const &direction)
+                : origin(origin), direction(direction)
+            {}
 
             Point operator() (real f) const noexcept {
                 assert(f>=0);

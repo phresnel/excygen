@@ -8,6 +8,8 @@
 #include "Photometry/CIEMatchingCurves.hh"
 #include "Photometry/ColorSpace.hh"
 
+#include "SurfaceIntegrators/Path.hh"
+
 #include "Shapes/Sphere.hh"
 #include "Shapes/Plane.hh"
 #include "Photometry/Lighting.hh"
