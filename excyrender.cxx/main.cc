@@ -86,9 +86,13 @@ int main () {
                                                   ))
                     });
     std::vector<std::shared_ptr<LightSource>> const lightSources({
-        std::shared_ptr<LightSource>(new Directional (direction(0,1,0), Spectrum::FromRGB(400,800,8,{5,5,5})))
+        std::shared_ptr<LightSource>(new Directional (direction(1,1,0), Spectrum::FromRGB(400,800,8,{8,7,7})))
     });
-    auto const integrator = SurfaceIntegrators::Path(8, primitive, lightSources);
+    auto const integrator = SurfaceIntegrators::Path(8, primitive, lightSources,
+                                                     [](Geometry::Direction const &) { 
+                                                        return Spectrum::FromRGB(400,800,8,{1,2,3});
+                                                     }
+                                                    );
 
     raytrace (width, height, integrator, pixels);
     ImageFormat::ppm (std::cout, width, height, pixels);

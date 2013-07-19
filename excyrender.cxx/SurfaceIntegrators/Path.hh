@@ -16,8 +16,9 @@ namespace excyrender { namespace SurfaceIntegrators {
     class Path {
     public:
         Path (int maxDepth, Primitives::Primitive const &prim, 
-              std::vector<std::shared_ptr<Photometry::LightSource>> ls)
-            : maxDepth(maxDepth), primitive(prim), lightSources(ls)
+              std::vector<std::shared_ptr<Photometry::LightSource>> ls,
+              std::function<Photometry::Spectrum(Geometry::Direction const &)> background)
+            : maxDepth(maxDepth), primitive(prim), lightSources(ls), background(background)
         {
         }
         
@@ -39,7 +40,7 @@ namespace excyrender { namespace SurfaceIntegrators {
 
             const auto i = primitive.intersect(ray);
             if (!i) 
-                return Spectrum::Black(400,800,8);
+                return background(ray.direction);
 
             const auto wo = -ray.direction;
                        
@@ -62,6 +63,7 @@ namespace excyrender { namespace SurfaceIntegrators {
         int maxDepth;
         Primitives::Primitive const &primitive;
         std::vector<std::shared_ptr<Photometry::LightSource>> lightSources;
+        std::function<Photometry::Spectrum(Geometry::Direction const &)> background;
     };
 } }
 
