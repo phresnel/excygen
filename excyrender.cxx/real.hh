@@ -8,8 +8,8 @@
 #include <algorithm>
 
 namespace excyrender {
-    typedef float real;
-    static constexpr real epsilon = real(0.0001);
+    typedef double real;
+    static constexpr real epsilon = real(0.00001);
     static constexpr real pi = real(3.14159265358979323846);
 
     using std::get;
