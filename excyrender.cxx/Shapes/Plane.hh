@@ -10,12 +10,12 @@
 
 namespace excyrender { namespace Shapes {
 
-    class Plane final {
+    class Plane final : public Shape {
     public:
         static Plane FromPointNormal(Geometry::Point const &p, Geometry::Normal const &n)
         {
             using Geometry::Vector; 
-            return {n, -(dot(Vector{p.x,p.y,p.z}, Vector{n.x,n.y,n.z}))};
+            return {n, -(dot(Vector{p.x,p.y,p.z}, Vector{n.x(),n.y(),n.z()}))};
         }
         
         optional<DifferentialGeometry> intersect(Geometry::Ray const &ray) const
@@ -48,7 +48,7 @@ namespace excyrender { namespace Shapes {
         
         real signedDistance (Geometry::Point const &p) const {
             using Geometry::Vector;
-            return dot(Vector{n.x,n.y,n.z}, Vector{p.x,p.y,p.z}) + d;
+            return dot(Vector{n.x(),n.y(),n.z()}, Vector{p.x,p.y,p.z}) + d;
         }
     };
 } }

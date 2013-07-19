@@ -7,12 +7,12 @@
 namespace excyrender { namespace Primitives {
 
 
-final class PrimitiveFromShape : public Primitive
+class PrimitiveFromShape final : public Primitive
 {
 public:
     PrimitiveFromShape() = delete;
     PrimitiveFromShape(std::shared_ptr<Shapes::Shape> shape,
-                       Photometry::BSDF::BSDF const &bsdf) :
+                       Photometry::Surface::BSDF const &bsdf) :
         shape(shape),
         bsdf(bsdf)
     {
@@ -21,7 +21,7 @@ public:
     optional<Intersection> intersect(Geometry::Ray const &ray) const noexcept
     {
         if (const auto &dg = shape->intersect(ray)) {
-            return Intersection{dg, bsdf};
+            return Intersection{*dg, bsdf};
         }
         return optional<Intersection>();
     }
@@ -32,7 +32,7 @@ public:
     }
 private:
     std::shared_ptr<Shapes::Shape> shape;
-    Photometry::BSDF::BSDF bsdf;
+    Photometry::Surface::BSDF bsdf;
 };
 
 

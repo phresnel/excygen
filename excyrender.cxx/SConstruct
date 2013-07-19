@@ -1,5 +1,5 @@
 env = Environment(CPPPATH = ['.'],
-                  CXXFLAGS="-std=c++0x"
+                  CXXFLAGS="-std=c++0x -O3"
                   )
 
 env.Program(['main.cc',

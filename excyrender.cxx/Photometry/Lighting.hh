@@ -20,12 +20,12 @@ namespace excyrender { namespace Photometry {
     public:
         virtual ~LightSource() {}
         virtual Photometry::Spectrum
-            lightFrom (Geometry::Direction const &wo, BSDF::BSDF const &bsdf,
+            lightFrom (Geometry::Direction const &wo, Surface::BSDF const &bsdf,
                        Primitives::Primitive const &prim, 
                        Geometry::Point const &at, Geometry::Normal const &n) const noexcept = 0;
     };
     
-    class Directional final : LightSource {
+    class Directional final : public LightSource {
     public:
         Directional() = delete;
 
@@ -34,13 +34,12 @@ namespace excyrender { namespace Photometry {
         {}
 
         Photometry::Spectrum
-           lightFrom (Geometry::Direction const &wo, BSDF::BSDF const &bsdf,
+           lightFrom (Geometry::Direction const &wo, Surface::BSDF const &bsdf,
                       Primitives::Primitive const &prim, 
                       Geometry::Point const &at, Geometry::Normal const &n) const noexcept
         {
-            const real transmittance = prim.occludes(at, at+1000000*wi) ? 0 : 1,
+            const real transmittance = prim.occludes(at, at+wi*10000) ? 0 : 1,
                        dot_ = max(real(0), dot(static_cast<Geometry::Direction>(n), wi));
-
             return bsdf.f(wo, wi) * color * (dot_*transmittance);
         }
 
@@ -60,7 +59,7 @@ namespace excyrender { namespace Photometry {
                                + intersection.dg.nn * epsilon;
 
         Photometry::Spectrum sum = Photometry::Spectrum::Black(400, 800, 8);
-        for (auto light : lights) {
+        for (auto light : lights) {            
             sum += light->lightFrom(wo, intersection.bsdf, prim, poi_outside, intersection.dg.nn);
         }
         return sum;

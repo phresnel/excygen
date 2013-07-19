@@ -12,7 +12,7 @@ namespace excyrender {
     struct Intersection
     {
         DifferentialGeometry dg;
-        Photometry::BSDF::BSDF bsdf;
+        Photometry::Surface::BSDF bsdf;
     };
     
     inline real distance(Intersection const &i) noexcept {

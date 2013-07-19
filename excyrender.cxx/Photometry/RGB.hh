@@ -5,6 +5,7 @@
 #define RGB_HH_INCLUDED_20130708
 
 #include "real.hh"
+#include <ostream>
 
 namespace excyrender {
     namespace Photometry {
@@ -13,13 +14,17 @@ namespace excyrender {
             constexpr RGB(real r, real g, real b) noexcept : r(r), g(g), b(b) {}
             constexpr RGB() noexcept = default;
         };
+        
+        inline std::ostream& operator<< (std::ostream& os, RGB const &rgb) {
+            return os << "rgb{" << rgb.r << ' ' << rgb.g << ' ' << rgb.b << '}';
+        }
 
-        constexpr
+        constexpr inline
         RGB operator * (RGB const &rgb, real f) noexcept {
             return {rgb.r*f, rgb.g*f, rgb.b*f};
         }
 
-        constexpr
+        constexpr inline
         RGB saturate (RGB const &rgb, real min, real max) noexcept {
             return {excyrender::saturate(rgb.r, min, max),
                     excyrender::saturate(rgb.g, min, max),

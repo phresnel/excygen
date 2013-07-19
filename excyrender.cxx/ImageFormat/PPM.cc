@@ -20,6 +20,9 @@ namespace excyrender { namespace ImageFormat {
                 os << static_cast<int>(rgb.r) << ' '
                    << static_cast<int>(rgb.g) << ' '
                    << static_cast<int>(rgb.b) << ' ';
+                
+                //auto rgb = pixels[y*width+x]*255;//saturate (pixels[y*width+x]*255, 0, 255);
+                //os << (((rgb.r+rgb.g+rgb.b)/3)>0.5) << ' ';
             }
             os << '\n';
         }

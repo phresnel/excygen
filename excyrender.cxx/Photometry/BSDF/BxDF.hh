@@ -8,7 +8,7 @@
 #include "Photometry/Spectrum.hh"
 #include <tuple>
 
-namespace excyrender { namespace Photometry { namespace BSDF {
+namespace excyrender { namespace Photometry { namespace Surface {
 
 class BxDF {
 public:
@@ -53,7 +53,7 @@ public:
     
     real pdf(Geometry::Direction const &wo, Geometry::Direction const &wi) const noexcept 
     {
-        return fabs(wi.y) / pi;
+        return fabs(wi.y()) / pi;
     }
     
     Photometry::Spectrum f(Geometry::Direction const &wo, Geometry::Direction const &wi) const noexcept 
@@ -99,8 +99,8 @@ public:
     std::tuple<Geometry::Direction, Photometry::Spectrum, real>
       sample_f(Geometry::Direction const &wo, std::function<real()>) const noexcept
     {
-        const Geometry::Direction rdir {-wo.x, wo.y, -wo.z};
-        return std::make_tuple(rdir, s * (1 / fabs(rdir.y)), 1);
+        const Geometry::Direction rdir {-wo.x(), wo.y(), -wo.z()};
+        return std::make_tuple(rdir, s * (1 / fabs(rdir.y())), 1);
     }
 
 private:

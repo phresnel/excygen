@@ -4,10 +4,14 @@
 #ifndef PRIMITIVELIST_HH_INCLUDED_20130718
 #define PRIMITIVELIST_HH_INCLUDED_20130718
 
+#include "Primitives/Primitive.hh"
+#include <vector>
+#include <memory>
+
 namespace excyrender { namespace Primitives {
 
 
-final class PrimitiveList : public Primitive
+class PrimitiveList final : public Primitive
 {
 public:
     PrimitiveList() = delete;
@@ -32,10 +36,10 @@ public:
     {
         for (auto const &prim : primitives)
             if (prim->occludes(a,b)) return true;
-        return true;
+        return false;
     }
 private:
-    std::vector<std::shared_ptr<Primitives>> shape;
+    std::vector<std::shared_ptr<Primitive>> primitives;
 };
 
 

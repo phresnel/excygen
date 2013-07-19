@@ -15,14 +15,14 @@
 #include <initializer_list>
 
 
-namespace excyrender { namespace Photometry { namespace BSDF {
+namespace excyrender { namespace Photometry { namespace Surface {
 
     class BSDF final
     {
     public:
         BSDF() = delete;
         BSDF(std::initializer_list<std::shared_ptr<BxDF>> const &l)
-            : bxdfs(bxdfs)
+            : bxdfs(l)
         {
             if (!l.size())
                 throw std::logic_error("BSDF must have one or more BxDFs");
@@ -66,7 +66,7 @@ namespace excyrender { namespace Photometry { namespace BSDF {
                   && !refl || *refl==bxdf->reflection)
                   ++count;
             }
-            if (count != 1)
+            if (count > 1)
                 throw std::logic_error("BSDF currently supports up tp 1 sample-able BxDFs");
             if (count != 0) {
                 const auto wo_ = worldToLocal(dg, wo);

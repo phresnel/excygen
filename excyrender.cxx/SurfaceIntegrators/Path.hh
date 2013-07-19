@@ -30,10 +30,10 @@ namespace excyrender { namespace SurfaceIntegrators {
         Photometry::Spectrum integrate (int currDepth, Geometry::Ray const &ray, std::function<real()> rng) const
         {
             using namespace Photometry;
-            using namespace BSDF;
+            using namespace Surface;
             using namespace Geometry;
             using std::tuple; using std::get;
-            
+           
             if (currDepth >= maxDepth)
                 return Spectrum::Black(400,800,8);
 
@@ -52,14 +52,12 @@ namespace excyrender { namespace SurfaceIntegrators {
             const auto r_pdf  = get<2>(s);
             
             const auto r_incoming = integrate(currDepth+1, Ray(poi_outside,wi), rng);
-            
             const auto reflection = (r_pdf<=0)
                                     ? (Spectrum::Black(400,800,8))
                                     : (r_surf * r_incoming * (dot(static_cast<Normal>(wi), i->dg.nn)/r_pdf));
                                     
-            const auto direct = directLighting (lightSources, primitive, *i, wo);
-            return direct + reflection;
-                                    
+            const auto direct = directLighting (lightSources, primitive, *i, wo);            
+            return direct + reflection;                                                
         }
 
     private:    

@@ -39,6 +39,8 @@ namespace excyrender { namespace Photometry {
         static Spectrum FromRGB(real lambdaMin, real lambdaMax, int resolution, RGB const &rgb);
         static Spectrum Gray   (real lambdaMin, real lambdaMax, int resolution, real g);
         static Spectrum Black  (real lambdaMin, real lambdaMax, int resolution);
+        
+        Spectrum() = delete;
 
         // -- operators -----------------------------------------------------------------        
         Spectrum operator+= (Spectrum const &rhs);
@@ -51,6 +53,8 @@ namespace excyrender { namespace Photometry {
         // -- conversion ----------------------------------------------------------------        
         std::tuple<real,real,real> toXYZ() const;
         real toY() const;
+        
+        friend std::ostream& operator<< (std::ostream &, Spectrum const&);
 
     private:
         real operator() (real lambda) const;
@@ -74,6 +78,17 @@ namespace excyrender { namespace Photometry {
         real lambdaMin_, lambdaMax_, delta_, inverseDelta_;
         std::valarray<real> bins_;
     };
+    
+    
+    inline std::ostream& operator<< (std::ostream &os, Spectrum const &s) {
+        os << "spectrum{";
+        if (s.bins_.size())
+            os << s.bins_[0];
+        for (int i=1; i!=s.bins_.size(); ++i)            
+            os << ' ' << s.bins_[i];
+        os << "}";
+        return os;
+    }
     
     
     //-- ctor -------------------------------------------------------------------------------------

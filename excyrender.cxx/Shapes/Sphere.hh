@@ -11,7 +11,7 @@
 
 namespace excyrender { namespace Shapes {
 
-    class Sphere final {
+    class Sphere final : public Shape {
     public:
         Sphere (Geometry::Point const &center, real radius) : center(center), radius(radius)
         {
