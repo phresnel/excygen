@@ -62,8 +62,8 @@ namespace excyrender { namespace Photometry { namespace BSDF {
         {
             int count = 0;
             for (auto const &bxdf : bxdfs) {
-                if (dist && *dist==bxdf->distribution
-                  && refl && *refl==bxdf->reflection)
+                if (!dist || *dist==bxdf->distribution
+                  && !refl || *refl==bxdf->reflection)
                   ++count;
             }
             if (count != 1)
@@ -72,8 +72,8 @@ namespace excyrender { namespace Photometry { namespace BSDF {
                 const auto wo_ = worldToLocal(dg, wo);
                 for (auto const &bxdf_ : bxdfs) {
                     auto const &bxdf = *bxdf_;
-                    if (dist && *dist==bxdf.distribution
-                      && refl && *refl==bxdf.reflection)
+                    if (!dist || *dist==bxdf.distribution
+                      && !refl || *refl==bxdf.reflection)
                     {
                         const auto & r = bxdf.sample_f(wo_, rng);
                         return std::make_tuple(localToWorld(dg, std::get<0>(r)),
