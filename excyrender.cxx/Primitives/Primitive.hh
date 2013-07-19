@@ -14,6 +14,7 @@ struct Primitive {
     virtual ~Primitive() {};
     virtual optional<Intersection> intersect(Geometry::Ray const &) const noexcept = 0;
     virtual bool occludes(Geometry::Point const &a, Geometry::Point const &b) const noexcept = 0;
+    virtual bool occludes(Geometry::Point const &a, Geometry::Direction const &b) const noexcept = 0;
 };
 
 } }

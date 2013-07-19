@@ -27,16 +27,28 @@ namespace excyrender { namespace Shapes {
                        t = denom==0? 0 : -p/denom;
             const Normal nn = p>=0 ? n : -n;
             
-            if (t<=0) return optional<DifferentialGeometry>();
+            if (t<=epsilon) return optional<DifferentialGeometry>();
             
             return DifferentialGeometry{t, ray(t), nn, 0, 0, 
                                         createOrthogonal(static_cast<Vector>(nn))};
         }
                 
         bool occludes(Geometry::Point const &start, Geometry::Point const &end) const {
-            const bool signA = 0 < signedDistance(start),
-                       signB = 0 < signedDistance(end);
-            return signA != signB;
+            using namespace Geometry;
+
+            const real denom = dot(static_cast<Direction>(n), direction(end-start)),
+                       p = signedDistance(start),
+                       t = denom==0? 0 : -p/denom;
+            return t>epsilon;
+        }
+        
+        bool occludes(Geometry::Point const &start, Geometry::Direction const &d) const {
+            using namespace Geometry;
+
+            const real denom = dot(static_cast<Direction>(n), d),
+                       p = signedDistance(start),
+                       t = denom==0? 0 : -p/denom;
+            return t>epsilon;
         }
         
     private:

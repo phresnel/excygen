@@ -38,6 +38,13 @@ public:
             if (prim->occludes(a,b)) return true;
         return false;
     }
+
+    bool occludes(Geometry::Point const &a, Geometry::Direction const &b) const noexcept 
+    {
+        for (auto const &prim : primitives)
+            if (prim->occludes(a,b)) return true;
+        return false;
+    }
 private:
     std::vector<std::shared_ptr<Primitive>> primitives;
 };

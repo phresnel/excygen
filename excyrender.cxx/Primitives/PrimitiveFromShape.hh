@@ -30,6 +30,11 @@ public:
     {
         return shape->occludes(a,b);
     }
+    
+    bool occludes(Geometry::Point const &a, Geometry::Direction const &b) const noexcept
+    {
+        return shape->occludes(a,b);
+    }
 private:
     std::shared_ptr<Shapes::Shape> shape;
     Photometry::Surface::BSDF bsdf;

@@ -38,7 +38,7 @@ namespace excyrender { namespace Photometry {
                       Primitives::Primitive const &prim, 
                       Geometry::Point const &at, Geometry::Normal const &n) const noexcept
         {
-            const real transmittance = prim.occludes(at, at+wi*10000) ? 0 : 1,
+            const real transmittance = prim.occludes(at, wi) ? 0 : 1,
                        dot_ = max(real(0), dot(static_cast<Geometry::Direction>(n), wi));
             return bsdf.f(wo, wi) * color * (dot_*transmittance);
         }
@@ -55,12 +55,9 @@ namespace excyrender { namespace Photometry {
                             Intersection const &intersection,
                             Geometry::Direction const &wo) noexcept
     {
-        const auto poi_outside = intersection.dg.poi
-                               + intersection.dg.nn * epsilon;
-
         Photometry::Spectrum sum = Photometry::Spectrum::Black(400, 800, 8);
         for (auto light : lights) {            
-            sum += light->lightFrom(wo, intersection.bsdf, prim, poi_outside, intersection.dg.nn);
+            sum += light->lightFrom(wo, intersection.bsdf, prim, intersection.dg.poi, intersection.dg.nn);
         }
         return sum;
     }

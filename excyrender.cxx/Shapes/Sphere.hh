@@ -35,12 +35,14 @@ namespace excyrender { namespace Shapes {
                 const real dd = solA / d2;
                 const Point poi = ray(dd);
                 const Vector p = poi - center;
-                return DifferentialGeometry{dd, poi, Normal::Normalize(p), 0, 0, Vector{-p.z, 0, p.x}};
+                if (dd>epsilon)
+                    return DifferentialGeometry{dd, poi, Normal::Normalize(p), 0, 0, Vector{-p.z, 0, p.x}};
             } else if (solB > 0) {
                 const real dd = solB / d2;
                 const Point poi = ray(dd);
                 const Vector p = poi - center;
-                return DifferentialGeometry{dd, poi, Normal::Normalize(p), 0, 0, Vector{-p.z, 0, p.x}};
+                if (dd>epsilon)
+                    return DifferentialGeometry{dd, poi, Normal::Normalize(p), 0, 0, Vector{-p.z, 0, p.x}};
             }
             return optional<DifferentialGeometry>();
         }
@@ -57,7 +59,21 @@ namespace excyrender { namespace Shapes {
             if (discriminant<0) return false;            
             const real solA = -d0 - sqrt(discriminant),
                        solB = -d0 + sqrt(discriminant);                       
-            return solA>0 || solB>0;
+            return (solA/d2)>epsilon || (solB/d2)>epsilon;
+        }
+        
+        bool occludes(Geometry::Point const &start, Geometry::Direction const &direction) const {
+            using namespace Geometry;
+            const Vector diff = start - center;
+            const real d0 = dot(diff, static_cast<Vector>(direction)),
+                       d1 = d0 * d0,
+                       d2 = dot(direction, direction),
+                       d3 = len_sq(diff),
+                       discriminant = d1 - d2*(d3 - radius*radius);
+            if (discriminant<0) return false;            
+            const real solA = -d0 - sqrt(discriminant),
+                       solB = -d0 + sqrt(discriminant);                       
+            return (solA/d2)>epsilon || (solB/d2)>epsilon;
         }
 
     private:

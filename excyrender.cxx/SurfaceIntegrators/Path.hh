@@ -42,8 +42,6 @@ namespace excyrender { namespace SurfaceIntegrators {
                 return Spectrum::Black(400,800,8);
 
             const auto wo = -ray.direction;
-            const auto poi_outside = i->dg.poi + i->dg.nn * epsilon,
-                       poi_inside  = i->dg.poi - i->dg.nn * epsilon;
                        
             const tuple<Direction, Spectrum, real> s = 
                 i->bsdf.sample_f(optional<BxDF::Distribution>(), optional<BxDF::ReflectionClass>(), i->dg, wo, rng);
@@ -51,7 +49,7 @@ namespace excyrender { namespace SurfaceIntegrators {
             const auto r_surf = get<1>(s);
             const auto r_pdf  = get<2>(s);
             
-            const auto r_incoming = integrate(currDepth+1, Ray(poi_outside,wi), rng);
+            const auto r_incoming = integrate(currDepth+1, Ray(i->dg.poi,wi), rng);
             const auto reflection = (r_pdf<=0)
                                     ? (Spectrum::Black(400,800,8))
                                     : (r_surf * r_incoming * (dot(static_cast<Normal>(wi), i->dg.nn)/r_pdf));

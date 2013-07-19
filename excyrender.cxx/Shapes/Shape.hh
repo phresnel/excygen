@@ -17,6 +17,7 @@ namespace excyrender { namespace Shapes {
         
         virtual optional<DifferentialGeometry> intersect(Geometry::Ray const &) const = 0;
         virtual bool occludes(Geometry::Point const &, Geometry::Point const &) const = 0;
+        virtual bool occludes(Geometry::Point const &, Geometry::Direction const &) const = 0;
     };
 
 } }
