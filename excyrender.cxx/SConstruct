@@ -1,5 +1,5 @@
 env = Environment(CPPPATH = ['.'],
-                  CXXFLAGS="-std=c++0x -Wall -O3"
+                  CXXFLAGS="-std=c++0x -Wall -O3 -ffast-math -march=native -msse2"
                   )
 
 env.Program(['main.cc',
