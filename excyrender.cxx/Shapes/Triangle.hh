@@ -4,7 +4,7 @@
 #ifndef TRIANGLE_HH_INCLUDED_20130721
 #define TRIANGLE_HH_INCLUDED_20130721
 
-#include "Shapes/Shape.hh"
+#include "Shapes/FiniteShape.hh"
 #include "Geometry/Vector.hh"
 #include "Geometry/Normal.hh"
 #include "Geometry/Point.hh"
@@ -12,7 +12,7 @@
 
 namespace excyrender { namespace Shapes {
 
-    class Triangle final : public Shape {
+    class Triangle final : public FiniteShape {
     public:
         Triangle (Geometry::Point const &A,
                   Geometry::Point const &B,
@@ -47,6 +47,13 @@ namespace excyrender { namespace Shapes {
             return intersect_(start, direction) > epsilon;
         }
 
+        virtual AABB aabb() const {
+            const auto u = minmax({A.x, B.x, C.x}),
+                       v = minmax({A.y, B.y, C.y}),
+                       w = minmax({A.z, B.z, C.z});
+            return {Geometry::Point{u.first, v.first, w.first},
+                    Geometry::Point{u.second, v.second, w.second}};
+        }
 
     private:
         Geometry::Point A, B, C;

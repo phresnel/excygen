@@ -4,18 +4,15 @@
 #ifndef FINITESHAPE_HH_INCLUDED_20130718
 #define FINITESHAPE_HH_INCLUDED_20130718
 
-#include "Geometry/Ray.hh"
-#include "Geometry/Point.hh"
-#include "DifferentialGeometry.hh"
 #include "AABB.hh"
-#include "optional.hh"
+#include "Shape.hh"
 
-namespace excyrender { namespace FiniteShapes {
+namespace excyrender { namespace Shapes {
 
-    class FiniteShape {
+    class FiniteShape : public Shape {
     public:
         virtual ~FiniteShape() {}
-        
+
         virtual optional<DifferentialGeometry> intersect(Geometry::Ray const &) const = 0;
         virtual bool occludes(Geometry::Point const &, Geometry::Point const &) const = 0;
         virtual AABB aabb() const = 0;

@@ -17,10 +17,11 @@ namespace excyrender {
     using std::tuple;
     using std::min;
     using std::max;
-    
+    using std::minmax;
+
     template <typename T=real>
       using triple = std::tuple<T,T,T>;
-    
+
     template <typename T>
     triple<T> make_triple(T const &a, T const &b, T const &c) {
         return std::make_tuple(a,b,c);
