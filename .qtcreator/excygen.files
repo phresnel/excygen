@@ -28,7 +28,6 @@
 ../excyrender.cxx/Primitives/PrimitiveFromShape.hh
 ../excyrender.cxx/Primitives/Primitive.hh
 ../excyrender.cxx/Intersection.hh
-../excyrender.cxx/FiniteShapes/FiniteShape.hh
 ../excyrender.cxx/Photometry/Spectrum.cc
 ../excyrender.cxx/Photometry/SPD/Regular.cc
 ../excyrender.cxx/Photometry/SPD/Constant.cc
@@ -37,3 +36,6 @@
 ../excyrender.cxx/Photometry/SPD/Constant.cc
 ../excyrender.cxx/SConstruct
 ../excyrender.cxx/Shapes/Triangle.hh
+../excyrender.cxx/Shapes/FiniteShape.hh
+../excyrender.cxx/Primitives/BoundingIntervalHierarchy.hh
+../excyrender.cxx/Primitives/BoundingIntervalHierarchy.cc
