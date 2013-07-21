@@ -26,19 +26,19 @@ namespace excyrender {
         Geometry::Normal nn;
         real u, v;
         Geometry::Vector dpdu;
-        // -- shape :: Shape <-- This is as PBRT has it, but it would produce a 
+        // -- shape :: Shape <-- This is as PBRT has it, but it would produce a
         //--                    recursive dependency
     };
-    
-    Geometry::Direction worldToLocal (DifferentialGeometry const &dg, Geometry::Direction const &dir) {
+
+    inline Geometry::Direction worldToLocal (DifferentialGeometry const &dg, Geometry::Direction const &dir) {
         const Geometry::Vector n {dg.nn.x(), dg.nn.y(), dg.nn.z()},
                                s = normalize(dg.dpdu),
                                t = cross(n, s),
                                v {dir.x(), dir.y(), dir.z()};
         return {dot(v, s), dot(v,n), dot(v,t)};
     }
-    
-    Geometry::Direction localToWorld (DifferentialGeometry const &dg, Geometry::Direction const &dir) {
+
+    inline Geometry::Direction localToWorld (DifferentialGeometry const &dg, Geometry::Direction const &dir) {
         const Geometry::Vector n {dg.nn.x(), dg.nn.y(), dg.nn.z()},
                                s = normalize(dg.dpdu),
                                t = cross(n, s);
