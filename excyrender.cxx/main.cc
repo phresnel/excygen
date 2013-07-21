@@ -22,8 +22,30 @@
 #include <functional>
 #include <vector>
 #include <memory>
+#include <ctime>
 
 namespace excyrender {
+
+    class RNG {
+    public:
+        RNG(uint_fast32_t seed)
+            : data(new data_t{mt19937(seed),
+                              uniform_real_distribution(0,1)})
+        {
+        }
+
+        real operator() () {
+            return data->d(data->mt);
+        }
+
+    private:
+        struct data_t {
+            mt19937 mt;
+            uniform_real_distribution d;
+        };
+        std::shared_ptr<data_t> data;
+    };
+
     void raytrace (int width, int height,
                    std::function<Photometry::Spectrum(Geometry::Ray const &, std::function<float()>)> integrate,
                    std::vector<Photometry::RGB> &pixels)
@@ -31,16 +53,19 @@ namespace excyrender {
         using namespace Geometry;
         using namespace Photometry;
 
-        auto rng = [] { return rand() / static_cast<real>(RAND_MAX); };
+        auto tick_log = clock();
 
         for (auto y=0; y!=height; ++y) {
-            for (auto x=0; x!=width; ++x) {
-                const auto u = x / real(width),
-                           v = 1 - y / real(height);
+            #pragma omp parallel for
+            for (auto x=0; x<width; ++x) {
+
+                RNG rng(7*y*width+3*x);
 
                 Spectrum sum = Spectrum::Black(400,800,8);
-                const auto num_samples = 2;
+                const auto num_samples = 4;
                 for (auto i=0; i!=num_samples; ++i) {
+                    const auto u = (x + rng()-real(0.5)) / real(width),
+                               v = 1 - (y + rng()-real(0.5)) / real(height);
                     const auto ray = Ray{Point{0,0,0}, Geometry::direction(u-0.5, v-0.5, 1)};                
                     sum += integrate(ray, rng) * (real(1) / num_samples);
                 }                
@@ -48,6 +73,12 @@ namespace excyrender {
                 const auto XYZ = sum.toXYZ();
                 const auto RGB = Photometry::ColorSpace::XYZ_to_sRGB(XYZ);
                 pixels[y*width+x] = Photometry::RGB(get<0>(RGB), get<1>(RGB), get<2>(RGB));
+            }
+
+            auto curr = clock();
+            if (curr - tick_log > CLOCKS_PER_SEC) {
+                tick_log = curr;
+                std::clog << y << '/' << height << std::endl;
             }
         }
     }
@@ -61,8 +92,8 @@ int main () {
     using namespace Surface;
     using namespace Geometry;
 
-    const auto width = 256,
-               height = 256;
+    const auto width = 512,
+               height = 512;
     std::vector<Photometry::RGB> pixels(width*height);
 
     /*auto const integrator = [] (Geometry::Ray const &r) {

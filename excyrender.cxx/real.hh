@@ -6,6 +6,7 @@
 
 #include <tuple>
 #include <algorithm>
+#include <random>
 
 namespace excyrender {
     typedef double real;
@@ -35,6 +36,9 @@ namespace excyrender {
     real fabs(real n) noexcept {
         return n<0 ? -n : n;
     }
+
+    using std::mt19937;
+    typedef std::uniform_real_distribution<real> uniform_real_distribution;
 }
 
 #endif // REAL_HH_INCLUDED_20130708
