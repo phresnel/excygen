@@ -19,6 +19,8 @@
 
 #include "Photometry/Lighting.hh"
 
+#include "Primitives/BoundingIntervalHierarchy.hh"
+
 #include <iostream>
 #include <functional>
 #include <vector>
@@ -87,53 +89,58 @@ namespace excyrender {
 
 
 int main () {
-    using namespace excyrender;
-    using namespace Primitives;
-    using namespace Photometry;
-    using namespace Surface;
-    using namespace Geometry;
+    try {
+        using namespace excyrender;
+        using namespace Primitives;
+        using namespace Photometry;
+        using namespace Surface;
+        using namespace Geometry;
 
-    const auto width = 512,
-               height = 512;
-    std::vector<Photometry::RGB> pixels(width*height);
+        const auto width = 512,
+                   height = 512;
+        std::vector<Photometry::RGB> pixels(width*height);
 
-    /*auto const integrator = [] (Geometry::Ray const &r) {
-        return Photometry::RGB{r.direction.x+real(0.5), r.direction.y+real(0.5), 0};
-    };*/
-    PrimitiveList const primitive({
-                     std::shared_ptr<Primitive>(new
-                         PrimitiveFromShape (std::shared_ptr<Shapes::Shape>(new Shapes::Sphere ({-1.0,0.0,5}, 1)),
-                                             BSDF({std::shared_ptr<BxDF>(new Lambertian (Spectrum::FromRGB(400,800,8, {1,0.3,0.3})))
-                                                 })
-                                      )),
-                     std::shared_ptr<Primitive>(new
-                         PrimitiveFromShape (std::shared_ptr<Shapes::Shape>(new Shapes::Sphere ({1.0,0.0,5}, 1)),
-                                             BSDF({std::shared_ptr<BxDF>(new Lambertian (Spectrum::FromRGB(400,800,8, {1,1,1})))
-                                                 })
-                                      )),
-                     std::shared_ptr<Primitive>(new
-                         PrimitiveFromShape (std::shared_ptr<Shapes::Shape>(new Shapes::Plane(Shapes::Plane::FromPointNormal({0,-1,0},normal(0,1,0)))),
-                                             BSDF ({ std::shared_ptr<BxDF>( new Lambertian (Spectrum::Gray(400,800,8,1)) ) })
-                                      )),
-                     std::shared_ptr<Primitive>(new
-                         PrimitiveFromShape (std::shared_ptr<Shapes::Shape>(new Shapes::Triangle({0,0,5},{-1,1,5},{1,1,5})),
-                                             BSDF ({ std::shared_ptr<BxDF>( new Lambertian (Spectrum::FromRGB(400,800,8,{0.6,1,0.4})) ) })
-                                      )),
-                     std::shared_ptr<Primitive>(new
-                         PrimitiveFromShape (std::shared_ptr<Shapes::Shape>(new Shapes::Triangle({0,0,5},{-1,-1,5},{1,-1,5})),
-                                             BSDF ({ std::shared_ptr<BxDF>( new Lambertian (Spectrum::FromRGB(400,800,8,{0.6,1,0.4})) ) })
-                                      ))
-                    });
-    std::vector<std::shared_ptr<LightSource>> const lightSources({
-        std::shared_ptr<LightSource>(new Directional (direction(1,1,-1), Spectrum::FromRGB(400,800,8,{8,7,7})))
-    });
-    auto const integrator = SurfaceIntegrators::Path(8, primitive, lightSources,
-                                                     [](Geometry::Direction const &) {
-                                                        return Spectrum::FromRGB(400,800,8,{1,2,3});
-                                                     }
-                                                    );
+        Primitives::BoundingIntervalHierarchyBuilder builder;
+        auto g1 = builder.group(BSDF({std::shared_ptr<BxDF>( new Lambertian (Spectrum::FromRGB(400,800,8,{0.6,1,0.4})) )}));
+        auto bih = builder.finalize();
 
-    raytrace (width, height, integrator, pixels);
-    ImageFormat::ppm (std::cout, width, height, pixels);
+        PrimitiveList const primitive({
+                         std::shared_ptr<Primitive>(new
+                             PrimitiveFromShape (std::shared_ptr<Shapes::Shape>(new Shapes::Sphere ({-1.0,0.0,5}, 1)),
+                                                 BSDF({std::shared_ptr<BxDF>(new Lambertian (Spectrum::FromRGB(400,800,8, {1,0.3,0.3})))
+                                                     })
+                                          )),
+                         std::shared_ptr<Primitive>(new
+                             PrimitiveFromShape (std::shared_ptr<Shapes::Shape>(new Shapes::Sphere ({1.0,0.0,5}, 1)),
+                                                 BSDF({std::shared_ptr<BxDF>(new Lambertian (Spectrum::FromRGB(400,800,8, {1,1,1})))
+                                                     })
+                                          )),
+                         std::shared_ptr<Primitive>(new
+                             PrimitiveFromShape (std::shared_ptr<Shapes::Shape>(new Shapes::Plane(Shapes::Plane::FromPointNormal({0,-1,0},normal(0,1,0)))),
+                                                 BSDF ({ std::shared_ptr<BxDF>( new Lambertian (Spectrum::Gray(400,800,8,1)) ) })
+                                          )),
+                         std::shared_ptr<Primitive>(new
+                             PrimitiveFromShape (std::shared_ptr<Shapes::Shape>(new Shapes::Triangle({0,0,5},{-1,1,5},{1,1,5})),
+                                                 BSDF ({ std::shared_ptr<BxDF>( new Lambertian (Spectrum::FromRGB(400,800,8,{0.6,1,0.4})) ) })
+                                          )),
+                         std::shared_ptr<Primitive>(new
+                             PrimitiveFromShape (std::shared_ptr<Shapes::Shape>(new Shapes::Triangle({0,0,5},{-1,-1,5},{1,-1,5})),
+                                                 BSDF ({ std::shared_ptr<BxDF>( new Lambertian (Spectrum::FromRGB(400,800,8,{0.6,1,0.4})) ) })
+                                          ))
+                        });
+        std::vector<std::shared_ptr<LightSource>> const lightSources({
+            std::shared_ptr<LightSource>(new Directional (direction(1,1,-1), Spectrum::FromRGB(400,800,8,{8,7,7})))
+        });
+        auto const integrator = SurfaceIntegrators::Path(8, primitive, lightSources,
+                                                         [](Geometry::Direction const &) {
+                                                            return Spectrum::FromRGB(400,800,8,{1,2,3});
+                                                         }
+                                                        );
+
+        raytrace (width, height, integrator, pixels);
+        ImageFormat::ppm (std::cout, width, height, pixels);
+    } catch (std::exception &e) {
+        std::cerr << "error:" << e.what() << "(" << typeid(e).name() << ")\n";
+    }
 }
 
