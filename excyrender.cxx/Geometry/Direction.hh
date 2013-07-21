@@ -23,11 +23,16 @@ namespace excyrender {
             {
             }
 
+            static Direction Normalize(Vector v) noexcept {
+                v = normalize(v);
+                return {v.x, v.y, v.z};
+            }
+
             explicit operator Vector () const noexcept {
                 return {x_,y_,z_};
             }
-            
-            
+
+
             friend constexpr inline real dot (Direction const &lhs, Direction const &rhs) noexcept {
                 return lhs.x_*rhs.x_ + lhs.y_*rhs.y_ + lhs.z_*rhs.z_;
             }
@@ -48,7 +53,7 @@ namespace excyrender {
             }
 
         private:
-        
+
             const real x_, y_, z_;
 
             static constexpr real ensure_normalized(real x, bool c) {
@@ -56,7 +61,7 @@ namespace excyrender {
                         throw std::runtime_error("|x*x+y*y+z*z| > 0.00001 in Direction(x,y,z)");
             }
         };
-        
+
         inline Direction direction(real x, real y, real z) noexcept {
             const auto l = std::sqrt(x*x + y*y + z*z);
             return {x/l, y/l, z/l};

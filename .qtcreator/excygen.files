@@ -36,3 +36,4 @@
 ../excyrender.cxx/Photometry/SPD/Regular.cc
 ../excyrender.cxx/Photometry/SPD/Constant.cc
 ../excyrender.cxx/SConstruct
+../excyrender.cxx/Shapes/Triangle.hh
