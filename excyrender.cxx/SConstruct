@@ -2,11 +2,13 @@ env = Environment(CPPPATH = ['.'],
                   CXXFLAGS="-std=c++0x -O3 -ffast-math -march=native -msse2 -fopenmp",
                   )
 
-env.Program(['main.cc',
-             'ImageFormat/PPM.cc',
-             'Photometry/SPD/Regular.cc',
-             'Photometry/SPD/Constant.cc',
-             'Photometry/Spectrum.cc',
-            ],
-            LIBS=['gomp']
-           )
+t = env.Program(target='excygen',
+                source=['main.cc',
+                        'ImageFormat/PPM.cc',
+                        'Photometry/SPD/Regular.cc',
+                        'Photometry/SPD/Constant.cc',
+                        'Photometry/Spectrum.cc',
+                       ],
+                       LIBS=['gomp']
+               )
+Default(t)
