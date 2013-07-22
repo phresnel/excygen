@@ -12,9 +12,6 @@ namespace excyrender { namespace Shapes {
     class FiniteShape : public Shape {
     public:
         virtual ~FiniteShape() {}
-
-        virtual optional<DifferentialGeometry> intersect(Geometry::Ray const &) const = 0;
-        virtual bool occludes(Geometry::Point const &, Geometry::Point const &) const = 0;
         virtual AABB aabb() const = 0;
     };
 

@@ -1,20 +1,20 @@
 // (C) 2013 Sebastian Mach (1983), this file is published under the terms of the
 // GNU General Public License, Version 3 (a.k.a. GPLv3).
 // See COPYING in the root-folder of the excygen project folder.
-#ifndef PRIMITIVEFROMSHAPE_HH_INCLUDED_20130718
-#define PRIMITIVEFROMSHAPE_HH_INCLUDED_20130718
+#ifndef PRIMTIVEFROMFINITESHAPE_HH_INCLUDED_20130722
+#define PRIMTIVEFROMFINITESHAPE_HH_INCLUDED_20130722
 
-#include "Primitive.hh"
-#include "Shapes/Shape.hh"
+#include "FinitePrimitive.hh"
+#include "Shapes/FiniteShape.hh"
 
 namespace excyrender { namespace Primitives {
 
-class PrimitiveFromShape final : public Primitive
+class PrimitiveFromFiniteShape final : public FinitePrimitive
 {
 public:
-    PrimitiveFromShape() = delete;
-    PrimitiveFromShape(std::shared_ptr<Shapes::Shape> shape,
-                       Photometry::Surface::BSDF const &bsdf) :
+    PrimitiveFromFiniteShape() = delete;
+    PrimitiveFromFiniteShape(std::shared_ptr<Shapes::FiniteShape> shape,
+                             Photometry::Surface::BSDF const &bsdf) :
         shape(shape),
         bsdf(bsdf)
     {
@@ -37,11 +37,17 @@ public:
     {
         return shape->occludes(a,b);
     }
+
+    AABB aabb () const noexcept
+    {
+        return shape->aabb();
+    }
+
 private:
-    std::shared_ptr<Shapes::Shape> shape;
+    std::shared_ptr<Shapes::FiniteShape> shape;
     Photometry::Surface::BSDF bsdf;
 };
 
 } }
 
-#endif // PRIMITIVEFROMSHAPE_HH_INCLUDED_20130718
+#endif // PRIMTIVEFROMFINITESHAPE_HH_INCLUDED_20130722

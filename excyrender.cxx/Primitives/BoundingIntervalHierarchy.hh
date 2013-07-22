@@ -1,12 +1,21 @@
+// (C) 2013 Sebastian Mach (1983), this file is published under the terms of the
+// GNU General Public License, Version 3 (a.k.a. GPLv3).
+// See COPYING in the root-folder of the excygen project folder.
 #ifndef BOUNDINGINTERVALHIERARCHY_HH_INCLUDED_20130721
 #define BOUNDINGINTERVALHIERARCHY_HH_INCLUDED_20130721
 
-#include "Primitives/Primitive.hh"
+#include "Primitives/FinitePrimitive.hh"
 #include "Shapes/FiniteShape.hh"
+
+namespace excyrender { namespace Primitives { namespace detail {
+
+
+} } }
+
 
 namespace excyrender { namespace Primitives {
 
-class BoundingIntervalHierarchy final : public Primitive {
+class BoundingIntervalHierarchy final : public FinitePrimitive {
 public:
     BoundingIntervalHierarchy(BoundingIntervalHierarchy const &)            = delete;
     BoundingIntervalHierarchy& operator=(BoundingIntervalHierarchy const &) = delete;
@@ -14,6 +23,7 @@ public:
     optional<Intersection> intersect(Geometry::Ray const &) const noexcept;
     bool occludes(Geometry::Point const &a, Geometry::Point const &b) const noexcept;
     bool occludes(Geometry::Point const &a, Geometry::Direction const &b) const noexcept;
+    AABB aabb() const noexcept;
 
 private:
     friend class BoundingIntervalHierarchyBuilder;
@@ -33,7 +43,7 @@ public:
         Group(Group const&)             = delete;
         Group& operator=(Group const &) = delete;
 
-        void add (std::shared_ptr<Shapes::FiniteShape> shape) {
+        void add (std::shared_ptr<Primitives::FinitePrimitive> shape) {
             if (*finalized) {
                 throw std::logic_error("BoundingIntervalHierarchyBuilder::Group: called 'add()' "
                                        "but builder is finalized already");

@@ -22,4 +22,9 @@ bool BoundingIntervalHierarchy::occludes(Point const &a, Direction const &b) con
     return false;
 }
 
+AABB BoundingIntervalHierarchy::aabb() const noexcept
+{
+    throw std::runtime_error("not implemented");
+}
+
 } }
