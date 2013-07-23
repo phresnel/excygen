@@ -84,7 +84,7 @@ namespace excyrender { namespace Primitives { namespace detail {
                 Max.z = max(Max.z, back(bb));
                 Min.x = min(Min.x, left(bb));
                 Min.y = min(Min.y, bottom(bb));
-                Min.z = min(Min.z, back(bb));
+                Min.z = min(Min.z, front(bb));
             }
             return {Min, Max};
         }
@@ -144,8 +144,54 @@ namespace excyrender { namespace Primitives { namespace detail {
         }
 
 
-        void traverse(bih_node const* node, Geometry::Ray const &ray, real A, real B) const
+        auto traverse_rec(bih_node const* node, Geometry::Ray const &ray, real A, real B) const
+        -> decltype(objects[0].intersect(ray))
         {
+            using RetT = decltype(objects[0].intersect(ray));
+
+            if (A >= B) {
+                return RetT();
+            }
+
+            if (node->leaf())
+            {
+                RetT nearest;
+                object_group g = object_groups[node->index];
+                for (auto it=get<0>(g), end=get<1>(g); it!=end; ++it) {
+                    if (auto tmp = it->intersect(ray)) {
+                        const auto t = distance(*tmp);
+                        if (t<A || t>B)
+                            continue;
+                        if (!nearest || t < distance(*nearest)) {
+                            nearest = tmp;
+                        }
+                    }
+                }
+                return nearest;
+            }
+            else
+            {
+                const int axis = node->flags;
+                const real t1 = (node->clip[0] - ray.origin[axis]) / ray.direction[axis];
+                const real t2 = (node->clip[1] - ray.origin[axis]) / ray.direction[axis];
+
+                if (ray.direction[axis] < 0) {
+                    auto a = traverse_rec(node+1, ray, A, min(t1,B));
+                    if (a) B = min(B, distance(*a));
+                    auto b = traverse_rec(node+node->index, ray, max(t2,A), B);
+
+                    if (b) return b;
+                    return a;
+                } else {
+                    auto a = traverse_rec(node+node->index, ray, A, min(t2,B));
+                    if (a) B = min(B, distance(*a));
+                    auto b = traverse_rec(node+1, ray, max(t1,A), B);
+
+                    if (b) return b;
+                    return a;
+                }
+            }
+            return RetT();
         }
 
     public:
@@ -153,6 +199,7 @@ namespace excyrender { namespace Primitives { namespace detail {
         void start_build(int recursions_left = 10)
         {
             aabb = exact_aabb(objects.begin(), objects.end());
+            std::cerr << aabb << std::endl;
             build_node(objects.begin(), objects.end(),
                        aabb,
                        0,
@@ -168,14 +215,9 @@ namespace excyrender { namespace Primitives { namespace detail {
             const auto initial = excyrender::intersect(aabb, ray);
             if (!initial)
                 return RetT();
-            const real A = get<0>(*initial),
+            const real A = max(real(0),get<0>(*initial)),
                        B = get<1>(*initial);
-            if (A >= B)
-                return RetT();
-
-            traverse(&nodes[0], ray, A, B);
-
-            return RetT();
+            return traverse_rec(&nodes[0], ray, A, B);
         }
 
         bool occludes(Geometry::Point const &a, Geometry::Point const &b) const noexcept

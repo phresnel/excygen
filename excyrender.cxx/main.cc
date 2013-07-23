@@ -95,10 +95,11 @@ int main () {
     using bih_t = excyrender::Primitives::detail::bih<excyrender::Shapes::Sphere, excyrender::Shapes::Shape>;
     bih_t *bih = new bih_t;
     std::shared_ptr<excyrender::Shapes::Shape> bih_ (bih);
-    bih->objects.emplace_back(Point{1,0,5},real(1));
-    bih->objects.emplace_back(Point{2,0,5},real(1));
-    bih->objects.emplace_back(Point{-2,0,5},real(1));
     bih->objects.emplace_back(Point{-1,0,5},real(1));
+    bih->objects.emplace_back(Point{1,0,5},real(1));
+    bih->objects.emplace_back(Point{-1,2,5},real(1));
+    bih->objects.emplace_back(Point{1,2,5},real(1));
+    bih->objects.emplace_back(Point{1,1.2,5},real(1));
     bih->start_build();
 
     try {
@@ -150,7 +151,7 @@ int main () {
         std::vector<std::shared_ptr<LightSource>> const lightSources({
             std::shared_ptr<LightSource>(new Directional (direction(1,1,-1), Spectrum::FromRGB(400,800,8,{8,7,7})))
         });
-        auto const integrator = SurfaceIntegrators::Path(8, primitive, lightSources,
+        auto const integrator = SurfaceIntegrators::Path(1, primitive, lightSources,
                                                          [](Geometry::Direction const &) {
                                                             return Spectrum::FromRGB(400,800,8,{1,2,3});
                                                          }

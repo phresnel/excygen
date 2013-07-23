@@ -46,6 +46,10 @@ namespace excyrender {
                 s.y*dir.x() + n.y*dir.y() + t.y*dir.z(),
                 s.z*dir.x() + n.z*dir.y() + t.z*dir.z()};
     }
+
+    inline real distance(DifferentialGeometry const &dg) noexcept {
+        return dg.d;
+    }
 }
 
 

@@ -23,6 +23,13 @@ namespace excyrender {
             {
             }
 
+            constexpr real operator[] (int i) {
+                return i==0 ? x_ :
+                       i==1 ? y_ :
+                       i==2 ? z_ :
+                       throw std::logic_error("Direction::operator[] called with index not in 0,1,2");
+            }
+
             static Direction Normalize(Vector v) noexcept {
                 v = normalize(v);
                 return {v.x, v.y, v.z};
