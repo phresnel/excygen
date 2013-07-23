@@ -92,15 +92,18 @@ int main () {
     using namespace excyrender::Shapes;
     using namespace excyrender::Geometry;
     using excyrender::real;
-    using bih_t = excyrender::Primitives::detail::bih<excyrender::Shapes::Sphere, excyrender::Shapes::Shape>;
-    bih_t *bih = new bih_t;
-    std::shared_ptr<excyrender::Shapes::Shape> bih_ (bih);
-    bih->objects.emplace_back(Point{-1,0,5},real(1));
-    bih->objects.emplace_back(Point{1,0,5},real(1));
-    bih->objects.emplace_back(Point{-1,2,5},real(1));
-    bih->objects.emplace_back(Point{1,2,5},real(1));
-    bih->objects.emplace_back(Point{1,1.2,5},real(1));
-    bih->start_build();
+    using namespace excyrender::Primitives::detail;
+
+    bih_data<Sphere> data;
+    data.objects.emplace_back(Point{-1,0,5},real(1));
+    data.objects.emplace_back(Point{1,0,5},real(1));
+    data.objects.emplace_back(Point{-1,2,5},real(1));
+    data.objects.emplace_back(Point{1,2,5},real(1));
+    data.objects.emplace_back(Point{1,1.2,5},real(1));
+    bih_builder<Sphere> builder;
+    builder.start_build(data);
+
+    std::shared_ptr<Shape> bih(new bih_traverser<Sphere,Shape> (data));
 
     try {
         using namespace excyrender;
@@ -113,13 +116,9 @@ int main () {
                    height = 512;
         std::vector<Photometry::RGB> pixels(width*height);
 
-        Primitives::BoundingIntervalHierarchyBuilder builder;
-        auto g1 = builder.group(BSDF({std::shared_ptr<BxDF>( new Lambertian (Spectrum::FromRGB(400,800,8,{0.6,1,0.4})) )}));
-        auto bih = builder.finalize();
-
         PrimitiveList const primitive({
                          std::shared_ptr<Primitive>(new PrimitiveFromShape
-                             (bih_,
+                             (bih,
                               BSDF({std::shared_ptr<BxDF>(new Lambertian (Spectrum::FromRGB(400,800,8, {1,0.3,0.3})))})
                              ))
 

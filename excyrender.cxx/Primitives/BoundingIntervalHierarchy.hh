@@ -59,22 +59,41 @@ namespace excyrender { namespace Primitives { namespace detail {
         return os;
     }
 
-    template <typename T, typename BaseClass>
-    class bih : public BaseClass {
-        typedef typename std::vector<T>::iterator iterator;
-
-    public:
+    template <typename T>
+    struct bih_data {
         std::vector<T> objects;
 
-    private:
         AABB aabb = AABB(Geometry::Point(0,0,0),Geometry::Point(1,1,1)); // we could skip this meaningless initialization by separating builder, data and traverser
         std::vector<bih_node> nodes;
 
         typedef typename std::vector<T>::const_iterator object_iterator;
         typedef tuple<object_iterator, object_iterator> object_group;
         std::vector<object_group> object_groups;
+    };
 
-        AABB exact_aabb(iterator it, iterator end) {
+
+
+
+    template <typename T>
+    class bih_builder
+    {
+        typedef typename std::vector<T>::iterator iterator;
+    public:
+        void start_build(bih_data<T> &data, int recursions_left = 10)
+        {
+            data.aabb = exact_aabb(data.objects.begin(), data.objects.end());
+
+            build_node(data.objects.begin(), data.objects.end(),
+                       data.aabb,
+                       0,
+                       data.nodes,
+                       data.object_groups);
+            data.nodes.shrink_to_fit();
+        }
+
+    private:
+
+        static AABB exact_aabb(iterator it, iterator end) {
             Geometry::Point Max(-real_max, -real_max, -real_max),
                             Min(real_max, real_max, real_max);
             for ( ; it!=end; ++it) {
@@ -89,7 +108,7 @@ namespace excyrender { namespace Primitives { namespace detail {
             return {Min, Max};
         }
 
-        tuple<real,real> clip(iterator it, iterator end, int axis) {
+        static tuple<real,real> clip(iterator it, iterator end, int axis) {
             real Max = -real_max, Min = real_max;
             for ( ; it!=end; ++it) {
                 const auto bb = it->aabb();
@@ -99,8 +118,10 @@ namespace excyrender { namespace Primitives { namespace detail {
             return make_tuple(Min, Max);
         }
 
-        void build_node(const iterator first, const iterator last, AABB const &node_bb, int r,
-                        std::vector<bih_node> &nodes, std::vector<object_group> &groups)
+        static void build_node(const iterator first, const iterator last, AABB const &node_bb,
+                               int r,
+                               std::vector<bih_node> &nodes,
+                               std::vector<typename bih_data<T>::object_group> &groups)
         {
             using namespace Geometry;
 
@@ -133,7 +154,7 @@ namespace excyrender { namespace Primitives { namespace detail {
             }
         }
 
-        void debug (std::ostream &os, bih_node const *node, int deep=0) {
+        static void debug (std::ostream &os, bih_node const *node, int deep=0) {
             for (int i=0; i<deep*4; ++i)
                 os << ' ';
             os << *node << '\n';
@@ -143,11 +164,45 @@ namespace excyrender { namespace Primitives { namespace detail {
             debug(os, node+node->index, deep+1);
         }
 
+    };
 
-        auto traverse_rec(bih_node const* node, Geometry::Ray const &ray, real A, real B) const
-        -> decltype(objects[0].intersect(ray))
+
+
+    template <typename T, typename BaseClass>
+    class bih_traverser : public BaseClass {
+    public:
+        bih_traverser(bih_data<T> &data) : data(data) {}
+
+        auto intersect(Geometry::Ray const &ray) const noexcept
+        -> decltype(((T*)(nullptr))->intersect(ray))
         {
-            using RetT = decltype(objects[0].intersect(ray));
+            using RetT = decltype(((T*)(nullptr))->intersect(ray));
+            const auto initial = excyrender::intersect(data.aabb, ray);
+            if (!initial)
+                return RetT();
+            const real A = max(real(0),get<0>(*initial)),
+                       B = get<1>(*initial);
+            return traverse_rec(&data.nodes[0], ray, A, B);
+        }
+
+        bool occludes(Geometry::Point const &a, Geometry::Point const &b) const noexcept
+        {
+            return !!intersect(Geometry::Ray(a, Geometry::Direction::Normalize(b-a)));
+        }
+
+        bool occludes(Geometry::Point const &a, Geometry::Direction const &b) const noexcept
+        {
+            return !!intersect(Geometry::Ray(a, b));
+        }
+
+    private:
+        bih_data<T> &data;
+
+    private:
+        auto traverse_rec(bih_node const* node, Geometry::Ray const &ray, real A, real B) const
+        -> decltype(((T*)(nullptr))->intersect(ray))
+        {
+            using RetT = decltype(((T*)(nullptr))->intersect(ray));
 
             if (A >= B) {
                 return RetT();
@@ -156,7 +211,7 @@ namespace excyrender { namespace Primitives { namespace detail {
             if (node->leaf())
             {
                 RetT nearest;
-                object_group g = object_groups[node->index];
+                typename bih_data<T>::object_group g = data.object_groups[node->index];
                 for (auto it=get<0>(g), end=get<1>(g); it!=end; ++it) {
                     if (auto tmp = it->intersect(ray)) {
                         const auto t = distance(*tmp);
@@ -192,42 +247,6 @@ namespace excyrender { namespace Primitives { namespace detail {
                 }
             }
             return RetT();
-        }
-
-    public:
-
-        void start_build(int recursions_left = 10)
-        {
-            aabb = exact_aabb(objects.begin(), objects.end());
-            std::cerr << aabb << std::endl;
-            build_node(objects.begin(), objects.end(),
-                       aabb,
-                       0,
-                       nodes, object_groups);
-            nodes.shrink_to_fit();
-            debug(std::clog, &nodes[0]);
-        }
-
-        auto intersect(Geometry::Ray const &ray) const noexcept
-        -> decltype(objects[0].intersect(ray))
-        {
-            using RetT = decltype(objects[0].intersect(ray));
-            const auto initial = excyrender::intersect(aabb, ray);
-            if (!initial)
-                return RetT();
-            const real A = max(real(0),get<0>(*initial)),
-                       B = get<1>(*initial);
-            return traverse_rec(&nodes[0], ray, A, B);
-        }
-
-        bool occludes(Geometry::Point const &a, Geometry::Point const &b) const noexcept
-        {
-            return !!intersect(Geometry::Ray(a, Geometry::Direction::Normalize(b-a)));
-        }
-
-        bool occludes(Geometry::Point const &a, Geometry::Direction const &b) const noexcept
-        {
-            return !!intersect(Geometry::Ray(a, b));
         }
     };
 
