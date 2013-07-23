@@ -52,7 +52,7 @@ namespace excyrender { namespace detail { namespace BIH {
             if (node->leaf())
             {
                 RetT nearest;
-                typename Data<T>::object_group g = data.object_groups[node->index];
+                typename Data<T>::object_group g = data.object_groups[node->index()];
                 for (auto it=get<0>(g), end=get<1>(g); it!=end; ++it) {
                     if (auto tmp = it->intersect(ray)) {
                         const auto t = distance(*tmp);
@@ -67,19 +67,19 @@ namespace excyrender { namespace detail { namespace BIH {
             }
             else
             {
-                const int axis = node->flags;
-                const real t1 = (node->clip[0] - ray.origin[axis]) / ray.direction[axis];
-                const real t2 = (node->clip[1] - ray.origin[axis]) / ray.direction[axis];
+                const int axis = node->axis();
+                const real t1 = (node->left()  - ray.origin[axis]) / ray.direction[axis];
+                const real t2 = (node->right() - ray.origin[axis]) / ray.direction[axis];
 
                 if (ray.direction[axis] < 0) {
                     auto a = traverse_rec(node+1, ray, A, min(t1,B));
                     if (a) B = min(B, distance(*a));
-                    auto b = traverse_rec(node+node->index, ray, max(t2,A), B);
+                    auto b = traverse_rec(node+node->index(), ray, max(t2,A), B);
 
                     if (b) return b;
                     return a;
                 } else {
-                    auto a = traverse_rec(node+node->index, ray, A, min(t2,B));
+                    auto a = traverse_rec(node+node->index(), ray, A, min(t2,B));
                     if (a) B = min(B, distance(*a));
                     auto b = traverse_rec(node+1, ray, max(t1,A), B);
 

@@ -10,53 +10,65 @@
 
 namespace excyrender { namespace detail { namespace BIH {
 
-   struct Node {
-        uint32_t flags : 2;
-        uint32_t index : 30;
-        float clip[2];
+    class Node {
+    public:
 
-        static Node Inner(tuple<real,real> const &clip, int axis, int index)
+        static Node Inner(tuple<real,real> const &clip, int axis, int index) noexcept
         {
             if (axis!=0 && axis!=1 && axis!=2)
                 throw std::logic_error("Node::Inner: axis must be one of 0,1,2");
             Node ret;
-            ret.clip[0] = get<0>(clip);
-            ret.clip[1] = get<1>(clip);
-            ret.flags = axis;
-            ret.index = index;
+            ret.clip_[0] = get<0>(clip);
+            ret.clip_[1] = get<1>(clip);
+            ret.flags_ = axis;
+            ret.index_ = index;
             return ret;
         }
 
-        static Node Leaf(int index)
+        static Node Leaf(int index) noexcept
         {
             Node ret;
-            ret.flags = 3;
-            ret.index = index;
+            ret.flags_ = 3;
+            ret.index_ = index;
             return ret;
         }
 
-        static Node Bogus()
+        constexpr static Node Bogus() noexcept
         {
             return Node();
         }
 
-        bool empty() const { return std::fabs(clip[0]-clip[1])<=0; }
-        bool leaf () const { return flags == 3; }
+        constexpr bool empty() noexcept {
+            return std::fabs(clip_[0]-clip_[1])<=0;
+        }
+
+        constexpr bool leaf () noexcept {
+            return flags_ == 3;
+        }
+
+        constexpr int axis() noexcept {
+            return flags_;
+        }
+
+        constexpr int index() noexcept {
+            return index_;
+        }
+
+        constexpr real left() noexcept {
+            return clip_[0];
+        }
+
+        constexpr real right() noexcept {
+            return clip_[1];
+        }
 
     private:
         Node() = default;
+
+        uint32_t flags_ : 2;
+        uint32_t index_ : 30;
+        float clip_[2];
     };
-
-
-    inline
-    std::ostream& operator<< (std::ostream& os, Node const &n) {
-        if (n.leaf()) {
-            os << "leaf{" << n.index << "}";
-        } else {
-            os << "innr{[" << n.clip[0] << ".." << n.clip[1] << "], " << n.flags << "}";
-        }
-        return os;
-    }
 
 } } }
 

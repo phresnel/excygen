@@ -87,17 +87,6 @@ namespace excyrender { namespace detail { namespace BIH {
                 build_node(pivot, last,  get<1>(children_bb), r+1, nodes, groups);
             }
         }
-
-        static void debug (std::ostream &os, Node const *node, int deep=0) {
-            for (int i=0; i<deep*4; ++i)
-                os << ' ';
-            os << *node << '\n';
-            if (node->leaf())
-                return;
-            debug(os, node+1, deep+1);
-            debug(os, node+node->index, deep+1);
-        }
-
     };
 
 } } }
