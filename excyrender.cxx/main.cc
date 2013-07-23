@@ -88,6 +88,10 @@ namespace excyrender {
 }
 
 
+#include "detail/BIH/Builder.hh"
+#include "detail/BIH/Data.hh"
+#include "detail/BIH/RecursiveTraverser.hh"
+
 int main () {
     using namespace excyrender::Shapes;
     using namespace excyrender::Geometry;

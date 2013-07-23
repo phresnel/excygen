@@ -50,3 +50,7 @@
 ../excyrender.cxx/ImageFormat/PPM.hh
 
 ../excyrender.cxx/SConstruct
+../excyrender.cxx/detail/BIH/RecursiveTraverser.hh
+../excyrender.cxx/detail/BIH/Node.hh
+../excyrender.cxx/detail/BIH/Data.hh
+../excyrender.cxx/detail/BIH/Builder.hh
