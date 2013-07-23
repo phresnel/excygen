@@ -7,17 +7,21 @@
 #include <tuple>
 #include <algorithm>
 #include <random>
+#include <limits>
 
 namespace excyrender {
     typedef double real;
     static constexpr real epsilon = real(0.00001);
     static constexpr real pi = real(3.14159265358979323846);
+    static constexpr real real_max = std::numeric_limits<real>::max();
 
     using std::get;
     using std::tuple;
+    using std::make_tuple;
     using std::min;
     using std::max;
     using std::minmax;
+    using std::swap;
 
     template <typename T=real>
       using triple = std::tuple<T,T,T>;

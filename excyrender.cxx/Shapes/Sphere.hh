@@ -13,6 +13,8 @@ namespace excyrender { namespace Shapes {
 
     class Sphere final : public FiniteShape {
     public:
+        Sphere () = delete;
+
         Sphere (Geometry::Point const &center, real radius) : center(center), radius(radius)
         {
             if (radius<0) throw std::runtime_error("sphere radius must be positive");
@@ -81,10 +83,19 @@ namespace excyrender { namespace Shapes {
                     {center.x+radius, center.y+radius, center.z+radius}};
         }
 
+        void swap(Sphere &rhs) noexcept
+        {
+            Geometry::swap(center, rhs.center);
+            std::swap(radius, rhs.radius);
+        }
     private:
         Geometry::Point center;
         real radius;
     };
+
+    inline void swap(Sphere &lhs, Sphere &rhs) noexcept {
+        lhs.swap(rhs);
+    }
 
 } }
 

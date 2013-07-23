@@ -33,7 +33,7 @@ namespace excyrender {
     public:
         RNG(uint_fast32_t seed)
             : data(new data_t{mt19937(seed),
-                              uniform_real_distribution(0,1)})
+                              uniform_real_distribution(0,real(1))})
         {
         }
 
@@ -89,6 +89,18 @@ namespace excyrender {
 
 
 int main () {
+    using namespace excyrender::Shapes;
+    using namespace excyrender::Geometry;
+    using excyrender::real;
+    using bih_t = excyrender::Primitives::detail::bih<excyrender::Shapes::Sphere, excyrender::Shapes::Shape>;
+    bih_t *bih = new bih_t;
+    std::shared_ptr<excyrender::Shapes::Shape> bih_ (bih);
+    bih->objects.emplace_back(Point{1,0,5},real(1));
+    bih->objects.emplace_back(Point{2,0,5},real(1));
+    bih->objects.emplace_back(Point{-2,0,5},real(1));
+    bih->objects.emplace_back(Point{-1,0,5},real(1));
+    bih->start_build();
+
     try {
         using namespace excyrender;
         using namespace Primitives;
@@ -105,6 +117,12 @@ int main () {
         auto bih = builder.finalize();
 
         PrimitiveList const primitive({
+                         std::shared_ptr<Primitive>(new PrimitiveFromShape
+                             (bih_,
+                              BSDF({std::shared_ptr<BxDF>(new Lambertian (Spectrum::FromRGB(400,800,8, {1,0.3,0.3})))})
+                             ))
+
+                         /*
                          std::shared_ptr<Primitive>(new
                              PrimitiveFromShape (std::shared_ptr<Shapes::Shape>(new Shapes::Sphere ({-1.0,0.0,5}, 1)),
                                                  BSDF({std::shared_ptr<BxDF>(new Lambertian (Spectrum::FromRGB(400,800,8, {1,0.3,0.3})))
@@ -117,7 +135,7 @@ int main () {
                                           )),
                          std::shared_ptr<Primitive>(new
                              PrimitiveFromShape (std::shared_ptr<Shapes::Shape>(new Shapes::Plane(Shapes::Plane::FromPointNormal({0,-1,0},normal(0,1,0)))),
-                                                 BSDF ({ std::shared_ptr<BxDF>( new Lambertian (Spectrum::Gray(400,800,8,1)) ) })
+                                                 BSDF ({ std::shared_ptr<BxDF>( new Lambertian (Spectrum::Gray(400,800,8,real(1))) ) })
                                           )),
                          std::shared_ptr<Primitive>(new
                              PrimitiveFromShape (std::shared_ptr<Shapes::Shape>(new Shapes::Triangle({0,0,5},{-1,1,5},{1,1,5})),
@@ -127,6 +145,7 @@ int main () {
                              PrimitiveFromShape (std::shared_ptr<Shapes::Shape>(new Shapes::Triangle({0,0,5},{-1,-1,5},{1,-1,5})),
                                                  BSDF ({ std::shared_ptr<BxDF>( new Lambertian (Spectrum::FromRGB(400,800,8,{0.6,1,0.4})) ) })
                                           ))
+                        */
                         });
         std::vector<std::shared_ptr<LightSource>> const lightSources({
             std::shared_ptr<LightSource>(new Directional (direction(1,1,-1), Spectrum::FromRGB(400,800,8,{8,7,7})))
