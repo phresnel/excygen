@@ -92,18 +92,18 @@ int main () {
     using namespace excyrender::Shapes;
     using namespace excyrender::Geometry;
     using excyrender::real;
-    using namespace excyrender::Primitives::detail;
+    using namespace excyrender::detail;
 
-    bih_data<Sphere> data;
+    BIH::Data<Sphere> data;
     data.objects.emplace_back(Point{-1,0,5},real(1));
     data.objects.emplace_back(Point{1,0,5},real(1));
     data.objects.emplace_back(Point{-1,2,5},real(1));
     data.objects.emplace_back(Point{1,2,5},real(1));
     data.objects.emplace_back(Point{1,1.2,5},real(1));
-    bih_builder<Sphere> builder;
+    BIH::Builder<Sphere> builder;
     builder.start_build(data);
 
-    std::shared_ptr<Shape> bih(new bih_traverser<Sphere,Shape> (data));
+    std::shared_ptr<Shape> bih(new BIH::RecursiveTraverser<Sphere,Shape> (data));
 
     try {
         using namespace excyrender;

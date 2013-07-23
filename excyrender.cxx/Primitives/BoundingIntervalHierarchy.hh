@@ -10,18 +10,18 @@
 #include <cstdint>
 #include <iterator>
 
-namespace excyrender { namespace Primitives { namespace detail {
+namespace excyrender { namespace detail { namespace BIH {
 
-    struct bih_node {
+    struct Node {
         uint32_t flags : 2;
         uint32_t index : 30;
         float clip[2];
 
-        static bih_node Inner(tuple<real,real> const &clip, int axis, int index)
+        static Node Inner(tuple<real,real> const &clip, int axis, int index)
         {
             if (axis!=0 && axis!=1 && axis!=2)
-                throw std::logic_error("bih_node::Inner: axis must be one of 0,1,2");
-            bih_node ret;
+                throw std::logic_error("Node::Inner: axis must be one of 0,1,2");
+            Node ret;
             ret.clip[0] = get<0>(clip);
             ret.clip[1] = get<1>(clip);
             ret.flags = axis;
@@ -29,28 +29,28 @@ namespace excyrender { namespace Primitives { namespace detail {
             return ret;
         }
 
-        static bih_node Leaf(int index)
+        static Node Leaf(int index)
         {
-            bih_node ret;
+            Node ret;
             ret.flags = 3;
             ret.index = index;
             return ret;
         }
 
-        static bih_node Bogus()
+        static Node Bogus()
         {
-            return bih_node();
+            return Node();
         }
 
         bool empty() const { return std::fabs(clip[0]-clip[1])<=0; }
         bool leaf () const { return flags == 3; }
 
     private:
-        bih_node() = default;
+        Node() = default;
     };
 
     inline
-    std::ostream& operator<< (std::ostream& os, bih_node const &n) {
+    std::ostream& operator<< (std::ostream& os, Node const &n) {
         if (n.leaf()) {
             os << "leaf{" << n.index << "}";
         } else {
@@ -60,11 +60,11 @@ namespace excyrender { namespace Primitives { namespace detail {
     }
 
     template <typename T>
-    struct bih_data {
+    struct Data {
         std::vector<T> objects;
 
         AABB aabb = AABB(Geometry::Point(0,0,0),Geometry::Point(1,1,1)); // we could skip this meaningless initialization by separating builder, data and traverser
-        std::vector<bih_node> nodes;
+        std::vector<Node> nodes;
 
         typedef typename std::vector<T>::const_iterator object_iterator;
         typedef tuple<object_iterator, object_iterator> object_group;
@@ -75,11 +75,11 @@ namespace excyrender { namespace Primitives { namespace detail {
 
 
     template <typename T>
-    class bih_builder
+    class Builder
     {
         typedef typename std::vector<T>::iterator iterator;
     public:
-        void start_build(bih_data<T> &data, int recursions_left = 10)
+        void start_build(Data<T> &data, int recursions_left = 10)
         {
             data.aabb = exact_aabb(data.objects.begin(), data.objects.end());
 
@@ -120,8 +120,8 @@ namespace excyrender { namespace Primitives { namespace detail {
 
         static void build_node(const iterator first, const iterator last, AABB const &node_bb,
                                int r,
-                               std::vector<bih_node> &nodes,
-                               std::vector<typename bih_data<T>::object_group> &groups)
+                               std::vector<Node> &nodes,
+                               std::vector<typename Data<T>::object_group> &groups)
         {
             using namespace Geometry;
 
@@ -131,13 +131,13 @@ namespace excyrender { namespace Primitives { namespace detail {
             if (std::distance(first, last) <= 1 || r>5)
             {
                 groups.emplace_back(first, last);
-                nodes.push_back(bih_node::Leaf(groups.size()-1));
+                nodes.push_back(Node::Leaf(groups.size()-1));
                 return;
             }
             else
             {
                 // Reserve space.
-                nodes.push_back (bih_node::Bogus());
+                nodes.push_back (Node::Bogus());
                 const auto where_our_node_at = nodes.size()-1;
 
                 // Find pivot object.
@@ -148,13 +148,13 @@ namespace excyrender { namespace Primitives { namespace detail {
                 // Children bounding boxes, children, and current node finalization.
                 const auto children_bb = split(node_bb, axis);
                 build_node(first, pivot, get<0>(children_bb), r+1, nodes, groups);
-                nodes[where_our_node_at] = bih_node::Inner(clip_planes, axis,
+                nodes[where_our_node_at] = Node::Inner(clip_planes, axis,
                                                            nodes.size()-where_our_node_at);
                 build_node(pivot, last,  get<1>(children_bb), r+1, nodes, groups);
             }
         }
 
-        static void debug (std::ostream &os, bih_node const *node, int deep=0) {
+        static void debug (std::ostream &os, Node const *node, int deep=0) {
             for (int i=0; i<deep*4; ++i)
                 os << ' ';
             os << *node << '\n';
@@ -169,9 +169,9 @@ namespace excyrender { namespace Primitives { namespace detail {
 
 
     template <typename T, typename BaseClass>
-    class bih_traverser : public BaseClass {
+    class RecursiveTraverser : public BaseClass {
     public:
-        bih_traverser(bih_data<T> &data) : data(data) {}
+        RecursiveTraverser(Data<T> &data) : data(data) {}
 
         auto intersect(Geometry::Ray const &ray) const noexcept
         -> decltype(((T*)(nullptr))->intersect(ray))
@@ -196,10 +196,10 @@ namespace excyrender { namespace Primitives { namespace detail {
         }
 
     private:
-        bih_data<T> &data;
+        Data<T> &data;
 
     private:
-        auto traverse_rec(bih_node const* node, Geometry::Ray const &ray, real A, real B) const
+        auto traverse_rec(Node const* node, Geometry::Ray const &ray, real A, real B) const
         -> decltype(((T*)(nullptr))->intersect(ray))
         {
             using RetT = decltype(((T*)(nullptr))->intersect(ray));
@@ -211,7 +211,7 @@ namespace excyrender { namespace Primitives { namespace detail {
             if (node->leaf())
             {
                 RetT nearest;
-                typename bih_data<T>::object_group g = data.object_groups[node->index];
+                typename Data<T>::object_group g = data.object_groups[node->index];
                 for (auto it=get<0>(g), end=get<1>(g); it!=end; ++it) {
                     if (auto tmp = it->intersect(ray)) {
                         const auto t = distance(*tmp);
