@@ -4,7 +4,7 @@
 #include "BoundingIntervalHierarchy.hh"
 
 using namespace excyrender::Geometry;
-
+/*
 namespace excyrender { namespace Primitives {
 
 namespace {
@@ -31,3 +31,4 @@ AABB BoundingIntervalHierarchy::aabb() const noexcept
 }
 
 } }
+*/

@@ -12,28 +12,28 @@ namespace excyrender { namespace Shapes {
 
     class Plane final : public Shape {
     public:
-        static Plane FromPointNormal(Geometry::Point const &p, Geometry::Normal const &n)
+        static Plane FromPointNormal(Geometry::Point const &p, Geometry::Normal const &n) noexcept
         {
-            using Geometry::Vector; 
+            using Geometry::Vector;
             return {n, -(dot(Vector{p.x,p.y,p.z}, Vector{n.x(),n.y(),n.z()}))};
         }
-        
-        optional<DifferentialGeometry> intersect(Geometry::Ray const &ray) const
-        {        
+
+        optional<DifferentialGeometry> intersect(Geometry::Ray const &ray) const noexcept
+        {
             using namespace Geometry;
 
             const real denom = dot(static_cast<Direction>(n), ray.direction),
                        p = signedDistance(ray.origin),
                        t = denom==0? 0 : -p/denom;
             const Normal nn = p>=0 ? n : -n;
-            
+
             if (t<=epsilon) return optional<DifferentialGeometry>();
-            
-            return DifferentialGeometry{t, ray(t), nn, 0, 0, 
+
+            return DifferentialGeometry{t, ray(t), nn, 0, 0,
                                         createOrthogonal(static_cast<Vector>(nn))};
         }
-                
-        bool occludes(Geometry::Point const &start, Geometry::Point const &end) const {
+
+        bool occludes(Geometry::Point const &start, Geometry::Point const &end) const noexcept {
             using namespace Geometry;
 
             const real denom = dot(static_cast<Direction>(n), direction(end-start)),
@@ -41,8 +41,8 @@ namespace excyrender { namespace Shapes {
                        t = denom==0? 0 : -p/denom;
             return t>epsilon;
         }
-        
-        bool occludes(Geometry::Point const &start, Geometry::Direction const &d) const {
+
+        bool occludes(Geometry::Point const &start, Geometry::Direction const &d) const noexcept {
             using namespace Geometry;
 
             const real denom = dot(static_cast<Direction>(n), d),
@@ -50,15 +50,15 @@ namespace excyrender { namespace Shapes {
                        t = denom==0? 0 : -p/denom;
             return t>epsilon;
         }
-        
+
     private:
         // Implements the Hessian normal form.
         Geometry::Normal n;
         real d;
-        
+
         Plane (Geometry::Normal const &n, real d) : n(n), d(d) {}
-        
-        real signedDistance (Geometry::Point const &p) const {
+
+        real signedDistance (Geometry::Point const &p) const noexcept {
             using Geometry::Vector;
             return dot(Vector{n.x(),n.y(),n.z()}, Vector{p.x,p.y,p.z}) + d;
         }

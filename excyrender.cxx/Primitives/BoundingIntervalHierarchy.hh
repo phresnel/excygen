@@ -8,7 +8,7 @@
 #include "Shapes/FiniteShape.hh"
 #include "Geometry/Direction.hh"
 
-
+/*
 namespace excyrender { namespace Primitives {
 
 class BoundingIntervalHierarchy final : public FinitePrimitive {
@@ -82,9 +82,9 @@ private:
     std::shared_ptr<bool> finalized = std::shared_ptr<bool>(new bool(false));
 };
 
-
 // TODO: once functional, add a specialized BIH for any type T <- FiniteShape
 
 } }
+*/
 
 #endif // BOUNDINGINTERVALHIERARCHY_HH_INCLUDED_20130721

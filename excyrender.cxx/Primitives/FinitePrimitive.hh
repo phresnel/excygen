@@ -14,6 +14,11 @@ struct FinitePrimitive : Primitive {
     virtual AABB aabb() const noexcept = 0;
 };
 
+inline AABB aabb(FinitePrimitive const &s) noexcept
+{
+    return s.aabb();
+}
+
 } }
 
 #endif // FINITEPRIMITIVE_HH_INCLUDED_20130722

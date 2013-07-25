@@ -8,6 +8,7 @@
 #include "Geometry/Vector.hh"
 #include "Geometry/Normal.hh"
 #include <stdexcept>
+#include "real.hh"
 
 namespace excyrender { namespace Shapes {
 
@@ -20,7 +21,7 @@ namespace excyrender { namespace Shapes {
             if (radius<0) throw std::runtime_error("sphere radius must be positive");
         }
 
-        optional<DifferentialGeometry> intersect(Geometry::Ray const &ray) const {
+        optional<DifferentialGeometry> intersect(Geometry::Ray const &ray) const noexcept{
             using namespace Geometry;
             const Vector diff = ray.origin - center;
             const real d0 = dot(diff, static_cast<Vector>(ray.direction)),
@@ -49,7 +50,7 @@ namespace excyrender { namespace Shapes {
             return optional<DifferentialGeometry>();
         }
 
-        bool occludes(Geometry::Point const &start, Geometry::Point const &end) const {
+        bool occludes(Geometry::Point const &start, Geometry::Point const &end) const noexcept {
             using namespace Geometry;
             const Vector diff = start - center,
                          direction = normalize(end-start);
@@ -64,7 +65,7 @@ namespace excyrender { namespace Shapes {
             return (solA/d2)>epsilon || (solB/d2)>epsilon;
         }
 
-        bool occludes(Geometry::Point const &start, Geometry::Direction const &direction) const {
+        bool occludes(Geometry::Point const &start, Geometry::Direction const &direction) const noexcept {
             using namespace Geometry;
             const Vector diff = start - center;
             const real d0 = dot(diff, static_cast<Vector>(direction)),
@@ -78,7 +79,7 @@ namespace excyrender { namespace Shapes {
             return (solA/d2)>epsilon || (solB/d2)>epsilon;
         }
 
-        AABB aabb() const {
+        AABB aabb() const noexcept {
             return {{center.x-radius, center.y-radius, center.z-radius},
                     {center.x+radius, center.y+radius, center.z+radius}};
         }
@@ -95,6 +96,21 @@ namespace excyrender { namespace Shapes {
 
     inline void swap(Sphere &lhs, Sphere &rhs) noexcept {
         lhs.swap(rhs);
+    }
+
+    inline optional<DifferentialGeometry> intersect(Sphere const &p, Geometry::Ray const &r) noexcept
+    {
+        return p.intersect(r);
+    }
+
+    inline bool occludes(Sphere const &p, Geometry::Point const &a, Geometry::Point const &b) noexcept
+    {
+        return p.occludes(a,b);
+    }
+
+    inline bool occludes(Sphere const &p, Geometry::Point const &a, Geometry::Direction const &b) noexcept
+    {
+        return p.occludes(a,b);
     }
 
 } }

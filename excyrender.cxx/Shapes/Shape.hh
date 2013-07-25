@@ -14,11 +14,28 @@ namespace excyrender { namespace Shapes {
     class Shape {
     public:
         virtual ~Shape() {}
-        
-        virtual optional<DifferentialGeometry> intersect(Geometry::Ray const &) const = 0;
-        virtual bool occludes(Geometry::Point const &, Geometry::Point const &) const = 0;
-        virtual bool occludes(Geometry::Point const &, Geometry::Direction const &) const = 0;
+
+        virtual optional<DifferentialGeometry> intersect(Geometry::Ray const &) const noexcept = 0;
+        virtual bool occludes(Geometry::Point const &, Geometry::Point const &) const noexcept = 0;
+        virtual bool occludes(Geometry::Point const &, Geometry::Direction const &) const noexcept = 0;
     };
+
+    // Free functions. These help make acceleration structures from the detail namespace more generic.
+    inline optional<DifferentialGeometry> intersect(Shape const &p, Geometry::Ray const &r) noexcept
+    {
+        return p.intersect(r);
+    }
+
+    inline bool occludes(Shape const &p, Geometry::Point const &a, Geometry::Point const &b) noexcept
+    {
+        return p.occludes(a,b);
+    }
+
+    inline bool occludes(Shape const &p, Geometry::Point const &a, Geometry::Direction const &b) noexcept
+    {
+        return p.occludes(a,b);
+    }
+
 
 } }
 

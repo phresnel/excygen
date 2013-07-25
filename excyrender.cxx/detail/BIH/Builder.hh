@@ -13,13 +13,13 @@ namespace excyrender { namespace detail { namespace BIH {
     {
         typedef typename std::vector<T>::iterator iterator;
     public:
-        void start_build(Data<T> &data, int recursions_left = 10)
+        void start_build(Data<T> &data, int max_depth = 10)
         {
             data.aabb = exact_aabb(data.objects.begin(), data.objects.end());
 
             build_node(data.objects.begin(), data.objects.end(),
                        data.aabb,
-                       0,
+                       max_depth,
                        data.nodes,
                        data.object_groups);
             data.nodes.shrink_to_fit();
@@ -45,7 +45,7 @@ namespace excyrender { namespace detail { namespace BIH {
         static tuple<real,real> clip(iterator it, iterator end, int axis) {
             real Max = -real_max, Min = real_max;
             for ( ; it!=end; ++it) {
-                const auto bb = it->aabb();
+                const auto bb = aabb(*it);
                 Max = max(Max, bb.max()[axis]);
                 Min = min(Min, bb.min()[axis]);
             }
@@ -62,7 +62,7 @@ namespace excyrender { namespace detail { namespace BIH {
             const int  axis = longest_axis(node_bb);
             const auto clip_planes = clip(first, last, axis);
 
-            if (std::distance(first, last) <= 1 || r>5)
+            if (std::distance(first, last) <= 1 || r<=0)
             {
                 groups.emplace_back(first, last);
                 nodes.push_back(Node::Leaf(groups.size()-1));
@@ -77,14 +77,14 @@ namespace excyrender { namespace detail { namespace BIH {
                 // Find pivot object.
                 const real split_plane = center(node_bb, axis);
                 const auto pivot = std::partition (first, last, [&](T const &obj) {
-                                                 return center(obj.aabb())[axis] < split_plane; });
+                                                 return center(aabb(obj))[axis] < split_plane; });
 
                 // Children bounding boxes, children, and current node finalization.
                 const auto children_bb = split(node_bb, axis);
-                build_node(first, pivot, get<0>(children_bb), r+1, nodes, groups);
+                build_node(first, pivot, get<0>(children_bb), r-1, nodes, groups);
                 nodes[where_our_node_at] = Node::Inner(clip_planes, axis,
                                                            nodes.size()-where_our_node_at);
-                build_node(pivot, last,  get<1>(children_bb), r+1, nodes, groups);
+                build_node(pivot, last,  get<1>(children_bb), r-1, nodes, groups);
             }
         }
     };

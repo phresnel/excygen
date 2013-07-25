@@ -60,6 +60,12 @@ namespace excyrender {
                 return {-v.x_, -v.y_, -v.z_};
             }
 
+            inline void swap(Normal &rhs) noexcept {
+                excyrender::swap(x_, rhs.x_);
+                excyrender::swap(y_, rhs.y_);
+                excyrender::swap(z_, rhs.z_);
+            }
+
         private:
             real x_, y_, z_;
 
@@ -68,6 +74,10 @@ namespace excyrender {
                         throw std::runtime_error("|x*x+y*y+z*z| > 0.00001 in Normal(x,y,z)");
             }
         };
+
+        inline void swap (Normal &lhs, Normal &rhs) noexcept {
+            lhs.swap(rhs);
+        }
 
         inline Normal normal(real x, real y, real z) noexcept {
             const auto l = std::sqrt(x*x + y*y + z*z);

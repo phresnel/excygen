@@ -12,8 +12,13 @@ namespace excyrender { namespace Shapes {
     class FiniteShape : public Shape {
     public:
         virtual ~FiniteShape() {}
-        virtual AABB aabb() const = 0;
+        virtual AABB aabb() const noexcept = 0;
     };
+
+    inline AABB aabb(FiniteShape const &s) noexcept
+    {
+        return s.aabb();
+    }
 
 } }
 

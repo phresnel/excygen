@@ -5,22 +5,38 @@
 #define RECURSIVE_TRAVERSER_HH_INCLUDED_20130723
 
 #include "Node.hh"
+#include "Data.hh"
 #include "Geometry/Ray.hh"
 
 namespace excyrender { namespace detail { namespace BIH {
 
+    namespace detail {
+        template <typename T>
+        struct RecursiveTraverserTraits {
+            using intersection_type = decltype(intersect(*((T*)nullptr),
+                                              *((Geometry::Ray*)nullptr)));
+
+            // "Import" some global functions to circumvent ADL-issues within RecursiveTraverser.
+            // Note how intersect has a suffix here.
+            static intersection_type intersect_(T const &o, Geometry::Ray const &ray) noexcept {
+                return intersect(o, ray);
+            }
+        };
+    }
+
     template <typename T, typename BaseClass>
     class RecursiveTraverser : public BaseClass {
+        const Data<T> &data;
+        typedef typename detail::RecursiveTraverserTraits<T>::intersection_type intersection_type;
+
     public:
         RecursiveTraverser(Data<T> &data) : data(data) {}
 
-        auto intersect(Geometry::Ray const &ray) const noexcept
-        -> decltype(((T*)(nullptr))->intersect(ray))
+        intersection_type intersect(Geometry::Ray const &ray) const noexcept
         {
-            using RetT = decltype(((T*)(nullptr))->intersect(ray));
             const auto initial = excyrender::intersect(data.aabb, ray);
             if (!initial)
-                return RetT();
+                return intersection_type();
             const real A = max(real(0),get<0>(*initial)),
                        B = get<1>(*initial);
             return traverse_rec(&data.nodes[0], ray, A, B);
@@ -37,24 +53,19 @@ namespace excyrender { namespace detail { namespace BIH {
         }
 
     private:
-        Data<T> &data;
-
-    private:
-        auto traverse_rec(Node const* node, Geometry::Ray const &ray, real A, real B) const
-        -> decltype(((T*)(nullptr))->intersect(ray))
+        intersection_type
+         traverse_rec(Node const* node, Geometry::Ray const &ray, real A, real B) const noexcept
         {
-            using RetT = decltype(((T*)(nullptr))->intersect(ray));
-
             if (A >= B) {
-                return RetT();
+                return intersection_type();
             }
 
             if (node->leaf())
             {
-                RetT nearest;
+                intersection_type nearest;
                 typename Data<T>::object_group g = data.object_groups[node->index()];
                 for (auto it=get<0>(g), end=get<1>(g); it!=end; ++it) {
-                    if (auto tmp = it->intersect(ray)) {
+                    if (auto tmp = detail::RecursiveTraverserTraits<T>::intersect_(*it, ray)) {
                         const auto t = distance(*tmp);
                         if (t<A || t>B)
                             continue;
@@ -87,7 +98,7 @@ namespace excyrender { namespace detail { namespace BIH {
                     return a;
                 }
             }
-            return RetT();
+            return intersection_type();
         }
     };
 

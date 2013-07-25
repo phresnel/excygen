@@ -20,6 +20,9 @@ namespace excyrender { namespace detail { namespace BIH {
         typedef typename std::vector<T>::const_iterator object_iterator;
         typedef tuple<object_iterator, object_iterator> object_group;
         std::vector<object_group> object_groups;
+
+        // below decltype can't be used
+        //using intersection_type = decltype(intersect(*((T*)(nullptr)), *(Geometry::Ray*(nullptr))));
     };
 
 } } }

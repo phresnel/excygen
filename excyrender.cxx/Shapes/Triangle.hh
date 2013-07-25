@@ -23,7 +23,7 @@ namespace excyrender { namespace Shapes {
         }
 
 
-        optional<DifferentialGeometry> intersect(Geometry::Ray const &ray) const {
+        optional<DifferentialGeometry> intersect(Geometry::Ray const &ray) const noexcept {
             using namespace Geometry;
             real u, v;
             Vector dpdu;
@@ -38,21 +38,28 @@ namespace excyrender { namespace Shapes {
         }
 
 
-        bool occludes(Geometry::Point const &start, Geometry::Point const &end) const {
+        bool occludes(Geometry::Point const &start, Geometry::Point const &end) const noexcept {
             return intersect_(start, Geometry::Direction::Normalize(end-start));
         }
 
 
-        bool occludes(Geometry::Point const &start, Geometry::Direction const &direction) const {
+        bool occludes(Geometry::Point const &start, Geometry::Direction const &direction) const noexcept {
             return intersect_(start, direction) > epsilon;
         }
 
-        virtual AABB aabb() const {
+        virtual AABB aabb() const noexcept {
             const auto u = minmax({A.x, B.x, C.x}),
                        v = minmax({A.y, B.y, C.y}),
                        w = minmax({A.z, B.z, C.z});
             return {Geometry::Point{u.first, v.first, w.first},
                     Geometry::Point{u.second, v.second, w.second}};
+        }
+
+        void swap (Triangle &rhs) noexcept {
+            Geometry::swap (A, rhs.A);
+            Geometry::swap (B, rhs.B);
+            Geometry::swap (C, rhs.C);
+            Geometry::swap (normal, rhs.normal);
         }
 
     private:
@@ -63,14 +70,14 @@ namespace excyrender { namespace Shapes {
 
         // Möller-Trumbore-Implementation
         // (transcribed from http://en.wikipedia.org/wiki/M%C3%B6ller%E2%80%93Trumbore_intersection_algorithm)
-        real intersect_(Geometry::Point const &start, Geometry::Direction const &direction) const {
+        real intersect_(Geometry::Point const &start, Geometry::Direction const &direction) const noexcept {
             real unused1, unused2;
             Geometry::Vector unused3;
             return intersect_(start, direction, unused1, unused2, unused3);
         }
 
         real intersect_(Geometry::Point const &start, Geometry::Direction const &direction,
-                        real &u, real &v, Geometry::Vector &e1) const
+                        real &u, real &v, Geometry::Vector &e1) const noexcept
         {
             using Geometry::Vector;
             e1 = B-A;
@@ -89,6 +96,27 @@ namespace excyrender { namespace Shapes {
             return t;
         }
     };
+
+
+
+    inline void swap(Triangle &lhs, Triangle &rhs) noexcept {
+        lhs.swap(rhs);
+    }
+
+    inline optional<DifferentialGeometry> intersect(Triangle const &p, Geometry::Ray const &r) noexcept
+    {
+        return p.intersect(r);
+    }
+
+    inline bool occludes(Triangle const &p, Geometry::Point const &a, Geometry::Point const &b) noexcept
+    {
+        return p.occludes(a,b);
+    }
+
+    inline bool occludes(Triangle const &p, Geometry::Point const &a, Geometry::Direction const &b) noexcept
+    {
+        return p.occludes(a,b);
+    }
 
 } }
 
