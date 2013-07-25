@@ -16,6 +16,7 @@
 #include "Shapes/Triangle.hh"
 #include "Primitives/PrimitiveList.hh"
 #include "Primitives/PrimitiveFromShape.hh"
+#include "Primitives/PrimitiveFromFiniteShape.hh"
 
 #include "Photometry/Lighting.hh"
 
@@ -49,7 +50,7 @@ namespace excyrender {
         std::shared_ptr<data_t> data;
     };
 
-    void raytrace (int width, int height,
+    void raytrace (int width, int height, int samples_per_pixel,
                    std::function<Photometry::Spectrum(Geometry::Ray const &, std::function<float()>)> integrate,
                    std::vector<Photometry::RGB> &pixels)
     {
@@ -65,12 +66,11 @@ namespace excyrender {
                 RNG rng(7*y*width+3*x);
 
                 Spectrum sum = Spectrum::Black(400,800,8);
-                const auto num_samples = 4;
-                for (auto i=0; i!=num_samples; ++i) {
+                for (auto i=0; i!=samples_per_pixel; ++i) {
                     const auto u = (x + rng()-real(0.5)) / real(width),
                                v = 1 - (y + rng()-real(0.5)) / real(height);
                     const auto ray = Ray{Point{0,0.5,0}, Geometry::direction(u-0.5, v-0.5, 0.8)};
-                    sum += integrate(ray, rng) * (real(1) / num_samples);
+                    sum += integrate(ray, rng) * (real(1) / samples_per_pixel);
                 }
 
                 const auto XYZ = sum.toXYZ();
@@ -88,27 +88,9 @@ namespace excyrender {
 }
 
 
-#include "detail/BIH/Builder.hh"
-#include "detail/BIH/Data.hh"
-#include "detail/BIH/RecursiveTraverser.hh"
+#include "Primitives/BoundingIntervalHierarchy.hh"
 
 int main () {
-    using namespace excyrender::Shapes;
-    using namespace excyrender::Geometry;
-    using excyrender::real;
-    using namespace excyrender::detail;
-
-    BIH::Data<Sphere> data;
-    data.objects.emplace_back(Point{-1,0,5},real(1));
-    data.objects.emplace_back(Point{1,0,5},real(1));
-    data.objects.emplace_back(Point{-1,2,5},real(1));
-    data.objects.emplace_back(Point{1,2,5},real(1));
-    data.objects.emplace_back(Point{1,1.2,5},real(1));
-    BIH::Builder<Sphere> builder;
-    builder.start_build(data);
-
-    std::shared_ptr<Shape> bih(new BIH::RecursiveTraverser<Sphere,Shape> (data));
-
     try {
         using namespace excyrender;
         using namespace Primitives;
@@ -118,49 +100,48 @@ int main () {
 
         const auto width = 512,
                    height = 512;
+        const auto samples_per_pixel = 64;
         std::vector<Photometry::RGB> pixels(width*height);
 
-        PrimitiveList const primitive({
-                         std::shared_ptr<Primitive>(new PrimitiveFromShape
-                             (bih,
-                              BSDF({std::shared_ptr<BxDF>(new Lambertian (Spectrum::FromRGB(400,800,8, {1,0.3,0.3})))})
-                             ))
 
-                         /*
-                         std::shared_ptr<Primitive>(new
-                             PrimitiveFromShape (std::shared_ptr<Shapes::Shape>(new Shapes::Sphere ({-1.0,0.0,5}, 1)),
-                                                 BSDF({std::shared_ptr<BxDF>(new Lambertian (Spectrum::FromRGB(400,800,8, {1,0.3,0.3})))
-                                                     })
-                                          )),
-                         std::shared_ptr<Primitive>(new
-                             PrimitiveFromShape (std::shared_ptr<Shapes::Shape>(new Shapes::Sphere ({1.0,0.0,5}, 1)),
-                                                 BSDF({std::shared_ptr<BxDF>(new Lambertian (Spectrum::FromRGB(400,800,8, {1,1,1})))
-                                                     })
-                                          )),
+        Primitives::BoundingIntervalHierarchyBuilder builder;
+        builder.add({std::shared_ptr<Primitives::FinitePrimitive>(new
+                         PrimitiveFromFiniteShape (std::shared_ptr<Shapes::FiniteShape>(new Shapes::Sphere ({-1.0,0.0,5}, 1)),
+                         BSDF({std::shared_ptr<BxDF>(new Lambertian (Spectrum::FromRGB(400,800,8, {1,0.3,0.3})))})
+                     )),
+                     std::shared_ptr<Primitives::FinitePrimitive>(new
+                         PrimitiveFromFiniteShape (std::shared_ptr<Shapes::FiniteShape>(new Shapes::Sphere ({1.0,0.0,5}, 1)),
+                         BSDF({std::shared_ptr<BxDF>(new Lambertian (Spectrum::FromRGB(400,800,8, {1,1,1})))})
+                     )),
+                     std::shared_ptr<Primitives::FinitePrimitive>(new
+                         PrimitiveFromFiniteShape (std::shared_ptr<Shapes::FiniteShape>(new Shapes::Triangle({0,0,5},{-1,1,5},{1,1,5})),
+                         BSDF ({ std::shared_ptr<BxDF>( new Lambertian (Spectrum::FromRGB(400,800,8,{0.6,1,0.4})) ) })
+                     )),
+                     std::shared_ptr<Primitives::FinitePrimitive>(new
+                         PrimitiveFromFiniteShape (std::shared_ptr<Shapes::FiniteShape>(new Shapes::Triangle({0,0,5},{-1,-1,5},{1,-1,5})),
+                         BSDF ({ std::shared_ptr<BxDF>( new Lambertian (Spectrum::FromRGB(400,800,8,{0.6,1,0.4})) ) })
+                     ))
+                    });
+
+
+        PrimitiveList const primitive({
+                         builder.finalize(),
                          std::shared_ptr<Primitive>(new
                              PrimitiveFromShape (std::shared_ptr<Shapes::Shape>(new Shapes::Plane(Shapes::Plane::FromPointNormal({0,-1,0},normal(0,1,0)))),
-                                                 BSDF ({ std::shared_ptr<BxDF>( new Lambertian (Spectrum::Gray(400,800,8,real(1))) ) })
-                                          )),
-                         std::shared_ptr<Primitive>(new
-                             PrimitiveFromShape (std::shared_ptr<Shapes::Shape>(new Shapes::Triangle({0,0,5},{-1,1,5},{1,1,5})),
-                                                 BSDF ({ std::shared_ptr<BxDF>( new Lambertian (Spectrum::FromRGB(400,800,8,{0.6,1,0.4})) ) })
-                                          )),
-                         std::shared_ptr<Primitive>(new
-                             PrimitiveFromShape (std::shared_ptr<Shapes::Shape>(new Shapes::Triangle({0,0,5},{-1,-1,5},{1,-1,5})),
-                                                 BSDF ({ std::shared_ptr<BxDF>( new Lambertian (Spectrum::FromRGB(400,800,8,{0.6,1,0.4})) ) })
-                                          ))
-                        */
+                             BSDF ({ std::shared_ptr<BxDF>( new Lambertian (Spectrum::Gray(400,800,8,real(1))) ) })
+                         )),
                         });
+
         std::vector<std::shared_ptr<LightSource>> const lightSources({
             std::shared_ptr<LightSource>(new Directional (direction(1,1,-1), Spectrum::FromRGB(400,800,8,{8,7,7})))
         });
-        auto const integrator = SurfaceIntegrators::Path(1, primitive, lightSources,
+        auto const integrator = SurfaceIntegrators::Path(6, primitive, lightSources,
                                                          [](Geometry::Direction const &) {
                                                             return Spectrum::FromRGB(400,800,8,{1,2,3});
                                                          }
                                                         );
 
-        raytrace (width, height, integrator, pixels);
+        raytrace (width, height, samples_per_pixel, integrator, pixels);
         ImageFormat::ppm (std::cout, width, height, pixels);
     } catch (std::exception &e) {
         std::cerr << "error:" << e.what() << "(" << typeid(e).name() << ")\n";

@@ -9,6 +9,7 @@
 #include <algorithm>
 #include <stdexcept>
 #include <tuple>
+#include "optional.hh"
 
 namespace excyrender {
     namespace detail {

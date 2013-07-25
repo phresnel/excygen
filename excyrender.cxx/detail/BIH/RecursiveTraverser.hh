@@ -14,7 +14,7 @@ namespace excyrender { namespace detail { namespace BIH {
         template <typename T>
         struct RecursiveTraverserTraits {
             using intersection_type = decltype(intersect(*((T*)nullptr),
-                                              *((Geometry::Ray*)nullptr)));
+                                               *((Geometry::Ray*)nullptr)));
 
             // "Import" some global functions to circumvent ADL-issues within RecursiveTraverser.
             // Note how intersect has a suffix here.
@@ -24,13 +24,14 @@ namespace excyrender { namespace detail { namespace BIH {
         };
     }
 
-    template <typename T, typename BaseClass>
-    class RecursiveTraverser : public BaseClass {
+    template <typename T>
+    class RecursiveTraverser {
         const Data<T> &data;
-        typedef typename detail::RecursiveTraverserTraits<T>::intersection_type intersection_type;
 
     public:
-        RecursiveTraverser(Data<T> &data) : data(data) {}
+        typedef typename detail::RecursiveTraverserTraits<T>::intersection_type intersection_type;
+
+        RecursiveTraverser(Data<T> const &data) : data(data) {}
 
         intersection_type intersect(Geometry::Ray const &ray) const noexcept
         {
@@ -101,6 +102,30 @@ namespace excyrender { namespace detail { namespace BIH {
             return intersection_type();
         }
     };
+
+
+    template <typename T>
+    inline
+    typename RecursiveTraverser<T>::intersection_type
+      recursive_intersect(Data<T> const &data, Geometry::Ray const &ray) noexcept
+    {
+        return RecursiveTraverser<T>(data).intersect(ray);
+    }
+
+    template <typename T>
+    inline
+    bool recursive_occludes(Data<T> const &data, Geometry::Point const &a, Geometry::Point const &b) noexcept
+    {
+        return RecursiveTraverser<T>(data).occludes(a, b);
+    }
+
+    template <typename T>
+    inline
+    bool recursive_occludes(Data<T> const &data, Geometry::Point const &a, Geometry::Direction const &b) noexcept
+    {
+        return RecursiveTraverser<T>(data).occludes(a, b);
+    }
+
 
 } } }
 

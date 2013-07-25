@@ -6,6 +6,7 @@
 
 #include <ostream>
 #include <cstdint>
+#include <stdexcept>
 #include "real.hh"
 
 namespace excyrender { namespace detail { namespace BIH {
