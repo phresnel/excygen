@@ -47,7 +47,7 @@ namespace excyrender { namespace Shapes {
             return intersect_(start, direction) > epsilon;
         }
 
-        virtual AABB aabb() const noexcept {
+        AABB aabb() const noexcept {
             const auto u = minmax({A.x, B.x, C.x}),
                        v = minmax({A.y, B.y, C.y}),
                        w = minmax({A.z, B.z, C.z});
