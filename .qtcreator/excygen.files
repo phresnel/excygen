@@ -54,3 +54,6 @@
 ../excyrender.cxx/detail/BIH/Node.hh
 ../excyrender.cxx/detail/BIH/Data.hh
 ../excyrender.cxx/detail/BIH/Builder.hh
+
+../excyrender.cxx/DebugPixel.hh
+../excyrender.cxx/DebugPixel.cc

@@ -42,7 +42,7 @@ namespace excyrender { namespace Primitives {
 
         void add (std::initializer_list<std::shared_ptr<Primitives::FinitePrimitive>> prims);
         void add (std::shared_ptr<Primitives::FinitePrimitive> prim);
-        std::shared_ptr<BoundingIntervalHierarchy> finalize();
+        std::shared_ptr<BoundingIntervalHierarchy> finalize(int max_rec);
 
     private:
         bool finalized = false;

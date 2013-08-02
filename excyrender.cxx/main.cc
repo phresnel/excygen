@@ -21,6 +21,7 @@
 #include "Photometry/Lighting.hh"
 
 #include "Primitives/BoundingIntervalHierarchy.hh"
+#include "DebugPixel.hh"
 
 #include <iostream>
 #include <functional>
@@ -52,7 +53,8 @@ namespace excyrender {
 
     void raytrace (int width, int height, int samples_per_pixel,
                    std::function<Photometry::Spectrum(Geometry::Ray const &, std::function<float()>)> integrate,
-                   std::vector<Photometry::RGB> &pixels)
+                   std::vector<Photometry::RGB> &pixels,
+                   std::vector<DebugPixel> &debug)
     {
         using namespace Geometry;
         using namespace Photometry;
@@ -62,6 +64,7 @@ namespace excyrender {
         for (auto y=0; y!=height; ++y) {
             #pragma omp parallel for
             for (auto x=0; x<width; ++x) {
+                DebugPixel *cd = current_debug = &debug[y*width+x];
 
                 RNG rng(7*y*width+3*x);
 
@@ -71,12 +74,19 @@ namespace excyrender {
                                v = 1 - (y + rng()-real(0.5)) / real(height);
                     const auto ray = Ray{Point{0,0.5,0}, Geometry::direction(u-0.5, v-0.5, 0.8)};
                     sum += integrate(ray, rng) * (real(1) / samples_per_pixel);
+                    current_debug = 0;
                 }
 
                 const auto XYZ = sum.toXYZ();
                 const auto RGB = Photometry::ColorSpace::XYZ_to_sRGB(XYZ);
                 pixels[y*width+x] = Photometry::RGB(get<0>(RGB), get<1>(RGB), get<2>(RGB));
+
+                /*#pragma omp critical
+                std::cout << (int)cd->traversal0 << ":";*/
             }
+
+            /*#pragma omp critical
+            std::cout << "\n";*/
 
             auto curr = clock();
             if (curr - tick_log > CLOCKS_PER_SEC) {
@@ -100,8 +110,9 @@ int main () {
 
         const auto width = 512,
                    height = 512;
-        const auto samples_per_pixel = 64;
+        const auto samples_per_pixel = 1;
         std::vector<Photometry::RGB> pixels(width*height);
+        std::vector<DebugPixel> debug(width*height);
 
 
         Primitives::BoundingIntervalHierarchyBuilder builder;
@@ -123,9 +134,24 @@ int main () {
                      ))
                     });
 
+        for (int i=0; i<10000; ++i) {
+            float x = rand() / (float)RAND_MAX * 4 - 2;
+            float y = rand() / (float)RAND_MAX * 2;
+            float r = 0.1 + rand() / (float)RAND_MAX * 2;
+
+            x = x*x;
+
+            if (std::fabs(x) < 0.5)
+                continue;
+            builder.add(std::shared_ptr<Primitives::FinitePrimitive>(new
+                         PrimitiveFromFiniteShape (std::shared_ptr<Shapes::FiniteShape>(new Shapes::Sphere ({x,y,5}, 0.02)),
+                         BSDF({std::shared_ptr<BxDF>(new Lambertian (Spectrum::FromRGB(400,800,8, {1,1,1})))})
+                       )));
+        }
+
 
         PrimitiveList const primitive({
-                         builder.finalize(),
+                         builder.finalize(20),
                          std::shared_ptr<Primitive>(new
                              PrimitiveFromShape (std::shared_ptr<Shapes::Shape>(new Shapes::Plane(Shapes::Plane::FromPointNormal({0,-1,0},normal(0,1,0)))),
                              BSDF ({ std::shared_ptr<BxDF>( new Lambertian (Spectrum::Gray(400,800,8,real(1))) ) })
@@ -141,7 +167,12 @@ int main () {
                                                          }
                                                         );
 
-        raytrace (width, height, samples_per_pixel, integrator, pixels);
+        raytrace (width, height, samples_per_pixel, integrator, pixels, debug);
+        for (int y=0; y!=height; ++y) {
+            for (int x=0; x!=width; ++x) {
+                pixels[y*width+x] = Photometry::RGB(0,0,debug[y*width+x].traversal0 / 20.0f);
+            }
+        }
         ImageFormat::ppm (std::cout, width, height, pixels);
     } catch (std::exception &e) {
         std::cerr << "error:" << e.what() << "(" << typeid(e).name() << ")\n";

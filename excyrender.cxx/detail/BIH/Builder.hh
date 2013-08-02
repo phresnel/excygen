@@ -14,7 +14,7 @@ namespace excyrender { namespace detail { namespace BIH {
         {
             typedef typename std::vector<T>::iterator iterator;
         public:
-            void build(Data<T> &data, int max_depth = 10)
+            void build(Data<T> &data, int max_depth)
             {
                 data.aabb = exact_aabb(data.objects.begin(), data.objects.end());
 
@@ -63,7 +63,7 @@ namespace excyrender { namespace detail { namespace BIH {
                 const int  axis = longest_axis(node_bb);
                 const auto clip_planes = clip(first, last, axis);
 
-                if (std::distance(first, last) <= 1 || r<=0)
+                if (std::distance(first, last) <= 5 || r<=0)
                 {
                     groups.emplace_back(first, last);
                     nodes.push_back(Node::Leaf(groups.size()-1));
@@ -92,8 +92,8 @@ namespace excyrender { namespace detail { namespace BIH {
     }
 
     template <typename T>
-    void build (Data<T> &data) {
-        detail::Builder<T>().build(data);
+    void build (Data<T> &data, int max_rec) {
+        detail::Builder<T>().build(data, max_rec);
     }
 
 } } }

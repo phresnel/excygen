@@ -9,6 +9,7 @@ t = env.Program(target='excygen',
                         'Photometry/SPD/Constant.cc',
                         'Photometry/Spectrum.cc',
                         'Primitives/BoundingIntervalHierarchy.cc',
+                        'DebugPixel.cc'
                        ],
                        LIBS=['gomp']
                )

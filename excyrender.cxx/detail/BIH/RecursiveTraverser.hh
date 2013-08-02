@@ -35,12 +35,19 @@ namespace excyrender { namespace detail { namespace BIH {
 
         intersection_type intersect(Geometry::Ray const &ray) const noexcept
         {
+            int steps;
+            return this->intersect(ray, steps);
+        }
+
+
+        intersection_type intersect(Geometry::Ray const &ray, int &steps) const noexcept
+        {
             const auto initial = excyrender::intersect(data.aabb, ray);
             if (!initial)
                 return intersection_type();
             const real A = max(real(0),get<0>(*initial)),
                        B = get<1>(*initial);
-            return traverse_rec(&data.nodes[0], ray, A, B);
+            return traverse_rec(&data.nodes[0], ray, A, B, steps);
         }
 
         bool occludes(Geometry::Point const &a, Geometry::Point const &b) const noexcept
@@ -55,7 +62,7 @@ namespace excyrender { namespace detail { namespace BIH {
 
     private:
         intersection_type
-         traverse_rec(Node const* node, Geometry::Ray const &ray, real A, real B) const noexcept
+         traverse_rec(Node const* node, Geometry::Ray const &ray, real A, real B, int &steps) const noexcept
         {
             if (A >= B) {
                 return intersection_type();
@@ -84,16 +91,20 @@ namespace excyrender { namespace detail { namespace BIH {
                 const real t2 = (node->right() - ray.origin[axis]) / ray.direction[axis];
 
                 if (ray.direction[axis] < 0) {
-                    auto a = traverse_rec(node+1, ray, A, min(t1,B));
+                    auto a = traverse_rec(node+1, ray, A, min(t1,B), steps);
                     if (a) B = min(B, distance(*a));
-                    auto b = traverse_rec(node+node->index(), ray, max(t2,A), B);
+                    auto b = traverse_rec(node+node->index(), ray, max(t2,A), B, steps);
+
+                    if (a || b) ++steps;
 
                     if (b) return b;
                     return a;
                 } else {
-                    auto a = traverse_rec(node+node->index(), ray, A, min(t2,B));
+                    auto a = traverse_rec(node+node->index(), ray, A, min(t2,B), steps);
                     if (a) B = min(B, distance(*a));
-                    auto b = traverse_rec(node+1, ray, max(t1,A), B);
+                    auto b = traverse_rec(node+1, ray, max(t1,A), B, steps);
+
+                    if (a || b) ++steps;
 
                     if (b) return b;
                     return a;
@@ -110,6 +121,14 @@ namespace excyrender { namespace detail { namespace BIH {
       recursive_intersect(Data<T> const &data, Geometry::Ray const &ray) noexcept
     {
         return RecursiveTraverser<T>(data).intersect(ray);
+    }
+
+    template <typename T>
+    inline
+    typename RecursiveTraverser<T>::intersection_type
+      recursive_intersect(Data<T> const &data, Geometry::Ray const &ray, int &steps) noexcept
+    {
+        return RecursiveTraverser<T>(data).intersect(ray, steps);
     }
 
     template <typename T>

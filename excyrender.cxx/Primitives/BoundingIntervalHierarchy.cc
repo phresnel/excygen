@@ -4,6 +4,7 @@
 #include "detail/BIH/RecursiveTraverser.hh"
 #include "detail/BIH/Builder.hh"
 #include "BoundingIntervalHierarchy.hh"
+#include "DebugPixel.hh"
 
 using namespace excyrender::Geometry;
 
@@ -21,7 +22,11 @@ inline AABB aabb (std::shared_ptr<FinitePrimitive> const &fp) {
 
 
 optional<Intersection> BoundingIntervalHierarchy::intersect(Ray const &ray) const noexcept {
-    return detail::BIH::recursive_intersect(data_, ray);
+    int steps = 0;
+    auto ret = detail::BIH::recursive_intersect(data_, ray, steps);
+    if (current_debug)
+        current_debug->traversal0 += steps;
+    return ret;
 }
 
 bool BoundingIntervalHierarchy::occludes(Point const &a, Point const &b) const noexcept {
@@ -38,14 +43,14 @@ AABB BoundingIntervalHierarchy::aabb() const noexcept {
 
 
 
-std::shared_ptr<BoundingIntervalHierarchy> BoundingIntervalHierarchyBuilder::finalize() {
+std::shared_ptr<BoundingIntervalHierarchy> BoundingIntervalHierarchyBuilder::finalize(int max_rec) {
     if (finalized) {
         throw std::logic_error("BoundingIntervalHierarchyBuilder::Group: called 'finalize()' "
                                "but builder is finalized already");
     }
     finalized = true;
 
-    build(data_);
+    build(data_, max_rec);
 
     std::shared_ptr<BoundingIntervalHierarchy> ret (new BoundingIntervalHierarchy);
     ret->data_ = std::move(data_);
