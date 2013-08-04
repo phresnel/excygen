@@ -1,0 +1,22 @@
+env = Environment(CPPPATH = ['.'],
+                  CXXFLAGS="-std=c++0x -Wall -O3 -ffast-math -march=native -msse2 -fopenmp",
+                  )
+
+t = env.Library(target='xyto',
+                source=['compiler.cc',
+                        'interpreter.cc',
+                        'lsystem.cc',
+                        'parameter.cc',
+                        'parameterlist.cc',
+                        'parse_expr.cc',
+                        'pattern.cc',
+                        'production_body.cc',
+                        'production.cc',
+                        'production_header.cc',
+                        'segment.cc',
+                        'token.cc',
+                        'tokenize.cc',
+                        'xyto_ios.cc'
+                       ]
+               )
+Default(t)
