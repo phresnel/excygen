@@ -57,3 +57,5 @@
 
 ../excyrender.cxx/DebugPixel.hh
 ../excyrender.cxx/DebugPixel.cc
+
+../excyrender.cxx/detail/Image.hh

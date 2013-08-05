@@ -20,6 +20,13 @@ namespace excyrender {
                 b += rhs.b;
                 return *this;
             }
+
+            RGB& operator-= (RGB const &rhs) noexcept {
+                r -= rhs.r;
+                g -= rhs.g;
+                b -= rhs.b;
+                return *this;
+            }
         };
 
         inline std::ostream& operator<< (std::ostream& os, RGB const &rgb) {
@@ -31,9 +38,24 @@ namespace excyrender {
             return {rgb.r*f, rgb.g*f, rgb.b*f};
         }
 
+        constexpr inline
+        RGB operator * (real f, RGB const &rgb) noexcept {
+            return {f*rgb.r, f*rgb.g, f*rgb.b};
+        }
+
+        constexpr inline
+        RGB operator * (RGB const &lhs, RGB const &rhs) noexcept {
+            return {lhs.r*rhs.r, lhs.g*rhs.g, lhs.b*rhs.b};
+        }
+
         inline
         RGB operator + (RGB lhs, RGB const &rhs) noexcept {
             return lhs += rhs;
+        }
+
+        inline
+        RGB operator - (RGB lhs, RGB const &rhs) noexcept {
+            return lhs -= rhs;
         }
 
         constexpr inline

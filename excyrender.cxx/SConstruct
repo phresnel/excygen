@@ -11,6 +11,6 @@ t = env.Program(target='excygen',
                         'Primitives/BoundingIntervalHierarchy.cc',
                         'DebugPixel.cc'
                        ],
-                       LIBS=['gomp']
+                       LIBS=['gomp', 'SDL', 'SDL_image']
                )
 Default(t)
