@@ -27,7 +27,7 @@ namespace excyrender { namespace Photometry { namespace Surface {
             if (!l.size())
                 throw std::logic_error("BSDF must have one or more BxDFs");
         }
-        
+
         real pdf(Geometry::Direction const &wo, Geometry::Direction const &wi) const noexcept
         {
             real sum = 0;
@@ -38,9 +38,9 @@ namespace excyrender { namespace Photometry { namespace Surface {
             }
             return sum;
         }
-        
-        Photometry::Spectrum 
-         f(Geometry::Direction const &wo, Geometry::Direction const &wi) 
+
+        Photometry::Spectrum
+         f(Geometry::Direction const &wo, Geometry::Direction const &wi)
          const noexcept
         {
             auto sum = Photometry::Spectrum::Black(400,800,8);
@@ -53,7 +53,7 @@ namespace excyrender { namespace Photometry { namespace Surface {
         }
 
         std::tuple<Geometry::Direction, Photometry::Spectrum, real>
-         sample_f(optional<BxDF::Distribution> dist, 
+         sample_f(optional<BxDF::Distribution> dist,
                   optional<BxDF::ReflectionClass> refl,
                   DifferentialGeometry const &dg,
                   Geometry::Direction const &wo,
@@ -62,8 +62,8 @@ namespace excyrender { namespace Photometry { namespace Surface {
         {
             int count = 0;
             for (auto const &bxdf : bxdfs) {
-                if (!dist || *dist==bxdf->distribution
-                  && !refl || *refl==bxdf->reflection)
+                if ((!dist || *dist==bxdf->distribution)
+                  && (!refl || *refl==bxdf->reflection))
                   ++count;
             }
             if (count > 1)
@@ -72,8 +72,8 @@ namespace excyrender { namespace Photometry { namespace Surface {
                 const auto wo_ = worldToLocal(dg, wo);
                 for (auto const &bxdf_ : bxdfs) {
                     auto const &bxdf = *bxdf_;
-                    if (!dist || *dist==bxdf.distribution
-                      && !refl || *refl==bxdf.reflection)
+                    if ((!dist || *dist==bxdf.distribution)
+                      && (!refl || *refl==bxdf.reflection))
                     {
                         const auto & r = bxdf.sample_f(wo_, rng);
                         return std::make_tuple(localToWorld(dg, std::get<0>(r)),
@@ -87,7 +87,7 @@ namespace excyrender { namespace Photometry { namespace Surface {
                                    0);
         }
 
-    private:        
+    private:
         std::vector<std::shared_ptr<BxDF>> bxdfs;
     };
 } } }

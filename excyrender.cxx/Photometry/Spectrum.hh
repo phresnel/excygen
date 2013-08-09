@@ -24,9 +24,9 @@ namespace excyrender { namespace Photometry {
         Spectrum (real lambdaMin, real lambdaMax, Cont const &spectrum) :
             lambdaMin_   (lambdaMin),
             lambdaMax_   (lambdaMax),
-            bins_        (spectrum.size()),
             delta_       ((lambdaMax_ - lambdaMin_) / (spectrum.size()-1)),
-            inverseDelta_(1 / delta_)
+            inverseDelta_(1 / delta_),
+            bins_        (spectrum.size())
         {
             for (int i=0, s=spectrum.size(); i!=s; ++i) {
                 bins_[i] = spectrum[i];
@@ -84,7 +84,7 @@ namespace excyrender { namespace Photometry {
         os << "spectrum{";
         if (s.bins_.size())
             os << s.bins_[0];
-        for (int i=1; i!=s.bins_.size(); ++i)
+        for (size_t i=1; i!=s.bins_.size(); ++i)
             os << ' ' << s.bins_[i];
         os << "}";
         return os;

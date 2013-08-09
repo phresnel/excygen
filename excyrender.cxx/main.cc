@@ -67,7 +67,8 @@ namespace excyrender {
         for (auto y=0; y!=height; ++y) {
             #pragma omp parallel for
             for (auto x=0; x<width; ++x) {
-                DebugPixel *cd = current_debug = &debug[y*width+x];
+                /*DebugPixel *cd =*/
+                current_debug = &debug[y*width+x];
 
                 RNG rng(7*y*width+3*x);
 
