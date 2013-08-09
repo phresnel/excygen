@@ -65,8 +65,10 @@ namespace excyrender { namespace detail { namespace BIH {
          traverse_rec(Node const* node, Geometry::Ray const &ray, real A, real B, int &steps) const noexcept
         {
             if (A >= B) {
+
                 return intersection_type();
             }
+            ++steps;
 
             if (node->leaf())
             {
@@ -90,23 +92,19 @@ namespace excyrender { namespace detail { namespace BIH {
                 const real t1 = (node->left()  - ray.origin[axis]) / ray.direction[axis];
                 const real t2 = (node->right() - ray.origin[axis]) / ray.direction[axis];
 
-                if (ray.direction[axis] < 0) {
+                if (ray.direction[axis] >= 0) {
                     auto a = traverse_rec(node+1, ray, A, min(t1,B), steps);
                     if (a) B = min(B, distance(*a));
                     auto b = traverse_rec(node+node->index(), ray, max(t2,A), B, steps);
 
-                    if (a || b) ++steps;
-
-                    if (b) return b;
+                    if (b) return b; // We adjusted B for the far node, so any far-hit must be nearer than near-hit.
                     return a;
                 } else {
                     auto a = traverse_rec(node+node->index(), ray, A, min(t2,B), steps);
                     if (a) B = min(B, distance(*a));
                     auto b = traverse_rec(node+1, ray, max(t1,A), B, steps);
 
-                    if (a || b) ++steps;
-
-                    if (b) return b;
+                    if (b) return b; // We adjusted B for the far node, so any far-hit must be nearer than near-hit.
                     return a;
                 }
             }

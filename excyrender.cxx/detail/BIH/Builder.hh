@@ -43,7 +43,7 @@ namespace excyrender { namespace detail { namespace BIH {
                 return {Min, Max};
             }
 
-            static tuple<real,real> clip(iterator it, iterator end, int axis) {
+            /*static tuple<real,real> clip(iterator it, iterator end, int axis) {
                 real Max = -real_max, Min = real_max;
                 for ( ; it!=end; ++it) {
                     const auto bb = aabb(*it);
@@ -51,6 +51,20 @@ namespace excyrender { namespace detail { namespace BIH {
                     Min = min(Min, bb.min()[axis]);
                 }
                 return make_tuple(Min, Max);
+            }*/
+
+            static real max_bound(iterator it, iterator end, int axis) {
+                real Max = -real_max;
+                for (; it!=end; ++it)
+                    Max = max(Max, aabb(*it).max()[axis]);
+                return Max;
+            }
+
+            static real min_bound(iterator it, iterator end, int axis) {
+                real Min = real_max;
+                for (; it!=end; ++it)
+                    Min = min(Min, aabb(*it).min()[axis]);
+                return Min;
             }
 
             static void build_node(const iterator first, const iterator last, AABB const &node_bb,
@@ -61,7 +75,7 @@ namespace excyrender { namespace detail { namespace BIH {
                 using namespace Geometry;
 
                 const int  axis = longest_axis(node_bb);
-                const auto clip_planes = clip(first, last, axis);
+                //const auto clip_planes = clip(first, last, axis);
 
                 if (std::distance(first, last) <= 5 || r<=0)
                 {
@@ -83,7 +97,10 @@ namespace excyrender { namespace detail { namespace BIH {
                     // Children bounding boxes, children, and current node finalization.
                     const auto children_bb = split(node_bb, axis);
                     build_node(first, pivot, get<0>(children_bb), r-1, nodes, groups);
-                    nodes[where_our_node_at] = Node::Inner(clip_planes, axis,
+
+                    const auto left  = max_bound(first, pivot, axis),
+                               right = min_bound(pivot, last, axis);
+                    nodes[where_our_node_at] = Node::Inner(make_tuple(left, right), axis,
                                                            nodes.size()-where_our_node_at);
                     build_node(pivot, last,  get<1>(children_bb), r-1, nodes, groups);
                 }
