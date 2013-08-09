@@ -92,17 +92,17 @@ namespace excyrender {
 
 
     inline std::tuple<AABB, AABB> split(AABB const &bb, int axis) noexcept {
-        const Geometry::Point c = center(bb);
+        const real c = center(bb, axis);
 
         if (axis==0)
-            return std::make_tuple(AABB(bb.min(), {c.x, bb.max().y, bb.max().z}),
-                                   AABB(          {c.x, bb.min().y, bb.min().z}, bb.max()));
+            return std::make_tuple(AABB(bb.min(), {c, bb.max().y, bb.max().z}),
+                                   AABB(          {c, bb.min().y, bb.min().z}, bb.max()));
         if (axis==1)
-            return std::make_tuple(AABB(bb.min(), {bb.max().x, c.y, bb.max().z}),
-                                   AABB(          {bb.min().x, c.y, bb.min().z}, bb.max()));
+            return std::make_tuple(AABB(bb.min(), {bb.max().x, c, bb.max().z}),
+                                   AABB(          {bb.min().x, c, bb.min().z}, bb.max()));
         if (axis==2)
-            return std::make_tuple(AABB(bb.min(), {bb.max().x, bb.max().y, c.z}),
-                                   AABB(          {bb.min().x, bb.min().y, c.z}, bb.max()));
+            return std::make_tuple(AABB(bb.min(), {bb.max().x, bb.max().y, c}),
+                                   AABB(          {bb.min().x, bb.min().y, c}, bb.max()));
         throw std::logic_error("split(AABB,int) -> axis!=[0,1,2]");
     }
 
