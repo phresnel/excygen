@@ -21,17 +21,18 @@ import Photometry.RGB(RGB(..))
 namespace excyrender {
     namespace Photometry {
         namespace SPD {
-        
+
             class Regular final  : public SPD {
             public:
                 Regular() = delete;
 
                 template <typename Cont>
                 Regular(real lambdaMin, real lambdaMax, Cont const &spectrum) :
-                    lambdaMin_(lambdaMin), lambdaMax_(lambdaMax), spectrum_(spectrum.size()),
-                    delta_((lambdaMax_ - lambdaMin_) / (spectrum_.size()-1)),
+                    SPD(lambdaMin, lambdaMax),
+                    spectrum_(spectrum.size()),
+                    delta_((lambda_max - lambda_min) / (spectrum_.size()-1)),
                     inverseDelta_(1 / delta_)
-                {                
+                {
                     for (int i=0, s=spectrum.size(); i!=s; ++i) {
                         spectrum_[i] = spectrum[i];
                     }
@@ -41,13 +42,12 @@ namespace excyrender {
                 real operator() (real) const ;
                 std::tuple<real,real,real> toXYZ() const ;
                 //std::unique_ptr<SPD> stretch(real f) const ;
-                
+
             private:
-                real lambdaMin_, lambdaMax_;
                 std::valarray<real> spectrum_;
                 real delta_, inverseDelta_;
             };
-            
+
         }
     }
 }

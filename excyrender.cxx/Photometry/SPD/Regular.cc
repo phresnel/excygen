@@ -23,29 +23,24 @@ namespace excyrender {
 
             real Regular::operator() (real lambda) const
             {
-                const real x = (lambda - lambdaMin_) * inverseDelta_;
+                const real x = (lambda - lambda_min) * inverseDelta_;
                 const size_t b0 = std::floor(x),
-                             b1 = std::min (b0+1, spectrum_.size()-1);
+                             b1 = b0+1;
                 const real dx = x - b0;
-                return (1-dx) * spectrum_[b0] + dx * spectrum_[b1];
+
+                const real A = b0>=0&&b0<spectrum_.size() ? spectrum_[b0] : real(0);
+                const real B = b1>=0&&b1<spectrum_.size() ? spectrum_[b1] : real(0);
+
+                return (1-dx) * A + dx * B;
             }
-            
+
             std::tuple<real,real,real> Regular::toXYZ() const
             {
-                /*
-                let samples = V.map f (V.enumFromN 0 cie_length)
-                       where f i = sampleRegular_unchecked lambdaMin spectrum inverseDelta 
-                                                           $ lambdaMin + inverseDelta * i 
-                in (cie_inverse_length * V.sum (V.zipWith (*) cie_x' samples),
-                    cie_inverse_length * V.sum (V.zipWith (*) cie_y' samples),
-                    cie_inverse_length * V.sum (V.zipWith (*) cie_z' samples))
-                */
-                    
                 using namespace CIEMatchingCurves;
 
-                std::valarray<real> samples(cie_length);                
+                std::valarray<real> samples(cie_length);
                 for (int i=0; i!=cie_length; ++i) {
-                    samples[i] = (*this)(lambdaMin_ + inverseDelta_ * i);
+                    samples[i] = (*this)(lambda_min + inverseDelta_ * i);
                 }
                 return std::make_tuple(
                     cie_inverse_length * (samples * cie_x).sum(),
@@ -54,12 +49,6 @@ namespace excyrender {
                 );
             }
 
-            /*std::unique_ptr<SPD> Regular::stretch(real f) const {
-               // SPD.stretch = \f -> regularSPD lambdaMin' lambdaMax' $ V.toList $ V.map (f*) spectrum'
-               //return new Regular
-            }*/
-            
-            
             Regular Regular::FromRGB(RGB const &rgb)
             {
                 using namespace RGBToSpectrumCurves;
@@ -68,11 +57,11 @@ namespace excyrender {
 
                 std::valarray<real> u(rgbToSpectrumCurves_length),
                                     v(rgbToSpectrumCurves_length),
-                                    w(rgbToSpectrumCurves_length);                
+                                    w(rgbToSpectrumCurves_length);
                 if (r<=g && r<=b)
                 {
                     // Compute reflectance _SampledSpectrum_ with _r_ as minimum
-                    u = rgbRefl2SpectWhite * r;          // -- r += r * rgbRefl2SpectWhite                
+                    u = rgbRefl2SpectWhite * r;          // -- r += r * rgbRefl2SpectWhite
                     if (g<=b) {
                         v = rgbRefl2SpectCyan * (g-r);   // -- r += (g - r) * rgbRefl2SpectCyan;
                         w = rgbRefl2SpectBlue * (b-g);   // -- r += (b - g) * rgbRefl2SpectBlue;
@@ -84,7 +73,7 @@ namespace excyrender {
                 else if (g<=r && g<=b)
                 {
                     // -- Compute reflectance _SampledSpectrum_ with _g_ as minimum
-                    u = rgbRefl2SpectWhite * g;           // -- r += g * rgbRefl2SpectWhite                
+                    u = rgbRefl2SpectWhite * g;           // -- r += g * rgbRefl2SpectWhite
                     if (r<=b) {
                         v = rgbRefl2SpectMagenta * (r-g); // -- r += (r - g) * rgbRefl2SpectMagenta
                         w = rgbRefl2SpectBlue    * (b-r); // -- r += (b - r) * rgbRefl2SpectBlue
@@ -103,7 +92,7 @@ namespace excyrender {
                     } else {
                         v = rgbRefl2SpectYellow * (g-b); // -- r += (g - b) * rgbRefl2SpectYellow;
                         w = rgbRefl2SpectRed    * (r-g); // -- r += (r - g) * rgbRefl2SpectRed;
-                    }                    
+                    }
                 }
                 // TODO: check what this 0.94 is for
                 return Regular(rgbToSpectrumCurves_start, rgbToSpectrumCurves_end, (u+v+w)*0.94);

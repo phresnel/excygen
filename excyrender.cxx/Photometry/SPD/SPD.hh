@@ -15,10 +15,17 @@ namespace excyrender {
             class SPD {
             public:
                 virtual ~SPD() {}
-                
+
+                SPD(real lambda_min, real lambda_max)
+                    : lambda_min(lambda_min), lambda_max(lambda_max) {}
+
+                // It is valid to use operator() for arguments outside the lambda-range,
+                // outside values are then assumed 0.
                 virtual real operator() (real) const = 0;
+
                 virtual std::tuple<real,real,real> toXYZ() const = 0;
-                //virtual std::unique_ptr<SPD> stretch(real f) const = 0;
+
+                real lambda_min = 0, lambda_max = 0;
             };
 
         }

@@ -8,12 +8,13 @@
 namespace excyrender {
     namespace Photometry {
         namespace SPD {
-            
+
             class Constant final  : public SPD {
             public:
                 Constant() = delete;
-                Constant(real c) : c_(c) {}
-                
+                Constant(real lambda_min, real lambda_max, real c)
+                    : SPD(lambda_min, lambda_max), c_(c) {}
+
                 real operator() (real) const { return c_; }
 
                 std::tuple<real,real,real> toXYZ() const;

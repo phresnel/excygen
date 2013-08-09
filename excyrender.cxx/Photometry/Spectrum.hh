@@ -18,7 +18,7 @@ namespace excyrender { namespace Photometry {
 
     class Spectrum final {
     public:
-    
+
         // -- ctors ---------------------------------------------------------------------
         template <typename Cont>
         Spectrum (real lambdaMin, real lambdaMax, Cont const &spectrum) :
@@ -27,7 +27,7 @@ namespace excyrender { namespace Photometry {
             bins_        (spectrum.size()),
             delta_       ((lambdaMax_ - lambdaMin_) / (spectrum.size()-1)),
             inverseDelta_(1 / delta_)
-        {                
+        {
             for (int i=0, s=spectrum.size(); i!=s; ++i) {
                 bins_[i] = spectrum[i];
             }
@@ -39,21 +39,21 @@ namespace excyrender { namespace Photometry {
         static Spectrum FromRGB(real lambdaMin, real lambdaMax, int resolution, RGB const &rgb);
         static Spectrum Gray   (real lambdaMin, real lambdaMax, int resolution, real g);
         static Spectrum Black  (real lambdaMin, real lambdaMax, int resolution);
-        
+
         Spectrum() = delete;
 
-        // -- operators -----------------------------------------------------------------        
+        // -- operators -----------------------------------------------------------------
         Spectrum operator+= (Spectrum const &rhs);
         Spectrum operator-= (Spectrum const &rhs);
         Spectrum operator*= (Spectrum const &rhs);
         Spectrum operator*= (real rhs);
         Spectrum operator/= (real rhs);
         Spectrum pow(real exponent) const;
-        
-        // -- conversion ----------------------------------------------------------------        
+
+        // -- conversion ----------------------------------------------------------------
         std::tuple<real,real,real> toXYZ() const;
         real toY() const;
-        
+
         friend std::ostream& operator<< (std::ostream &, Spectrum const&);
 
     private:
@@ -73,58 +73,56 @@ namespace excyrender { namespace Photometry {
                 throw std::runtime_error(ss.str());
             }
         }
-        
+
     private:
         real lambdaMin_, lambdaMax_, delta_, inverseDelta_;
         std::valarray<real> bins_;
     };
-    
-    
+
+
     inline std::ostream& operator<< (std::ostream &os, Spectrum const &s) {
         os << "spectrum{";
         if (s.bins_.size())
             os << s.bins_[0];
-        for (int i=1; i!=s.bins_.size(); ++i)            
+        for (int i=1; i!=s.bins_.size(); ++i)
             os << ' ' << s.bins_[i];
         os << "}";
         return os;
     }
-    
-    
+
+
     //-- ctor -------------------------------------------------------------------------------------
     inline Spectrum Spectrum::FromSPD(real lambdaMin, real lambdaMax, int resolution, SPD::SPD const &spd) {
-        const auto range = lambdaMax - lambdaMin,
-                   delta = range / (resolution-1);
+        const auto range = lambdaMax - lambdaMin;
         std::valarray<real> spec(resolution);
-        for (int i=0; i!=resolution; ++i) {
-            spec[i] = spd(i / real(resolution) * range + lambdaMin);
+        for (int i=0; i<resolution; ++i) {
+            spec[i] = spd(i / real(resolution) * range + spd.lambda_min);
         }
         return Spectrum(lambdaMin, lambdaMax, spec);
     }
 
     inline Spectrum Spectrum::FromSpectrum(real lambdaMin, real lambdaMax, int resolution, Spectrum const &spec) {
-        const auto range = lambdaMax - lambdaMin,
-                   delta = range / (resolution-1);
+        const auto range = lambdaMax - lambdaMin;
         std::valarray<real> bins(resolution);
-        for (int i=0; i!=resolution; ++i) {
+        for (int i=0; i<resolution; ++i) {
             bins[i] = spec(i / real(resolution) * range + lambdaMin);
         }
         return Spectrum(lambdaMin, lambdaMax, bins);
     }
-        
+
     inline Spectrum Spectrum::FromRGB(real lambdaMin, real lambdaMax, int resolution, RGB const &rgb) {
         return FromSPD (lambdaMin, lambdaMax, resolution, SPD::Regular::FromRGB(rgb));
     }
-    
+
     inline Spectrum Spectrum::Gray(real lambdaMin, real lambdaMax, int resolution, real g) {
         return FromRGB(lambdaMin, lambdaMax, resolution, RGB(g,g,g));
     }
-    
+
     inline Spectrum Spectrum::Black(real lambdaMin, real lambdaMax, int resolution) {
         return Gray(lambdaMin, lambdaMax, resolution, 0);
     }
-    
-    
+
+
     // -- operators -------------------------------------------------------------------------------
     inline Spectrum Spectrum::operator+= (Spectrum const &rhs) {
         assert_topology(rhs);
@@ -154,7 +152,7 @@ namespace excyrender { namespace Photometry {
         ret.bins_ = std::pow(bins_, exponent);
         return ret;
     }
-    
+
     inline real Spectrum::operator() (real lambda) const {
         const real x = (lambda - lambdaMin_) * inverseDelta_;
         const size_t b0 = std::floor(x),
@@ -179,23 +177,23 @@ namespace excyrender { namespace Photometry {
         const auto &samples = FromSpectrum(lambdaMin_, lambdaMax_, cie_length, *this).bins_;
         return cie_inverse_length * (cie_y * samples).sum();
     }
-    
-    
-    
+
+
+
     //-- free operators ---------------------------------------------------------------------------
     inline Spectrum operator+ (Spectrum lhs, Spectrum const &rhs) { return lhs += rhs; }
-    inline Spectrum operator- (Spectrum lhs, Spectrum const &rhs) { return lhs -= rhs; }    
-    inline Spectrum operator* (Spectrum lhs, Spectrum const &rhs) { return lhs *= rhs; }    
+    inline Spectrum operator- (Spectrum lhs, Spectrum const &rhs) { return lhs -= rhs; }
+    inline Spectrum operator* (Spectrum lhs, Spectrum const &rhs) { return lhs *= rhs; }
     inline Spectrum operator* (Spectrum lhs, real rhs) { return lhs *= rhs;  }
     inline Spectrum operator/ (Spectrum lhs, real rhs) { return lhs /= rhs;  }
     inline Spectrum pow       (Spectrum lhs, real exponent) { return lhs.pow(exponent); }
-    
+
     inline Spectrum sum(std::initializer_list<Spectrum> const &spectra) {
         Spectrum ret (Spectrum::Black(300,830,54));
         for (auto s : spectra)
             ret += s;
         return ret;
-    }   
+    }
 
 
 } }
