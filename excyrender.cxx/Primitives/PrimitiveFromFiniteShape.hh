@@ -13,17 +13,17 @@ class PrimitiveFromFiniteShape final : public FinitePrimitive
 {
 public:
     PrimitiveFromFiniteShape() = delete;
-    PrimitiveFromFiniteShape(std::shared_ptr<Shapes::FiniteShape> shape,
-                             Photometry::Surface::BSDF const &bsdf) :
+    PrimitiveFromFiniteShape(std::shared_ptr<const Shapes::FiniteShape> shape,
+                             std::shared_ptr<const Photometry::Material::Material> const &material) :
         shape(shape),
-        bsdf(bsdf)
+        material(material)
     {
     }
 
     optional<Intersection> intersect(Geometry::Ray const &ray) const noexcept
     {
         if (const auto &dg = shape->intersect(ray)) {
-            return Intersection{*dg, bsdf};
+            return Intersection{*dg, material};
         }
         return optional<Intersection>();
     }
@@ -44,8 +44,8 @@ public:
     }
 
 private:
-    std::shared_ptr<Shapes::FiniteShape> shape;
-    Photometry::Surface::BSDF bsdf;
+    std::shared_ptr<const Shapes::FiniteShape> shape;
+    std::shared_ptr<const Photometry::Material::Material> material;
 };
 
 } }

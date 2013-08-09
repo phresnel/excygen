@@ -46,7 +46,7 @@ namespace excyrender { namespace SurfaceIntegrators {
             const auto wo = -ray.direction;
 
             const tuple<Direction, Spectrum, real> s =
-                i->bsdf.sample_f(optional<BxDF::Distribution>(), optional<BxDF::ReflectionClass>(), i->dg, wo, rng);
+                i->material->bsdf(i->dg).sample_f(optional<BxDF::Distribution>(), optional<BxDF::ReflectionClass>(), i->dg, wo, rng);
             const auto wi     = get<0>(s);
             const auto r_surf = get<1>(s);
             const auto r_pdf  = get<2>(s);

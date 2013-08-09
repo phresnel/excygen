@@ -6,6 +6,7 @@
 
 #include "Primitive.hh"
 #include "Shapes/Shape.hh"
+#include "Photometry/Material/Material.hh"
 
 namespace excyrender { namespace Primitives {
 
@@ -13,17 +14,17 @@ class PrimitiveFromShape final : public Primitive
 {
 public:
     PrimitiveFromShape() = delete;
-    PrimitiveFromShape(std::shared_ptr<Shapes::Shape> shape,
-                       Photometry::Surface::BSDF const &bsdf) :
+    PrimitiveFromShape(std::shared_ptr<const Shapes::Shape> shape,
+                       std::shared_ptr<const Photometry::Material::Material> material) :
         shape(shape),
-        bsdf(bsdf)
+        material(material)
     {
     }
 
     optional<Intersection> intersect(Geometry::Ray const &ray) const noexcept
     {
         if (const auto &dg = shape->intersect(ray)) {
-            return Intersection{*dg, bsdf};
+            return Intersection{*dg, material};
         }
         return optional<Intersection>();
     }
@@ -38,8 +39,8 @@ public:
         return shape->occludes(a,b);
     }
 private:
-    std::shared_ptr<Shapes::Shape> shape;
-    Photometry::Surface::BSDF bsdf;
+    std::shared_ptr<const Shapes::Shape> shape;
+    std::shared_ptr<const Photometry::Material::Material> material;
 };
 
 } }

@@ -5,16 +5,17 @@
 #define INTERSECTION_HH_INCLUDED_20130718
 
 #include "DifferentialGeometry.hh"
-#include "Photometry/BSDF/BSDF.hh"
+#include "Photometry/Material/Material.hh"
+#include <memory>
 
 namespace excyrender {
 
     struct Intersection
     {
         DifferentialGeometry dg;
-        Photometry::Surface::BSDF bsdf;
+        std::shared_ptr<const Photometry::Material::Material> material;
     };
-    
+
     inline real distance(Intersection const &i) noexcept {
         return i.dg.d;
     }

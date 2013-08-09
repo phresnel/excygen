@@ -19,9 +19,12 @@
 #include "Primitives/PrimitiveFromFiniteShape.hh"
 
 #include "Photometry/Lighting.hh"
+#include "Photometry/Material/Simple.hh"
 
 #include "Primitives/BoundingIntervalHierarchy.hh"
 #include "DebugPixel.hh"
+
+#include "detail/Image.hh"
 
 #include <iostream>
 #include <functional>
@@ -118,34 +121,31 @@ int main () {
         Primitives::BoundingIntervalHierarchyBuilder builder;
         builder.add({std::shared_ptr<Primitives::FinitePrimitive>(new
                          PrimitiveFromFiniteShape (std::shared_ptr<Shapes::FiniteShape>(new Shapes::Sphere ({-1.0,0.0,5}, 1)),
-                         BSDF({std::shared_ptr<BxDF>(new Lambertian (Spectrum::FromRGB(400,800,8, {1,0.3,0.3})))})
+                         std::shared_ptr<const Material::Material>(new Material::Simple(BSDF({std::shared_ptr<BxDF>(new Lambertian (Spectrum::FromRGB(400,800,8, {1,0.3,0.3})))})))
                      )),
                      std::shared_ptr<Primitives::FinitePrimitive>(new
                          PrimitiveFromFiniteShape (std::shared_ptr<Shapes::FiniteShape>(new Shapes::Sphere ({1.0,0.0,5}, 1)),
-                         BSDF({std::shared_ptr<BxDF>(new Lambertian (Spectrum::FromRGB(400,800,8, {1,1,1})))})
+                         std::shared_ptr<const Material::Material>(new Material::Simple(BSDF({std::shared_ptr<BxDF>(new Lambertian (Spectrum::FromRGB(400,800,8, {1,1,1})))})))
                      )),
                      std::shared_ptr<Primitives::FinitePrimitive>(new
                          PrimitiveFromFiniteShape (std::shared_ptr<Shapes::FiniteShape>(new Shapes::Triangle({0,0,5},{-1,1,5},{1,1,5})),
-                         BSDF ({ std::shared_ptr<BxDF>( new Lambertian (Spectrum::FromRGB(400,800,8,{0.6,1,0.4})) ) })
+                         std::shared_ptr<const Material::Material>(new Material::Simple(BSDF ({ std::shared_ptr<BxDF>( new Lambertian (Spectrum::FromRGB(400,800,8,{0.6,1,0.4})) ) })))
                      )),
                      std::shared_ptr<Primitives::FinitePrimitive>(new
                          PrimitiveFromFiniteShape (std::shared_ptr<Shapes::FiniteShape>(new Shapes::Triangle({0,0,5},{-1,-1,5},{1,-1,5})),
-                         BSDF ({ std::shared_ptr<BxDF>( new Lambertian (Spectrum::FromRGB(400,800,8,{0.6,1,0.4})) ) })
+                         std::shared_ptr<const Material::Material>(new Material::Simple(BSDF ({ std::shared_ptr<BxDF>( new Lambertian (Spectrum::FromRGB(400,800,8,{0.6,1,0.4})) ) })))
                      ))
                     });
 
-        for (int i=0; i<10000; ++i) {
-            float x = rand() / (float)RAND_MAX * 4 - 2;
-            float y = rand() / (float)RAND_MAX * 2;
-            float r = 0.1 + rand() / (float)RAND_MAX * 2;
+        for (int i=0; i<100; ++i) {
+            float x = rand() / (float)RAND_MAX * 100 - 50;
+            float y = rand() / (float)RAND_MAX * 10;
+            float z = 4+rand() / (float)RAND_MAX * 100+5;
+            float r = 0.2 + rand() / (float)RAND_MAX * 1.3;
 
-            x = x*x;
-
-            if (std::fabs(x) < 0.5)
-                continue;
             builder.add(std::shared_ptr<Primitives::FinitePrimitive>(new
-                         PrimitiveFromFiniteShape (std::shared_ptr<Shapes::FiniteShape>(new Shapes::Sphere ({x,y,5}, 0.02)),
-                         BSDF({std::shared_ptr<BxDF>(new Lambertian (Spectrum::FromRGB(400,800,8, {1,1,1})))})
+                         PrimitiveFromFiniteShape (std::shared_ptr<Shapes::FiniteShape>(new Shapes::Sphere ({x,y,z}, r)),
+                         std::shared_ptr<const Material::Material>(new Material::Simple(BSDF({std::shared_ptr<BxDF>(new Lambertian (Spectrum::FromRGB(400,800,8, {1,1,1})))})))
                        )));
         }
 
@@ -154,7 +154,7 @@ int main () {
                          builder.finalize(20),
                          std::shared_ptr<Primitive>(new
                              PrimitiveFromShape (std::shared_ptr<Shapes::Shape>(new Shapes::Plane(Shapes::Plane::FromPointNormal({0,-1,0},normal(0,1,0)))),
-                             BSDF ({ std::shared_ptr<BxDF>( new Lambertian (Spectrum::Gray(400,800,8,real(1))) ) })
+                             std::shared_ptr<const Material::Material>(new Material::Simple(BSDF ({ std::shared_ptr<BxDF>( new Lambertian (Spectrum::Gray(400,800,8,real(1))) ) })))
                          )),
                         });
 
@@ -169,8 +169,8 @@ int main () {
 
         raytrace (width, height, samples_per_pixel, integrator, pixels, debug);
         for (int y=0; y!=height; ++y) {
-            for (int x=0; x!=width; ++x) {
-                pixels[y*width+x] = Photometry::RGB(0,0,debug[y*width+x].traversal0 / 20.0f);
+            for (int x=y%2; x<width; x+=2) {
+                pixels[y*width+x] = Photometry::RGB(0.5,0.5,1.0) * (debug[y*width+x].traversal0) * 0.025;
             }
         }
         ImageFormat::ppm (std::cout, width, height, pixels);
