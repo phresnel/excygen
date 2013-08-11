@@ -72,3 +72,5 @@
 ../excyrender.cxx/Photometry/Texture/AddTexture.hh
 ../excyrender.cxx/Photometry/Texture/LerpTexture.hh
 ../excyrender.cxx/Photometry/Texture/ImageTexture.hh
+../excyrender.cxx/Photometry/Material/Lambertian.hh
+../excyrender.cxx/Photometry/Texture/PlanarMapping2d.hh

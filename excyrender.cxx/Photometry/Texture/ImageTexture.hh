@@ -46,6 +46,8 @@ namespace excyrender { namespace Photometry { namespace Texture {
         return Spectrum::FromRGB(400,800,8, image.cubic(coords.s, coords.t));
     }
 
+    using ColorImageTexture = ImageTexture<Spectrum>;
+
 } } }
 
 #endif // IMAGETEXTURE_HH
