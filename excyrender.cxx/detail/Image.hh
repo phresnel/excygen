@@ -30,10 +30,17 @@
 
 namespace excyrender { namespace detail {
 
+enum class ImageWrap {
+    Wrap,
+    Black,
+    Clamp
+};
+
 class Image {
         std::vector<Photometry::RGB> h;
         std::vector<real> alpha_;
         unsigned int width_, height_;
+        ImageWrap wrap;
 
         static Uint32 getPixel (SDL_Surface *s, unsigned int x, unsigned int y) {
                 switch (s->format->BytesPerPixel) {
@@ -56,11 +63,28 @@ class Image {
                 return 0;
         }
 
+        constexpr static int wrap_num(int x, int dim) noexcept {
+            return x>0 ? x % dim
+                       : x + dim * ((-x+dim)/dim); // don't rely on compiler for negative integers
+        }
+        constexpr static int clamp_num(int x, int dim) noexcept {
+            return x < 0 ? 0 : x >= dim ? dim-1 : x;
+        }
+
+        /*static_assert(wrap_num(0, 2) == 0, "wrap_num is buggy");
+        static_assert(wrap_num(1, 2) == 1, "wrap_num is buggy");
+        static_assert(wrap_num(2, 2) == 0, "wrap_num is buggy");
+        static_assert(wrap_num(5, 2) == 1, "wrap_num is buggy");
+        static_assert(wrap_num(-250, 1000) == 750, "wrap_num is buggy");
+        static_assert(wrap_num(-1250, 1000) == 750, "wrap_num is buggy");
+        static_assert(wrap_num(-12500, 1000) == 750, "wrap_num is buggy");*/
+
+
         Image (Image const &);
         Image & operator = (Image const &) ;
 public:
-        Image (const std::string &filename)
-        : width_(0), height_(0)
+        Image (const std::string &filename, ImageWrap wrap = ImageWrap::Black)
+        : width_(0), height_(0), wrap(wrap)
         {
                 if (!load (filename))
                         throw std::runtime_error("error while loading " + filename);
@@ -112,14 +136,38 @@ public:
 
 
         Photometry::RGB at (int x, int y) const {
-                if ((x<0) | (x>=(int)width_) | (y<0) | (y>=(int)height_))
-                        return Photometry::RGB();
+                if ((x<0) | (x>=(int)width_) | (y<0) | (y>=(int)height_)) {
+                        switch (wrap) {
+                        case ImageWrap::Black:
+                            return Photometry::RGB();
+                        case ImageWrap::Wrap:
+                            x = wrap_num(x, width_);
+                            y = wrap_num(y, height_);
+                            break;
+                        case ImageWrap::Clamp:
+                            x = clamp_num(x, width_);
+                            y = clamp_num(y, height_);
+                            break;
+                        }
+                }
                 return h[y*width_ + x];
         }
 
         real alpha_at (int x, int y) const {
-                if ((x<0) | (x>=(int)width_) | (y<0) | (y>=(int)height_))
-                        return real(0);
+                if ((x<0) | (x>=(int)width_) | (y<0) | (y>=(int)height_)) {
+                        switch (wrap) {
+                        case ImageWrap::Black:
+                            return 0;
+                        case ImageWrap::Wrap:
+                            x = wrap_num(x, width_);
+                            y = wrap_num(y, height_);
+                            break;
+                        case ImageWrap::Clamp:
+                            x = clamp_num(x, width_);
+                            y = clamp_num(y, height_);
+                            break;
+                        }
+                }
                 return alpha_[y*width_ + x];
         }
 
