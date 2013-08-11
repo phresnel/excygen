@@ -22,6 +22,8 @@
 #include "Photometry/Material/Simple.hh"
 
 #include "Photometry/Texture/UVMapping2d.hh"
+#include "Photometry/Texture/ConstantTexture.hh"
+#include "Photometry/Texture/ScaleTexture.hh"
 
 #include "Primitives/BoundingIntervalHierarchy.hh"
 #include "DebugPixel.hh"
