@@ -1,0 +1,54 @@
+nimbly-done{
+    categories{
+        0.1-devel{
+            {
+                title:implement texture as per pbrt;
+                description:;
+                done:0;
+                priority:0;
+            }
+            {
+                title:implement image-texture;
+                description:;
+                done:0;
+                priority:0;
+            }
+            {
+                title:implement-lsystem-tree;
+                description:or copy from picogen, of course;
+                done:0;
+                priority:0;
+            }
+        }
+        0.1-release{
+            {
+                title:testing;
+                description:;
+                done:0;
+                priority:0;
+            }
+            {
+                title:RPM package;
+                description:;
+                done:0;
+                priority:0;
+            }
+            {
+                title:DEB package;
+                description:;
+                done:0;
+                priority:0;
+            }
+            {
+                title:No-Depends Static Tarballs;
+                description:;
+                done:0;
+                priority:0;
+            }
+        }
+        0.2-release{
+        }
+    }
+    uncategorized{
+    }
+}
