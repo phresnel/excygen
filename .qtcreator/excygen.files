@@ -47,6 +47,10 @@
 ../excyrender.cxx/Photometry/SPD/SPD.hh
 ../excyrender.cxx/Photometry/SPD/Regular.hh
 ../excyrender.cxx/Photometry/RGB.hh
+../excyrender.cxx/Photometry/Texture/TexCoords2d.hh
+../excyrender.cxx/Photometry/Texture/Mapping2d.hh
+../excyrender.cxx/Photometry/Texture/UVMapping2d.hh
+../excyrender.cxx/Photometry/Texture/Mapping3d.hh
 
 ../excyrender.cxx/ImageFormat/PPM.cc
 ../excyrender.cxx/ImageFormat/PPM.hh

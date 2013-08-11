@@ -21,6 +21,8 @@
 #include "Photometry/Lighting.hh"
 #include "Photometry/Material/Simple.hh"
 
+#include "Photometry/Texture/UVMapping2d.hh"
+
 #include "Primitives/BoundingIntervalHierarchy.hh"
 #include "DebugPixel.hh"
 
@@ -112,9 +114,9 @@ int main () {
         using namespace Surface;
         using namespace Geometry;
 
-        const auto width = 512,
-                   height = 512;
-        const auto samples_per_pixel = 1;
+        const auto width = 400,
+                   height = 400;
+        const auto samples_per_pixel = 6;
         std::vector<Photometry::RGB> pixels(width*height);
         std::vector<DebugPixel> debug(width*height);
 
@@ -126,27 +128,33 @@ int main () {
                      )),
                      std::shared_ptr<Primitives::FinitePrimitive>(new
                          PrimitiveFromFiniteShape (std::shared_ptr<Shapes::FiniteShape>(new Shapes::Sphere ({1.0,0.0,5}, 1)),
-                         std::shared_ptr<const Material::Material>(new Material::Simple(BSDF({std::shared_ptr<BxDF>(new Lambertian (Spectrum::FromRGB(400,800,8, {1,1,1})))})))
+                         std::shared_ptr<const Material::Material>(new Material::Simple(BSDF({std::shared_ptr<BxDF>(new Lambertian (Spectrum::Gray(400,800,8, 1)))})))
                      )),
                      std::shared_ptr<Primitives::FinitePrimitive>(new
                          PrimitiveFromFiniteShape (std::shared_ptr<Shapes::FiniteShape>(new Shapes::Triangle({0,0,5},{-1,1,5},{1,1,5})),
-                         std::shared_ptr<const Material::Material>(new Material::Simple(BSDF ({ std::shared_ptr<BxDF>( new Lambertian (Spectrum::FromRGB(400,800,8,{0.6,1,0.4})) ) })))
+                         std::shared_ptr<const Material::Material>(new Material::Simple(BSDF ({ std::shared_ptr<BxDF>( new Lambertian (Spectrum::FromRGB(400,800,8,{0.6,1.0,0.4})) ) })))
                      )),
                      std::shared_ptr<Primitives::FinitePrimitive>(new
                          PrimitiveFromFiniteShape (std::shared_ptr<Shapes::FiniteShape>(new Shapes::Triangle({0,0,5},{-1,-1,5},{1,-1,5})),
-                         std::shared_ptr<const Material::Material>(new Material::Simple(BSDF ({ std::shared_ptr<BxDF>( new Lambertian (Spectrum::FromRGB(400,800,8,{0.6,1,0.4})) ) })))
+                         std::shared_ptr<const Material::Material>(new Material::Simple(BSDF ({ std::shared_ptr<BxDF>( new Lambertian (Spectrum::FromRGB(400,800,8,{0.6,1.0,0.4})) ) })))
                      ))
                     });
 
-        for (int i=0; i<100; ++i) {
+        for (int i=0; i<10000; ++i) {
             float x = rand() / (float)RAND_MAX * 100 - 50;
-            float y = rand() / (float)RAND_MAX * 10;
-            float z = 4+rand() / (float)RAND_MAX * 100+5;
-            float r = 0.2 + rand() / (float)RAND_MAX * 1.3;
+            float z = 4+rand() / (float)RAND_MAX * 100 - 10;
+            float r = 0.05 + rand() / (float)RAND_MAX * 0.3;
+            float y = r-1;//rand() / (float)RAND_MAX * 10;
+
+            float r_ = rand() / (float)RAND_MAX * 0.6 + 0.4;
+            float g_ = rand() / (float)RAND_MAX * 0.6 + 0.4;
+            float b_ = rand() / (float)RAND_MAX * 0.6 + 0.4;
 
             builder.add(std::shared_ptr<Primitives::FinitePrimitive>(new
                          PrimitiveFromFiniteShape (std::shared_ptr<Shapes::FiniteShape>(new Shapes::Sphere ({x,y,z}, r)),
-                         std::shared_ptr<const Material::Material>(new Material::Simple(BSDF({std::shared_ptr<BxDF>(new Lambertian (Spectrum::FromRGB(400,800,8, {1,1,1})))})))
+                         std::shared_ptr<const Material::Material>(new Material::Simple(BSDF({
+                             std::shared_ptr<BxDF>(new Lambertian (Spectrum::FromRGB(400,800,8, {r_,g_,b_})))
+                         })))
                        )));
         }
 
@@ -162,16 +170,18 @@ int main () {
         std::vector<std::shared_ptr<LightSource>> const lightSources({
             std::shared_ptr<LightSource>(new Directional (direction(1,1,-1), Spectrum::FromRGB(400,800,8,{8,7,7})))
         });
-        auto const integrator = SurfaceIntegrators::Path(6, primitive, lightSources,
+        auto const integrator = SurfaceIntegrators::Path(1, primitive, lightSources,
                                                          [](Geometry::Direction const &) {
                                                             return Spectrum::FromRGB(400,800,8,{1,2,3});
                                                          }
                                                         );
 
         raytrace (width, height, samples_per_pixel, integrator, pixels, debug);
-        for (int y=0; y!=height; ++y) {
-            for (int x=y%2; x<width; x+=2) {
-                pixels[y*width+x] = Photometry::RGB(0.5,0.5,1.0) * (debug[y*width+x].traversal0) * 0.025;
+        if (0) {
+            for (int y=0; y!=height; ++y) {
+                for (int x=y%2; x<width; x+=2) {
+                    pixels[y*width+x] = Photometry::RGB(0.5,0.5,1.0) * (debug[y*width+x].traversal0) * 0.025;
+                }
             }
         }
         ImageFormat::ppm (std::cout, width, height, pixels);
