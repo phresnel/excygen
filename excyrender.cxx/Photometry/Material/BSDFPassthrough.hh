@@ -7,8 +7,8 @@
 #include "Material.hh"
 
 namespace excyrender { namespace Photometry { namespace Material {
-        struct Simple final : Material {
-            Simple(Surface::BSDF const &bsdf) : bsdf_(bsdf) {}
+        struct BSDFPassthrough final : Material {
+            BSDFPassthrough(Surface::BSDF const &bsdf) : bsdf_(bsdf) {}
 
             Surface::BSDF bsdf(DifferentialGeometry const &) const noexcept {
                 return bsdf_;

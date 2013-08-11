@@ -19,7 +19,7 @@
 #include "Primitives/PrimitiveFromFiniteShape.hh"
 
 #include "Photometry/Lighting.hh"
-#include "Photometry/Material/Simple.hh"
+#include "Photometry/Material/BSDFPassthrough.hh"
 
 #include "Photometry/Texture/UVMapping2d.hh"
 #include "Photometry/Texture/ConstantTexture.hh"
@@ -129,19 +129,19 @@ int main () {
         Primitives::BoundingIntervalHierarchyBuilder builder;
         builder.add({std::shared_ptr<Primitives::FinitePrimitive>(new
                          PrimitiveFromFiniteShape (std::shared_ptr<Shapes::FiniteShape>(new Shapes::Sphere ({-1.0,0.0,5}, 1)),
-                         std::shared_ptr<const Material::Material>(new Material::Simple(BSDF({std::shared_ptr<BxDF>(new Lambertian (Spectrum::FromRGB(400,800,8, {1,0.3,0.3})))})))
+                         std::shared_ptr<const Material::Material>(new Material::BSDFPassthrough(BSDF({std::shared_ptr<BxDF>(new Lambertian (Spectrum::FromRGB(400,800,8, {1,0.3,0.3})))})))
                      )),
                      std::shared_ptr<Primitives::FinitePrimitive>(new
                          PrimitiveFromFiniteShape (std::shared_ptr<Shapes::FiniteShape>(new Shapes::Sphere ({1.0,0.0,5}, 1)),
-                         std::shared_ptr<const Material::Material>(new Material::Simple(BSDF({std::shared_ptr<BxDF>(new Lambertian (Spectrum::Gray(400,800,8, 1)))})))
+                         std::shared_ptr<const Material::Material>(new Material::BSDFPassthrough(BSDF({std::shared_ptr<BxDF>(new Lambertian (Spectrum::Gray(400,800,8, 1)))})))
                      )),
                      std::shared_ptr<Primitives::FinitePrimitive>(new
                          PrimitiveFromFiniteShape (std::shared_ptr<Shapes::FiniteShape>(new Shapes::Triangle({0,0,5},{-1,1,5},{1,1,5})),
-                         std::shared_ptr<const Material::Material>(new Material::Simple(BSDF ({ std::shared_ptr<BxDF>( new Lambertian (Spectrum::FromRGB(400,800,8,{0.6,1.0,0.4})) ) })))
+                         std::shared_ptr<const Material::Material>(new Material::BSDFPassthrough(BSDF ({ std::shared_ptr<BxDF>( new Lambertian (Spectrum::FromRGB(400,800,8,{0.6,1.0,0.4})) ) })))
                      )),
                      std::shared_ptr<Primitives::FinitePrimitive>(new
                          PrimitiveFromFiniteShape (std::shared_ptr<Shapes::FiniteShape>(new Shapes::Triangle({0,0,5},{-1,-1,5},{1,-1,5})),
-                         std::shared_ptr<const Material::Material>(new Material::Simple(BSDF ({ std::shared_ptr<BxDF>( new Lambertian (Spectrum::FromRGB(400,800,8,{0.6,1.0,0.4})) ) })))
+                         std::shared_ptr<const Material::Material>(new Material::BSDFPassthrough(BSDF ({ std::shared_ptr<BxDF>( new Lambertian (Spectrum::FromRGB(400,800,8,{0.6,1.0,0.4})) ) })))
                      ))
                     });
 
@@ -157,7 +157,7 @@ int main () {
 
             builder.add(std::shared_ptr<Primitives::FinitePrimitive>(new
                          PrimitiveFromFiniteShape (std::shared_ptr<Shapes::FiniteShape>(new Shapes::Sphere ({x,y,z}, r)),
-                         std::shared_ptr<const Material::Material>(new Material::Simple(BSDF({
+                         std::shared_ptr<const Material::Material>(new Material::BSDFPassthrough(BSDF({
                              std::shared_ptr<BxDF>(new Lambertian (Spectrum::FromRGB(400,800,8, {r_,g_,b_})))
                          })))
                        )));
@@ -168,7 +168,7 @@ int main () {
                          builder.finalize(20),
                          std::shared_ptr<Primitive>(new
                              PrimitiveFromShape (std::shared_ptr<Shapes::Shape>(new Shapes::Plane(Shapes::Plane::FromPointNormal({0,-1,0},normal(0,1,0)))),
-                             std::shared_ptr<const Material::Material>(new Material::Simple(BSDF ({ std::shared_ptr<BxDF>( new Lambertian (Spectrum::Gray(400,800,8,real(1))) ) })))
+                             std::shared_ptr<const Material::Material>(new Material::BSDFPassthrough(BSDF ({ std::shared_ptr<BxDF>( new Lambertian (Spectrum::Gray(400,800,8,real(1))) ) })))
                          )),
                         });
 

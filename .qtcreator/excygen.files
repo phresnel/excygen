@@ -37,7 +37,7 @@
 ../excyrender.cxx/Photometry/BSDF/BxDF.hh
 ../excyrender.cxx/Photometry/BSDF/BSDF.hh
 ../excyrender.cxx/Photometry/Material/Material.hh
-../excyrender.cxx/Photometry/Material/Simple.hh
+../excyrender.cxx/Photometry/Material/BSDFPassthrough.hh
 ../excyrender.cxx/Photometry/Spectrum.hh
 ../excyrender.cxx/Photometry/CIEMatchingCurves.hh
 ../excyrender.cxx/Photometry/RGBToSpectrumCurves.hh
