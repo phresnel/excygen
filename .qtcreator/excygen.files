@@ -65,7 +65,9 @@
 ../excyrender.cxx/DebugPixel.cc
 
 ../excyrender.cxx/detail/Image.hh
+../excyrender.cxx/memory.hh
 ../excyrender.cxx/Photometry/Texture/Texture.hh
 ../excyrender.cxx/Photometry/Texture/ConstantTexture.hh
-../excyrender.cxx/Photometry/Texture/ScaleTexture.hh
-../excyrender.cxx/memory.hh
+../excyrender.cxx/Photometry/Texture/MulTexture.hh
+../excyrender.cxx/Photometry/Texture/AddTexture.hh
+../excyrender.cxx/Photometry/Texture/LerpTexture.hh

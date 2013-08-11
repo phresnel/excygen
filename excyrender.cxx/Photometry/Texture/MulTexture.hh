@@ -9,17 +9,26 @@
 
 namespace excyrender { namespace Photometry { namespace Texture {
 
+    namespace detail {
+        template <typename LHS, typename RHS>
+        using multexture_result_type = decltype(
+            (*((LHS*)nullptr)) (*((DifferentialGeometry*)nullptr))
+            *
+            (*((LHS*)nullptr)) (*((DifferentialGeometry*)nullptr))
+        );
+    }
+
     template <typename LHS, typename RHS>
-    struct ScaleTexture final : Texture<decltype( *((LHS*)nullptr) * *((RHS*)nullptr) )>
+    struct MulTexture final : Texture<detail::multexture_result_type<LHS,RHS>>
     {
-        using product_type = decltype( *((LHS*)nullptr) * *((RHS*)nullptr) );
+        using result_type = detail::multexture_result_type<LHS,RHS>;
 
 
-        ScaleTexture (shared_ptr<LHS> const &lhs, shared_ptr<RHS> const &rhs)
+        MulTexture (shared_ptr<LHS> lhs, shared_ptr<RHS> rhs)
             : lhs(lhs), rhs(rhs)
         {}
 
-        product_type operator() (DifferentialGeometry const &dg) const noexcept
+        result_type operator() (DifferentialGeometry const &dg) const noexcept
         {
             return (*lhs)(dg) * (*rhs)(dg);
         }

@@ -23,7 +23,10 @@
 
 #include "Photometry/Texture/UVMapping2d.hh"
 #include "Photometry/Texture/ConstantTexture.hh"
-#include "Photometry/Texture/ScaleTexture.hh"
+#include "Photometry/Texture/MulTexture.hh"
+#include "Photometry/Texture/AddTexture.hh"
+#include "Photometry/Texture/LerpTexture.hh"
+#include "Photometry/Texture/BilerpTexture.hh"
 
 #include "Primitives/BoundingIntervalHierarchy.hh"
 #include "DebugPixel.hh"
