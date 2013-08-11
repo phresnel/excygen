@@ -64,8 +64,8 @@ class Image {
         }
 
         constexpr static int wrap_num(int x, int dim) noexcept {
-            return x>0 ? x % dim
-                       : x + dim * ((-x+dim)/dim); // don't rely on compiler for negative integers
+            return x<0 ? (x + dim * (-x / dim + 1)) % dim
+                       : x % dim;
         }
         constexpr static int clamp_num(int x, int dim) noexcept {
             return x < 0 ? 0 : x >= dim ? dim-1 : x;
