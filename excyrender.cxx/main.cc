@@ -14,6 +14,7 @@
 #include "Shapes/Sphere.hh"
 #include "Shapes/Plane.hh"
 #include "Shapes/Triangle.hh"
+#include "Shapes/Terrain2d.hh"
 #include "Primitives/PrimitiveList.hh"
 #include "Primitives/PrimitiveFromShape.hh"
 #include "Primitives/PrimitiveFromFiniteShape.hh"
@@ -120,14 +121,15 @@ int main () {
         using Surface::BSDF;
         using namespace Photometry::Texture;
 
-        const auto width = 400,
-                   height = 400;
+        const auto width = 512,
+                   height = 512;
         const auto samples_per_pixel = 6;
         std::vector<Photometry::RGB> pixels(width*height);
         std::vector<DebugPixel> debug(width*height);
 
 
         Primitives::BoundingIntervalHierarchyBuilder builder;
+        /*
         builder.add({std::shared_ptr<Primitives::FinitePrimitive>(new
                          PrimitiveFromFiniteShape (std::shared_ptr<Shapes::FiniteShape>(new Shapes::Sphere ({-1.0,0.0,5}, 1)),
                          std::shared_ptr<const Material::Material>(new Material::BSDFPassthrough(BSDF({std::shared_ptr<BxDF>(new Surface::Lambertian (Spectrum::FromRGB(400,800,8, {1,0.3,0.3})))})))
@@ -163,18 +165,34 @@ int main () {
                          })))
                        )));
         }
+        */
+
+        builder.add(std::shared_ptr<Primitives::FinitePrimitive>(new
+                             PrimitiveFromFiniteShape (std::shared_ptr<Shapes::FiniteShape>(
+                                                          new Shapes::Terrain2d(
+                                                               Geometry::Rectangle({-100,-100},{100,100}),
+                                                               Geometry::Rectangle({0,0},{100,100}),
+                                                               512,
+                                                               [](real u,real v) { return -10 + 5*sin(u) * sin(v); }
+                                                           )),
+                             std::shared_ptr<Material::Material>(new Material::Lambertian(
+                                  shared_ptr<SpectrumTexture>(new ColorImageTexture(Photometry::Texture::XZPlanarMapping(0.4,0.4,0,0),
+                                                                                    "loose_gravel_9261459 (mayang.com).JPG"))
+                             ))
+                         ))
+                );
 
 
         PrimitiveList const primitive({
-                         builder.finalize(20),
-                         std::shared_ptr<Primitive>(new
+                         builder.finalize(20)
+                         /*std::shared_ptr<Primitive>(new
                              PrimitiveFromShape (std::shared_ptr<Shapes::Shape>(new Shapes::Plane(Shapes::Plane::FromPointNormal({0,-1,0},normal(0,1,0)))),
                              //std::shared_ptr<const Material::Material>(new Material::BSDFPassthrough(BSDF ({ std::shared_ptr<BxDF>( new Surface::Lambertian (Spectrum::Gray(400,800,8,real(1))) ) })))
                              std::shared_ptr<Material::Material>(new Material::Lambertian(
-                                  shared_ptr<SpectrumTexture>(new ColorImageTexture(Photometry::Texture::XZPlanarMapping(0.1,0.1,0,0),
+                                  shared_ptr<SpectrumTexture>(new ColorImageTexture(Photometry::Texture::XZPlanarMapping(0.4,0.4,0,0),
                                                                                     "loose_gravel_9261459 (mayang.com).JPG"))
                              ))
-                         )),
+                         ))*/
                         });
 
         std::vector<std::shared_ptr<LightSource>> const lightSources({

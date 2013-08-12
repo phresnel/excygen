@@ -17,6 +17,8 @@
 ../excyrender.cxx/Shapes/Sphere.hh
 ../excyrender.cxx/Shapes/Triangle.hh
 ../excyrender.cxx/Shapes/FiniteShape.hh
+../excyrender.cxx/Shapes/BoundingIntervalHierarchy.hh
+../excyrender.cxx/Shapes/BoundingIntervalHierarchy.cc
 
 ../excyrender.cxx/DifferentialGeometry.hh
 ../excyrender.cxx/Primitives/PrimitiveList.hh
@@ -74,3 +76,7 @@
 ../excyrender.cxx/Photometry/Texture/ImageTexture.hh
 ../excyrender.cxx/Photometry/Material/Lambertian.hh
 ../excyrender.cxx/Photometry/Texture/PlanarMapping2d.hh
+../excyrender.cxx/Shapes/Terrain2d.hh
+../excyrender.cxx/Shapes/Terrain2d.cc
+../excyrender.cxx/Geometry/Rectangle.hh
+../excyrender.cxx/Geometry/Point2d.hh
