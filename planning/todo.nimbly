@@ -4,18 +4,36 @@ nimbly-done{
             {
                 title:implement texture as per pbrt;
                 description:;
-                done:0;
+                done:1;
                 priority:0;
             }
             {
                 title:implement image-texture;
                 description:;
-                done:0;
+                done:1;
                 priority:0;
             }
             {
                 title:implement-lsystem-tree;
                 description:or copy from picogen, of course;
+                done:0;
+                priority:0;
+            }
+            {
+                title:Bump Mapping;
+                description:;
+                done:0;
+                priority:0;
+            }
+            {
+                title:2D-Terrain;
+                description:;
+                done:1;
+                priority:0;
+            }
+            {
+                title:in Terrain2d, use raw triangle BIH;
+                description:;
                 done:0;
                 priority:0;
             }
@@ -45,8 +63,58 @@ nimbly-done{
                 done:0;
                 priority:0;
             }
+            {
+                title:review final correctness;
+                description:;
+                done:0;
+                priority:0;
+            }
+            {
+                title:review constexpr correctness;
+                description:;
+                done:0;
+                priority:0;
+            }
+            {
+                title:review noexcept correctness;
+                description:;
+                done:0;
+                priority:0;
+            }
+            {
+                title:profile and do non-algorithmic optimizations;
+                description:;
+                done:0;
+                priority:0;
+            }
+            {
+                title:Code commenting;
+                description:There should be a short paragraph about the assumption and guarantees for each type.;
+                done:0;
+                priority:0;
+            }
         }
         0.2-release{
+        }
+        x.x-devel{
+            {
+                title:Normal Mapping;
+                description:;
+                done:0;
+                priority:0;
+            }
+            {
+                title:Parallax Mapping;
+                description:;
+                done:0;
+                priority:0;
+            }
+            {
+                title:3D-Terrain;
+                description:;
+                done:0;
+                priority:0;
+            }
         }
     }
     uncategorized{
