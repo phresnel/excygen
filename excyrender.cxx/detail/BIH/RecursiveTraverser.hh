@@ -64,7 +64,7 @@ namespace excyrender { namespace detail { namespace BIH {
         intersection_type
          traverse_rec(Node const* node, Geometry::Ray const &ray, real A, real B, int &steps) const noexcept
         {
-            if (A >= B) {
+            if (A > B) {
 
                 return intersection_type();
             }

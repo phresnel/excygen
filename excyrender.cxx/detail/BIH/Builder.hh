@@ -110,6 +110,8 @@ namespace excyrender { namespace detail { namespace BIH {
 
     template <typename T>
     void build (Data<T> &data, int max_rec) {
+        std::cerr << "building bih (" << data.objects.size() << " objects, "
+                  << "T=" << typeid(T).name() << ")" << std::endl;
         detail::Builder<T>().build(data, max_rec);
     }
 
