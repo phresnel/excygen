@@ -33,6 +33,8 @@
 #include "Primitives/BoundingIntervalHierarchy.hh"
 #include "DebugPixel.hh"
 
+#include "Nature/Et1.hh"
+
 #include <iostream>
 #include <functional>
 #include <vector>
@@ -121,9 +123,9 @@ int main () {
         using Surface::BSDF;
         using namespace Photometry::Texture;
 
-        const auto width = 512,
-                   height = 512;
-        const auto samples_per_pixel = 6;
+        const auto width = 800,
+                   height = 800;
+        const auto samples_per_pixel = 1;
         std::vector<Photometry::RGB> pixels(width*height);
         std::vector<DebugPixel> debug(width*height);
 
@@ -173,11 +175,12 @@ int main () {
                                                                Geometry::Rectangle({-100,-100},{100,100}),
                                                                Geometry::Rectangle({0,0},{100,100}),
                                                                512,
-                                                               [](real u,real v) { return -10 + 5*sin(u) * sin(v); }
+                                                               //[](real u,real v) { return -4 + 5*sin(u) * sin(v); }
+                                                               Nature::Et1::compile("-4+sin(x)+sin(y)")
                                                            )),
                              std::shared_ptr<Material::Material>(new Material::Lambertian(
                                   shared_ptr<SpectrumTexture>(new ColorImageTexture(Photometry::Texture::XZPlanarMapping(0.4,0.4,0,0),
-                                                                                    "loose_gravel_9261459 (mayang.com).JPG"))
+                                                                                    "Rock_07_UV_H_CM_1.jpg"))
                              ))
                          ))
                 );
@@ -196,7 +199,7 @@ int main () {
                         });
 
         std::vector<std::shared_ptr<LightSource>> const lightSources({
-            std::shared_ptr<LightSource>(new Directional (direction(1,1,-1), Spectrum::FromRGB(400,800,8,{8,7,7})))
+            std::shared_ptr<LightSource>(new Directional (direction(1,0.5,-1), Spectrum::FromRGB(400,800,8,{8,7,7})))
         });
         auto const integrator = SurfaceIntegrators::Path(5, primitive, lightSources,
                                                          [](Geometry::Direction const &) {

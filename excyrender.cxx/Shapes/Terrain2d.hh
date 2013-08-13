@@ -8,7 +8,7 @@
 #include "FiniteShape.hh"
 #include "Geometry/Rectangle.hh"
 #include "Shapes/BoundingIntervalHierarchy.hh"
-#include <functional>
+#include "Nature/HeightFunction.hh"
 
 namespace excyrender { namespace Shapes {
 
@@ -20,7 +20,7 @@ namespace excyrender { namespace Shapes {
         Terrain2d(Geometry::Rectangle const &target,
                   Geometry::Rectangle const &source,
                   int resolution,
-                  std::function<real (real, real)>);
+                  Nature::HeightFunction);
 
         optional<DifferentialGeometry> intersect(Geometry::Ray const &) const noexcept ;
         bool occludes(Geometry::Point const &, Geometry::Point const &) const noexcept ;

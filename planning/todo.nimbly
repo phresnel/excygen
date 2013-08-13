@@ -115,6 +115,12 @@ nimbly-done{
                 done:0;
                 priority:0;
             }
+            {
+                title:Ivy Generatpr;
+                description:http://graphics.uni-konstanz.de/~luft/ivy_generator/;
+                done:0;
+                priority:0;
+            }
         }
     }
     uncategorized{

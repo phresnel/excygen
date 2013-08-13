@@ -9,7 +9,7 @@ namespace excyrender { namespace Shapes {
 Terrain2d::Terrain2d(Geometry::Rectangle const &target_,
                      Geometry::Rectangle const &source_,
                      int resolution,
-                     std::function<real (real, real)> height_)
+                     Nature::HeightFunction height_)
 {
     if (resolution <= 0)
         throw std::logic_error("Terrain2d: resolution must be >= 1");

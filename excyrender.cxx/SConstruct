@@ -11,7 +11,8 @@ t = env.Program(target='excygen',
                         'Primitives/BoundingIntervalHierarchy.cc',
                         'Shapes/BoundingIntervalHierarchy.cc',
                         'DebugPixel.cc',
-                        'Shapes/Terrain2d.cc'
+                        'Shapes/Terrain2d.cc',
+                        'Nature/Et1.cc'
                        ],
                        LIBS=['gomp', 'SDL', 'SDL_image']
                )
