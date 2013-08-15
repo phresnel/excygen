@@ -188,7 +188,7 @@ namespace excyrender { namespace Nature { namespace Et1 { namespace {
 
 
 // -- Compilation ----------------------------------------------------------------------------------
-namespace excyrender { namespace Nature { namespace Et1 { namespace {
+namespace excyrender { namespace Nature { namespace Et1 { namespace AST {
 
     class ASTNode {
     public:
@@ -210,6 +210,52 @@ namespace excyrender { namespace Nature { namespace Et1 { namespace {
         virtual ~Expression() {}
     };
 
+
+    // -- Binary operations ------------------------------------------------------------------------
+    struct Binary : ASTNode {
+        virtual ~Binary() {}
+        Expression const &lhs() const { return *lhs_; }
+        Expression const &rhs() const { return *rhs_; }
+
+    protected:
+        Binary (token_iter from, token_iter to,
+                unique_ptr<Expression> &&lhs, unique_ptr<Expression> &&rhs
+               ) : ASTNode(from, to), lhs_(move(lhs)), rhs_(move(rhs)) {}
+
+    private:
+        unique_ptr<Expression> lhs_, rhs_;
+    };
+
+    struct Addition final : Binary {
+        Addition (token_iter from, token_iter to,
+                  unique_ptr<Expression> &&lhs, unique_ptr<Expression> &&rhs
+                  ) : Binary(from, to, move(lhs), move(rhs))
+        {}
+    };
+
+    struct Subtraction final : Binary {
+        Subtraction (token_iter from, token_iter to,
+                     unique_ptr<Expression> &&lhs, unique_ptr<Expression> &&rhs
+                    ) : Binary(from, to, move(lhs), move(rhs))
+        {}
+    };
+
+    struct Multiplication final : Binary {
+        Multiplication (token_iter from, token_iter to,
+                        unique_ptr<Expression> &&lhs, unique_ptr<Expression> &&rhs
+                       ) : Binary(from, to, move(lhs), move(rhs))
+        {}
+    };
+
+    struct Division final : Binary {
+        Division (token_iter from, token_iter to,
+                  unique_ptr<Expression> &&lhs, unique_ptr<Expression> &&rhs
+                 ) : Binary(from, to, move(lhs), move(rhs))
+        {}
+    };
+
+
+    // -- "End points" -----------------------------------------------------------------------------
     struct Literal : Expression {
         Literal (token_iter from, token_iter to) : Expression(from, to) {}
         virtual ~Literal() {}
@@ -234,7 +280,11 @@ namespace excyrender { namespace Nature { namespace Et1 { namespace {
         vector<unique_ptr<Expression>> arguments_;
     };
 
+} } } }
 
+
+
+namespace excyrender { namespace Nature { namespace Et1 { namespace {
 
     optional<Token> lookahead(token_iter it, token_iter end)  {
         if (it != end && it+1 != end)
@@ -249,13 +299,15 @@ namespace excyrender { namespace Nature { namespace Et1 { namespace {
     }
 
 
-    unique_ptr<Expression> expression(token_iter, token_iter);
-    unique_ptr<IntegerLiteral> integer_literal(token_iter, token_iter);
+    unique_ptr<AST::Expression> expression(token_iter, token_iter);
+    unique_ptr<AST::IntegerLiteral> integer_literal(token_iter, token_iter);
 
 
     // function-call : identifier '(' expression (',' expression)* ')'
-    unique_ptr<Call> call(token_iter it, token_iter end)
+    unique_ptr<AST::Call> call(token_iter it, token_iter end)
     {
+        using namespace AST;
+
         const token_iter call_begin = it;
 
         // some-call ( foo , bar )
@@ -310,16 +362,20 @@ namespace excyrender { namespace Nature { namespace Et1 { namespace {
 
 
 
-    unique_ptr<IntegerLiteral> integer_literal(token_iter it, token_iter end)
+    unique_ptr<AST::IntegerLiteral> integer_literal(token_iter it, token_iter end)
     {
+        using namespace AST;
+
         if (it->kind != Integer) return unique_ptr<IntegerLiteral>();
         return unique_ptr<IntegerLiteral>(new IntegerLiteral(it, it+1));
     }
 
 
 
-    unique_ptr<Expression> expression(token_iter it, token_iter end)
+    unique_ptr<AST::Expression> expression(token_iter it, token_iter end)
     {
+        using namespace AST;
+
         if (auto e = integer_literal(it, end))
             return std::move(e);
         if (auto e = call(it, end))
