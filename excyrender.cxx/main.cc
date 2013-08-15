@@ -176,7 +176,7 @@ int main () {
                                                                Geometry::Rectangle({0,0},{100,100}),
                                                                512,
                                                                //[](real u,real v) { return -4 + 5*sin(u) * sin(v); }
-                                                               Nature::Et1::compile("sqrt()+-4+sin(x)+sin(y)+(3*2)")
+                                                               Nature::Et1::compile("sqrt(1,2,3,foo())+-4+sin(x)+sin(y)+(3*2)")
                                                            )),
                              std::shared_ptr<Material::Material>(new Material::Lambertian(
                                   shared_ptr<SpectrumTexture>(new ColorImageTexture(Photometry::Texture::XZPlanarMapping(0.4,0.4,0,0),

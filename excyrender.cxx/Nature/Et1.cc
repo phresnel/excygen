@@ -193,7 +193,7 @@ namespace excyrender { namespace Nature { namespace Et1 { namespace {
     class ASTNode {
     public:
         ASTNode() = delete;
-        virtual ~ASTNode() = 0;
+        virtual ~ASTNode() {}
 
         token_iter from() const noexcept { return from_; }
         token_iter to()   const noexcept { return to_; }
@@ -203,6 +203,35 @@ namespace excyrender { namespace Nature { namespace Et1 { namespace {
 
     private:
         token_iter from_, to_;
+    };
+
+    struct Expression : ASTNode {
+        Expression (token_iter from, token_iter to) : ASTNode(from, to) {}
+        virtual ~Expression() {}
+    };
+
+    struct Literal : Expression {
+        Literal (token_iter from, token_iter to) : Expression(from, to) {}
+        virtual ~Literal() {}
+    };
+
+    struct IntegerLiteral final : Literal {
+        IntegerLiteral (token_iter from, token_iter to) : Literal(from, to) {}
+    };
+
+    struct Call final : Expression {
+        Call (token_iter from, token_iter to,
+              std::string const &id, vector<unique_ptr<Expression>> &&args)
+        : Expression(from, to), id_(id), arguments_(std::move(args))
+        {}
+
+        std::string id() const { return id_; }
+        vector<unique_ptr<Expression>>::size_type      args_size()  const { return arguments_.size(); }
+        vector<unique_ptr<Expression>>::const_iterator args_begin() const { return arguments_.begin(); }
+        vector<unique_ptr<Expression>>::const_iterator args_end()   const { return arguments_.end(); }
+    private:
+        std::string id_;
+        vector<unique_ptr<Expression>> arguments_;
     };
 
 
@@ -219,47 +248,86 @@ namespace excyrender { namespace Nature { namespace Et1 { namespace {
         return false;
     }
 
-    unique_ptr<ASTNode> expression(token_iter, token_iter) {
-        std::cerr << "expression() not implemented" << std::endl;
-        return unique_ptr<ASTNode>();
-    }
+
+    unique_ptr<Expression> expression(token_iter, token_iter);
+    unique_ptr<IntegerLiteral> integer_literal(token_iter, token_iter);
+
 
     // function-call : identifier '(' expression (',' expression)* ')'
-    bool function_call(token_iter it, token_iter end)
+    unique_ptr<Call> call(token_iter it, token_iter end)
     {
-        // Name.
+        const token_iter call_begin = it;
+
+        // some-call ( foo , bar )
+        // ^^^^^^^^^
         if (it->kind != Identifier)
-            return false;
+            return unique_ptr<Call>();
         const string callee = *it;
         ++it;
 
-        // Open Paren.
+        // some-call ( foo , bar )
+        //           ^
         if (it == end || it->kind != LParen)
-            return false;
+            return unique_ptr<Call>();
         ++it;
 
         // Arguments.
         std::cout << "looks like a call to '" << callee << "'" << std::endl;
 
-        while (it != end) {
-            const auto node = expression(it, end);
-            if (!node) {
-                if (it->kind == RParen)
-                    break;
-                throw std::runtime_error("expected ')'");
-            }
-            it = node->to();
-            if (it==end || it->kind!=Comma)
-                throw std::runtime_error("expected ','");
-            ++it;
+        std::vector<unique_ptr<Expression>> arguments;
 
-            /* PUSH NODE TO ARGUMENT LIST */
+        if (it->kind!=RParen) {
+            // some-call ( foo , bar )
+            //             ^^^  OR   ^
+            while (it!=end) {
+                // some-call ( foo , bar )
+                //             ^^^
+                {
+                    auto arg = expression(it, end);
+                    if (!arg)
+                        throw std::runtime_error("expected argument");
+                    it = arg->to();
+                    arguments.push_back(std::move(arg));
+                }
+
+                // some-call ( foo , bar )
+                //                 ^ OR  ^
+                if (it == end || it->kind == RParen)
+                    break;
+                if (it->kind != Comma)
+                    throw std::runtime_error("expected ','");
+                ++it;
+            }
         }
+
+        std::cout << arguments.size() << " arguments" << std::endl;
+
         if (it == end || it->kind != RParen)
             throw std::runtime_error("unclosed '(' in function call");
 
-        return false;
+        return unique_ptr<Call>(new Call(call_begin, it, callee, std::move(arguments)));
     }
+
+
+
+    unique_ptr<IntegerLiteral> integer_literal(token_iter it, token_iter end)
+    {
+        if (it->kind != Integer) return unique_ptr<IntegerLiteral>();
+        return unique_ptr<IntegerLiteral>(new IntegerLiteral(it, it+1));
+    }
+
+
+
+    unique_ptr<Expression> expression(token_iter it, token_iter end)
+    {
+        if (auto e = integer_literal(it, end))
+            return std::move(e);
+        if (auto e = call(it, end))
+            return std::move(e);
+        return unique_ptr<Expression>();
+    }
+
+
 
     // factor
     //     : function-call
@@ -273,7 +341,7 @@ namespace excyrender { namespace Nature { namespace Et1 { namespace {
     HeightFunction compile (vector<Token> const &toks) {
         if (toks.empty())
             throw std::runtime_error("no tokens");
-        if (function_call(toks.begin(), toks.end())) {
+        if (call(toks.begin(), toks.end())) {
             std::cout << "fun-call found" << std::endl;
         }
         throw std::runtime_error("not implemented");
