@@ -12,6 +12,34 @@
 // -- Compilation ----------------------------------------------------------------------------------
 namespace excyrender { namespace Nature { namespace Et1 { namespace AST {
 
+    class Addition;
+    class Subtraction;
+    class Multiplication;
+    class Division;
+    class IntegerLiteral;
+    class Call;
+
+    struct Visitor {
+        virtual void begin(Addition const &) = 0;
+        virtual void end(Addition const &) = 0;
+
+        virtual void begin(Subtraction const &) = 0;
+        virtual void end(Subtraction const &) = 0;
+
+        virtual void begin(Multiplication const &) = 0;
+        virtual void end(Multiplication const &) = 0;
+
+        virtual void begin(Division const &) = 0;
+        virtual void end(Division const &) = 0;
+
+        virtual void begin(IntegerLiteral const &) = 0;
+        virtual void end(IntegerLiteral const &) = 0;
+
+        virtual void begin(Call const &) = 0;
+        virtual void end(Call const &) = 0;
+    };
+
+
     class ASTNode {
     public:
         ASTNode() = delete;
@@ -20,6 +48,7 @@ namespace excyrender { namespace Nature { namespace Et1 { namespace AST {
         token_iter from() const noexcept { return from_; }
         token_iter to()   const noexcept { return to_; }
 
+        virtual void accept(Visitor &v) const = 0;
     protected:
         ASTNode(token_iter from, token_iter to) : from_(from), to_(to) {}
 
@@ -53,6 +82,13 @@ namespace excyrender { namespace Nature { namespace Et1 { namespace AST {
                   shared_ptr<Expression> lhs, shared_ptr<Expression> rhs
                   ) : Binary(from, to, lhs, rhs)
         {}
+
+        void accept(Visitor &v) const {
+            v.begin(*this);
+            lhs().accept(v);
+            rhs().accept(v);
+            v.end(*this);
+        }
     };
 
     struct Subtraction final : Binary {
@@ -60,6 +96,13 @@ namespace excyrender { namespace Nature { namespace Et1 { namespace AST {
                      shared_ptr<Expression> lhs, shared_ptr<Expression> rhs
                     ) : Binary(from, to, lhs, rhs)
         {}
+
+        void accept(Visitor &v) const {
+            v.begin(*this);
+            lhs().accept(v);
+            rhs().accept(v);
+            v.end(*this);
+        }
     };
 
     struct Multiplication final : Binary {
@@ -67,6 +110,13 @@ namespace excyrender { namespace Nature { namespace Et1 { namespace AST {
                         shared_ptr<Expression> lhs, shared_ptr<Expression> rhs
                        ) : Binary(from, to, lhs, rhs)
         {}
+
+        void accept(Visitor &v) const {
+            v.begin(*this);
+            lhs().accept(v);
+            rhs().accept(v);
+            v.end(*this);
+        }
     };
 
     struct Division final : Binary {
@@ -74,6 +124,13 @@ namespace excyrender { namespace Nature { namespace Et1 { namespace AST {
                   shared_ptr<Expression> lhs, shared_ptr<Expression> rhs
                  ) : Binary(from, to, lhs, rhs)
         {}
+
+        void accept(Visitor &v) const {
+            v.begin(*this);
+            lhs().accept(v);
+            rhs().accept(v);
+            v.end(*this);
+        }
     };
 
 
@@ -90,6 +147,11 @@ namespace excyrender { namespace Nature { namespace Et1 { namespace AST {
 
     struct IntegerLiteral final : Literal {
         IntegerLiteral (token_iter from, token_iter to) : Literal(from, to) {}
+
+        void accept(Visitor &v) const {
+            v.begin(*this);
+            v.end(*this);
+        }
     };
 
     struct Call final : Terminal {
@@ -102,6 +164,14 @@ namespace excyrender { namespace Nature { namespace Et1 { namespace AST {
         vector<shared_ptr<Expression>>::size_type      args_size()  const { return arguments_.size(); }
         vector<shared_ptr<Expression>>::const_iterator args_begin() const { return arguments_.begin(); }
         vector<shared_ptr<Expression>>::const_iterator args_end()   const { return arguments_.end(); }
+
+        void accept(Visitor &v) const {
+            v.begin(*this);
+            for (auto arg : arguments_)
+                arg->accept(v);
+            v.end(*this);
+        }
+
     private:
         std::string id_;
         vector<shared_ptr<Expression>> arguments_;
