@@ -88,6 +88,17 @@ namespace excyrender { namespace Nature { namespace Et1 { namespace {
             indent(); os << "}\n";
         }
 
+        void begin(AST::ParenExpression const &call)
+        {
+            indent(); os << "() {\n";
+            ++indent_;
+        }
+        void end(AST::ParenExpression const &)
+        {
+            --indent_;
+            indent(); os << "}\n";
+        }
+
     private:
         std::ostream &os = std::cout;
         int indent_ = 0;
@@ -234,6 +245,14 @@ namespace excyrender { namespace Nature { namespace Et1 { namespace {
             return e;
         if (auto e = call(it, end))
             return e;
+        if (it->kind == LParen) {
+            if (auto e = expression(it+1, end)) {
+                if (e->to()->kind != RParen)
+                    throw std::runtime_error("missing ')'");
+                return shared_ptr<AST::ParenExpression>(
+                            new AST::ParenExpression(it, e->to()+1, e));
+            }
+        }
         return shared_ptr<AST::Terminal>();
     }
 
@@ -313,7 +332,7 @@ namespace excyrender { namespace Nature { namespace Et1 { namespace {
 namespace excyrender { namespace Nature { namespace Et1 {
 
 HeightFunction compile (std::string const &code) {
-    return compile(tokenize("1+2*3+4"));
+    return compile(tokenize("1+2*(3+4)"));
 }
 
 } } }

@@ -19,6 +19,7 @@ namespace excyrender { namespace Nature { namespace Et1 { namespace AST {
     class IntegerLiteral;
     class Call;
     class Negation;
+    class ParenExpression;
 
     struct Visitor {
         virtual void begin(Addition const &) = 0;
@@ -41,6 +42,9 @@ namespace excyrender { namespace Nature { namespace Et1 { namespace AST {
 
         virtual void begin(Negation const &) = 0;
         virtual void end(Negation const &) = 0;
+
+        virtual void begin(ParenExpression const &) = 0;
+        virtual void end(ParenExpression const &) = 0;
     };
 
 
@@ -179,6 +183,28 @@ namespace excyrender { namespace Nature { namespace Et1 { namespace AST {
     private:
         std::string id_;
         vector<shared_ptr<Expression>> arguments_;
+    };
+
+
+    // We need this as an extra class because the parser relies on the from() and to() functions,
+    // which would be off-by-one if we'd just use Expression for expressions in parens.
+    struct ParenExpression final : Terminal {
+        ParenExpression(token_iter from, token_iter to,
+                        shared_ptr<Expression> expression)
+        : Terminal(from, to), expression_(expression)
+        {
+        }
+
+        Expression const &expression() const { return *expression_; }
+
+        void accept(Visitor &v) const {
+            v.begin(*this);
+            expression().accept(v);
+            v.end(*this);
+        }
+
+    private:
+        shared_ptr<Expression> expression_;
     };
 
 
