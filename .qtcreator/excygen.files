@@ -82,7 +82,8 @@
 ../excyrender.cxx/Geometry/Point2d.hh
 
 ../excyrender.cxx/Nature/HeightFunction.hh
-../excyrender.cxx/Nature/Et1.hh
-../excyrender.cxx/Nature/Et1.cc
+
+../excyrender.cxx/Scripting/Et1.hh
+../excyrender.cxx/Scripting/Et1.cc
 
 

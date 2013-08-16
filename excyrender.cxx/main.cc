@@ -33,7 +33,7 @@
 #include "Primitives/BoundingIntervalHierarchy.hh"
 #include "DebugPixel.hh"
 
-#include "Nature/Et1.hh"
+#include "Scripting/Et1.hh"
 
 #include <iostream>
 #include <functional>
