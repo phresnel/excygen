@@ -9,6 +9,96 @@
 
 namespace excyrender { namespace Nature { namespace Et1 { namespace {
 
+
+    struct DumpVisitor final : AST::Visitor {
+
+        void begin(AST::Addition const &)
+        {
+            indent(); os << "(+) {\n";
+            ++indent_;
+        }
+        void end(AST::Addition const &)
+        {
+            --indent_;
+            indent(); os << "}\n";
+        }
+
+        void begin(AST::Subtraction const &)
+        {
+            indent(); os << "(-) {\n";
+            ++indent_;
+        }
+        void end(AST::Subtraction const &)
+        {
+            --indent_;
+            indent(); os << "}\n";
+        }
+
+        void begin(AST::Negation const &)
+        {
+            indent(); os << "(neg) {\n";
+            ++indent_;
+        }
+        void end(AST::Negation const &)
+        {
+            --indent_;
+            indent(); os << "}\n";
+        }
+
+        void begin(AST::Multiplication const &)
+        {
+            indent(); os << "(*) {\n";
+            ++indent_;
+        }
+        void end(AST::Multiplication const &)
+        {
+            --indent_;
+            indent(); os << "}\n";
+        }
+
+        void begin(AST::Division const &)
+        {
+            indent(); os << "(/) {\n";
+            ++indent_;
+        }
+        void end(AST::Division const &)
+        {
+            --indent_;
+            indent(); os << "}\n";
+        }
+
+        void begin(AST::IntegerLiteral const &lit)
+        {
+            indent(); os << (string)(*lit.from()) << "\n";
+            ++indent_;
+        }
+        void end(AST::IntegerLiteral const &)
+        {
+            --indent_;
+        }
+
+        void begin(AST::Call const &call)
+        {
+            indent(); os << "call " << call.id() << "{\n";
+            ++indent_;
+        }
+        void end(AST::Call const &)
+        {
+            --indent_;
+            indent(); os << "}\n";
+        }
+
+    private:
+        std::ostream &os = std::cout;
+        int indent_ = 0;
+        void indent() {
+            for (int i=0; i!=indent_; ++i) {
+                std::cout << "    ";
+            }
+        }
+    };
+
+
     struct BinaryOperator {
         string symbol;
         int precedence;
@@ -50,8 +140,9 @@ namespace excyrender { namespace Nature { namespace Et1 { namespace {
     }
 
 
-    shared_ptr<AST::Expression> expression(token_iter, token_iter);
+    shared_ptr<AST::Expression>     expression(token_iter, token_iter);
     shared_ptr<AST::IntegerLiteral> integer_literal(token_iter, token_iter);
+    shared_ptr<AST::Terminal>       terminal (token_iter it, token_iter end);
 
 
     // function-call : identifier '(' expression (',' expression)* ')'
@@ -119,9 +210,27 @@ namespace excyrender { namespace Nature { namespace Et1 { namespace {
 
 
 
+    shared_ptr<AST::Unary> unary(token_iter it, token_iter end)
+    {
+        using namespace AST;
+
+        if (it->kind == Minus) {
+            auto rhs = terminal(it+1, end);
+            if (!rhs)
+                throw std::runtime_error("expected argument to negation-operator");
+            return shared_ptr<Negation>(new Negation(it, rhs->to(), rhs));
+        }
+
+        return shared_ptr<AST::Unary>();
+    }
+
+
+
     shared_ptr<AST::Terminal> terminal (token_iter it, token_iter end)
     {
         if (auto e = integer_literal(it, end))
+            return e;
+        if (auto e = unary(it, end))
             return e;
         if (auto e = call(it, end))
             return e;
@@ -139,20 +248,28 @@ namespace excyrender { namespace Nature { namespace Et1 { namespace {
             if (it == end)
                 return lhs;
 
+            // 1 + 2 + 3
+            //   ^
             std::map<string, BinaryOperator>::iterator prec_entry;
             const int prec = precedence(string(*it), &prec_entry);
-            if (prec < min_prec)
+            if (prec < min_prec) {
                 return lhs;
-
+            }
             ++it;
+
+            // 1 + 2 + 3
+            //     ^
             shared_ptr<AST::Expression> rhs = terminal(it, end);
             if (!rhs)
                 throw std::runtime_error("expected operand on right-hand-side of operator");
-            ++it;
+            it = rhs->to();
 
+            // 1 + 2 ? 3
+            //       ^
             const int next_prec = precedence(string(*it));
             if (prec < next_prec) {
-                rhs = binary(prec+1, rhs, it+1, end);
+                // This means '?' has higher precedence (e.g. '*').
+                rhs = binary(next_prec, rhs, it, end); // Therefore, what is our rhs should really be ?'s lhs.
                 if (!rhs)
                     return shared_ptr<AST::Expression>();
                 it = rhs->to();
@@ -175,96 +292,10 @@ namespace excyrender { namespace Nature { namespace Et1 { namespace {
     }
 
 
-
-    // factor
-    //     : function-call
-    //     | scalar
-    //     | '(' expression ')'
-    /*token_iter factor(token_iter it, token_iter end) {
-        if (function_call
-        //return it;
-    }*/
-
-    struct DumpVisitor final : AST::Visitor {
-
-        void begin(AST::Addition const &)
-        {
-            indent(); os << "(+) {\n";
-            ++indent_;
-        }
-        void end(AST::Addition const &)
-        {
-            --indent_;
-            indent(); os << "}\n";
-        }
-
-        void begin(AST::Subtraction const &)
-        {
-            indent(); os << "(-) {\n";
-            ++indent_;
-        }
-        void end(AST::Subtraction const &)
-        {
-            --indent_;
-            indent(); os << "}\n";
-        }
-
-        void begin(AST::Multiplication const &)
-        {
-            indent(); os << "(*) {\n";
-            ++indent_;
-        }
-        void end(AST::Multiplication const &)
-        {
-            --indent_;
-            indent(); os << "}\n";
-        }
-
-        void begin(AST::Division const &)
-        {
-            indent(); os << "(/) {\n";
-            ++indent_;
-        }
-        void end(AST::Division const &)
-        {
-            --indent_;
-            indent(); os << "}\n";
-        }
-
-        void begin(AST::IntegerLiteral const &lit)
-        {
-            indent(); os << (string)(*lit.from()) << "\n";
-            ++indent_;
-        }
-        void end(AST::IntegerLiteral const &)
-        {
-            --indent_;
-        }
-
-        void begin(AST::Call const &call)
-        {
-            indent(); os << "call " << call.id() << "{\n";
-            ++indent_;
-        }
-        void end(AST::Call const &)
-        {
-            --indent_;
-            indent(); os << "}\n";
-        }
-
-    private:
-        std::ostream &os = std::cout;
-        int indent_ = 0;
-        void indent() {
-            for (int i=0; i!=indent_; ++i) {
-                std::cout << "    ";
-            }
-        }
-    };
-
     HeightFunction compile (vector<Token> const &toks) {
         if (toks.empty())
             throw std::runtime_error("no tokens");
+        std::cout << toks << std::endl;
         if (auto e = expression(toks.begin(), toks.end())) {
             std::cout << "expression found" << std::endl;
 
@@ -282,7 +313,7 @@ namespace excyrender { namespace Nature { namespace Et1 { namespace {
 namespace excyrender { namespace Nature { namespace Et1 {
 
 HeightFunction compile (std::string const &code) {
-    return compile(tokenize(code));
+    return compile(tokenize("1+2*3+4"));
 }
 
 } } }

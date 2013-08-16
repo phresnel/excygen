@@ -18,6 +18,7 @@ namespace excyrender { namespace Nature { namespace Et1 { namespace AST {
     class Division;
     class IntegerLiteral;
     class Call;
+    class Negation;
 
     struct Visitor {
         virtual void begin(Addition const &) = 0;
@@ -37,6 +38,9 @@ namespace excyrender { namespace Nature { namespace Et1 { namespace AST {
 
         virtual void begin(Call const &) = 0;
         virtual void end(Call const &) = 0;
+
+        virtual void begin(Negation const &) = 0;
+        virtual void end(Negation const &) = 0;
     };
 
 
@@ -176,6 +180,36 @@ namespace excyrender { namespace Nature { namespace Et1 { namespace AST {
         std::string id_;
         vector<shared_ptr<Expression>> arguments_;
     };
+
+
+    // -- Unary operations -------------------------------------------------------------------------
+    struct Unary : Terminal {
+        virtual ~Unary() {}
+        Expression const &rhs() const { return *rhs_; }
+
+    protected:
+        Unary (token_iter from, token_iter to, shared_ptr<Expression> rhs) :
+            Terminal(from, to), rhs_(rhs) {}
+
+    private:
+        shared_ptr<Expression> rhs_;
+    };
+
+
+    struct Negation final : Unary {
+        Negation (token_iter from, token_iter to, shared_ptr<Expression> rhs) :
+            Unary(from, to, rhs)
+        {}
+
+        void accept(Visitor &v) const {
+            v.begin(*this);
+            rhs().accept(v);
+            v.end(*this);
+        }
+    };
+
+
+
 
 } } } }
 

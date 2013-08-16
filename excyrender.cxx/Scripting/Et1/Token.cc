@@ -14,7 +14,7 @@
 namespace excyrender { namespace Nature { namespace Et1 {
 
     std::ostream& operator<< (std::ostream &os, Token const &tok) {
-        switch (tok.kind) {
+        /*switch (tok.kind) {
         case Integer: os << "[int:"; break;
         case LParen: os << "'('"; break;
         case RParen: os << "')'"; break;
@@ -24,8 +24,8 @@ namespace excyrender { namespace Nature { namespace Et1 {
         case Slash: os << "'/'"; break;
         case Comma: os << "','"; break;
         case Identifier: os << "[id:"; break;
-        }
-        return os << string(tok.from, tok.to) << "] ";
+        }*/
+        return os << "{" << string(tok.from, tok.to) << "} ";
     }
 
     std::ostream& operator<< (std::ostream &os, vector<Token> const &toks) {
@@ -71,7 +71,7 @@ namespace excyrender { namespace Nature { namespace Et1 {
         }
 
         optional<iterator> integer(iterator it, iterator end) {
-            int sign = 1;
+            /*int sign = 1;
             while (it != end) {
                 if (*it == '-') {
                     sign = -sign;
@@ -81,7 +81,7 @@ namespace excyrender { namespace Nature { namespace Et1 {
                 } else {
                     break;
                 }
-            }
+            }*/
             if (it==end || !is_digit(*it))
                 return optional<iterator>();
 
