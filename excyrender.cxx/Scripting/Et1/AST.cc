@@ -185,11 +185,91 @@ namespace excyrender { namespace Nature { namespace Et1 { namespace {
         //return it;
     }*/
 
+    struct DumpVisitor final : AST::Visitor {
+
+        void begin(AST::Addition const &)
+        {
+            indent(); os << "(+) {\n";
+            ++indent_;
+        }
+        void end(AST::Addition const &)
+        {
+            --indent_;
+            indent(); os << "}\n";
+        }
+
+        void begin(AST::Subtraction const &)
+        {
+            indent(); os << "(-) {\n";
+            ++indent_;
+        }
+        void end(AST::Subtraction const &)
+        {
+            --indent_;
+            indent(); os << "}\n";
+        }
+
+        void begin(AST::Multiplication const &)
+        {
+            indent(); os << "(*) {\n";
+            ++indent_;
+        }
+        void end(AST::Multiplication const &)
+        {
+            --indent_;
+            indent(); os << "}\n";
+        }
+
+        void begin(AST::Division const &)
+        {
+            indent(); os << "(/) {\n";
+            ++indent_;
+        }
+        void end(AST::Division const &)
+        {
+            --indent_;
+            indent(); os << "}\n";
+        }
+
+        void begin(AST::IntegerLiteral const &lit)
+        {
+            indent(); os << (string)(*lit.from()) << "\n";
+            ++indent_;
+        }
+        void end(AST::IntegerLiteral const &)
+        {
+            --indent_;
+        }
+
+        void begin(AST::Call const &call)
+        {
+            indent(); os << "call " << call.id() << "{\n";
+            ++indent_;
+        }
+        void end(AST::Call const &)
+        {
+            --indent_;
+            indent(); os << "}\n";
+        }
+
+    private:
+        std::ostream &os = std::cout;
+        int indent_ = 0;
+        void indent() {
+            for (int i=0; i!=indent_; ++i) {
+                std::cout << "    ";
+            }
+        }
+    };
+
     HeightFunction compile (vector<Token> const &toks) {
         if (toks.empty())
             throw std::runtime_error("no tokens");
-        if (expression(toks.begin(), toks.end())) {
+        if (auto e = expression(toks.begin(), toks.end())) {
             std::cout << "expression found" << std::endl;
+
+            DumpVisitor dumper;
+            e->accept(dumper);
         }
         throw std::runtime_error("not implemented");
     }
