@@ -8,6 +8,7 @@
 #include <stdexcept>
 #include <vector>
 #include <algorithm>
+#include <map>
 
 
 // -- Tokenization ---------------------------------------------------------------------------------
@@ -212,52 +213,57 @@ namespace excyrender { namespace Nature { namespace Et1 { namespace AST {
 
 
     // -- Binary operations ------------------------------------------------------------------------
-    struct Binary : ASTNode {
+    struct Binary : Expression {
         virtual ~Binary() {}
         Expression const &lhs() const { return *lhs_; }
         Expression const &rhs() const { return *rhs_; }
 
     protected:
         Binary (token_iter from, token_iter to,
-                unique_ptr<Expression> &&lhs, unique_ptr<Expression> &&rhs
-               ) : ASTNode(from, to), lhs_(move(lhs)), rhs_(move(rhs)) {}
+                shared_ptr<Expression> lhs, shared_ptr<Expression> rhs
+               ) : Expression(from, to), lhs_(lhs), rhs_(rhs) {}
 
     private:
-        unique_ptr<Expression> lhs_, rhs_;
+        shared_ptr<Expression> lhs_, rhs_;
     };
 
     struct Addition final : Binary {
         Addition (token_iter from, token_iter to,
-                  unique_ptr<Expression> &&lhs, unique_ptr<Expression> &&rhs
-                  ) : Binary(from, to, move(lhs), move(rhs))
+                  shared_ptr<Expression> lhs, shared_ptr<Expression> rhs
+                  ) : Binary(from, to, lhs, rhs)
         {}
     };
 
     struct Subtraction final : Binary {
         Subtraction (token_iter from, token_iter to,
-                     unique_ptr<Expression> &&lhs, unique_ptr<Expression> &&rhs
-                    ) : Binary(from, to, move(lhs), move(rhs))
+                     shared_ptr<Expression> lhs, shared_ptr<Expression> rhs
+                    ) : Binary(from, to, lhs, rhs)
         {}
     };
 
     struct Multiplication final : Binary {
         Multiplication (token_iter from, token_iter to,
-                        unique_ptr<Expression> &&lhs, unique_ptr<Expression> &&rhs
-                       ) : Binary(from, to, move(lhs), move(rhs))
+                        shared_ptr<Expression> lhs, shared_ptr<Expression> rhs
+                       ) : Binary(from, to, lhs, rhs)
         {}
     };
 
     struct Division final : Binary {
         Division (token_iter from, token_iter to,
-                  unique_ptr<Expression> &&lhs, unique_ptr<Expression> &&rhs
-                 ) : Binary(from, to, move(lhs), move(rhs))
+                  shared_ptr<Expression> lhs, shared_ptr<Expression> rhs
+                 ) : Binary(from, to, lhs, rhs)
         {}
     };
 
 
     // -- "End points" -----------------------------------------------------------------------------
-    struct Literal : Expression {
-        Literal (token_iter from, token_iter to) : Expression(from, to) {}
+    struct Terminal : Expression {
+        Terminal (token_iter from, token_iter to) : Expression(from, to) {}
+        virtual ~Terminal() {}
+    };
+
+    struct Literal : Terminal {
+        Literal (token_iter from, token_iter to) : Terminal(from, to) {}
         virtual ~Literal() {}
     };
 
@@ -265,19 +271,19 @@ namespace excyrender { namespace Nature { namespace Et1 { namespace AST {
         IntegerLiteral (token_iter from, token_iter to) : Literal(from, to) {}
     };
 
-    struct Call final : Expression {
+    struct Call final : Terminal {
         Call (token_iter from, token_iter to,
-              std::string const &id, vector<unique_ptr<Expression>> &&args)
-        : Expression(from, to), id_(id), arguments_(std::move(args))
+              std::string const &id, vector<shared_ptr<Expression>> args)
+        : Terminal(from, to), id_(id), arguments_(args)
         {}
 
         std::string id() const { return id_; }
-        vector<unique_ptr<Expression>>::size_type      args_size()  const { return arguments_.size(); }
-        vector<unique_ptr<Expression>>::const_iterator args_begin() const { return arguments_.begin(); }
-        vector<unique_ptr<Expression>>::const_iterator args_end()   const { return arguments_.end(); }
+        vector<shared_ptr<Expression>>::size_type      args_size()  const { return arguments_.size(); }
+        vector<shared_ptr<Expression>>::const_iterator args_begin() const { return arguments_.begin(); }
+        vector<shared_ptr<Expression>>::const_iterator args_end()   const { return arguments_.end(); }
     private:
         std::string id_;
-        vector<unique_ptr<Expression>> arguments_;
+        vector<shared_ptr<Expression>> arguments_;
     };
 
 } } } }
@@ -299,12 +305,54 @@ namespace excyrender { namespace Nature { namespace Et1 { namespace {
     }
 
 
-    unique_ptr<AST::Expression> expression(token_iter, token_iter);
-    unique_ptr<AST::IntegerLiteral> integer_literal(token_iter, token_iter);
+
+    struct BinaryOperator {
+        string symbol;
+        int precedence;
+
+        using Factory = std::function<shared_ptr<AST::Expression> (token_iter, token_iter, shared_ptr<AST::Expression>, shared_ptr<AST::Expression>)>;
+        Factory create;
+
+        template <typename NodeT>
+        static Factory create_factory() {
+            return [](token_iter a, token_iter b, shared_ptr<AST::Expression> c, shared_ptr<AST::Expression> d)
+                    {
+                        auto e = new NodeT(a,b,c,d);
+                        return shared_ptr<AST::Expression>(e);
+                    };
+        }
+
+        BinaryOperator() = delete;
+        BinaryOperator (string const &symbol, int precedence, Factory create) :
+            symbol(symbol), precedence(precedence), create(create) {}
+    };
+    std::map<string, BinaryOperator> initial_precedence_table() {
+        std::map<string, BinaryOperator> ret;
+        // TODO: re-check map::emplace() availability. So long, // 'insert' because deleted default ctor.
+
+        ret.insert(std::make_pair("+", BinaryOperator{"+", 20, BinaryOperator::create_factory<AST::Addition>()}));
+        ret.insert(std::make_pair("-", BinaryOperator{"-", 20, BinaryOperator::create_factory<AST::Subtraction>()}));
+        ret.insert(std::make_pair("*", BinaryOperator{"*", 40, BinaryOperator::create_factory<AST::Multiplication>()}));
+        ret.insert(std::make_pair("/", BinaryOperator{"/", 40, BinaryOperator::create_factory<AST::Division>()}));
+        return ret;
+    }
+    std::map<string, BinaryOperator> precedence_table = initial_precedence_table(); // TODO: not as a global but as a parameter, which may enable operator overloading.
+    int precedence (string const &op, std::map<string, BinaryOperator>::iterator *where = nullptr) {
+        const auto it = precedence_table.find(op);
+        if (where)
+            *where = it;
+        if (it != precedence_table.end())
+            return it->second.precedence;
+        return -1;
+    }
+
+
+    shared_ptr<AST::Expression> expression(token_iter, token_iter);
+    shared_ptr<AST::IntegerLiteral> integer_literal(token_iter, token_iter);
 
 
     // function-call : identifier '(' expression (',' expression)* ')'
-    unique_ptr<AST::Call> call(token_iter it, token_iter end)
+    shared_ptr<AST::Call> call(token_iter it, token_iter end)
     {
         using namespace AST;
 
@@ -313,20 +361,18 @@ namespace excyrender { namespace Nature { namespace Et1 { namespace {
         // some-call ( foo , bar )
         // ^^^^^^^^^
         if (it->kind != Identifier)
-            return unique_ptr<Call>();
+            return shared_ptr<Call>();
         const string callee = *it;
         ++it;
 
         // some-call ( foo , bar )
         //           ^
         if (it == end || it->kind != LParen)
-            return unique_ptr<Call>();
+            return shared_ptr<Call>();
         ++it;
 
         // Arguments.
-        std::cout << "looks like a call to '" << callee << "'" << std::endl;
-
-        std::vector<unique_ptr<Expression>> arguments;
+        std::vector<shared_ptr<Expression>> arguments;
 
         if (it->kind!=RParen) {
             // some-call ( foo , bar )
@@ -339,7 +385,7 @@ namespace excyrender { namespace Nature { namespace Et1 { namespace {
                     if (!arg)
                         throw std::runtime_error("expected argument");
                     it = arg->to();
-                    arguments.push_back(std::move(arg));
+                    arguments.push_back(arg);
                 }
 
                 // some-call ( foo , bar )
@@ -352,35 +398,77 @@ namespace excyrender { namespace Nature { namespace Et1 { namespace {
             }
         }
 
-        std::cout << arguments.size() << " arguments" << std::endl;
-
         if (it == end || it->kind != RParen)
             throw std::runtime_error("unclosed '(' in function call");
 
-        return unique_ptr<Call>(new Call(call_begin, it, callee, std::move(arguments)));
+        return shared_ptr<Call>(new Call(call_begin, it, callee, arguments));
     }
 
 
 
-    unique_ptr<AST::IntegerLiteral> integer_literal(token_iter it, token_iter end)
+    shared_ptr<AST::IntegerLiteral> integer_literal(token_iter it, token_iter end)
     {
         using namespace AST;
 
-        if (it->kind != Integer) return unique_ptr<IntegerLiteral>();
-        return unique_ptr<IntegerLiteral>(new IntegerLiteral(it, it+1));
+        if (it->kind != Integer) return shared_ptr<IntegerLiteral>();
+        return shared_ptr<IntegerLiteral>(new IntegerLiteral(it, it+1));
     }
 
 
 
-    unique_ptr<AST::Expression> expression(token_iter it, token_iter end)
+    shared_ptr<AST::Terminal> terminal (token_iter it, token_iter end)
     {
-        using namespace AST;
-
         if (auto e = integer_literal(it, end))
-            return std::move(e);
+            return e;
         if (auto e = call(it, end))
-            return std::move(e);
-        return unique_ptr<Expression>();
+            return e;
+        return shared_ptr<AST::Terminal>();
+    }
+
+
+
+    shared_ptr<AST::Expression> binary(int min_prec, shared_ptr<AST::Expression> lhs,
+                                       token_iter it, token_iter end)
+    {
+        using namespace AST;
+
+        while (1) {
+            if (it == end)
+                return lhs;
+
+            std::map<string, BinaryOperator>::iterator prec_entry;
+            const int prec = precedence(string(*it), &prec_entry);
+            if (prec < min_prec)
+                return lhs;
+
+            ++it;
+            shared_ptr<AST::Expression> rhs = terminal(it, end);
+            if (!rhs)
+                throw std::runtime_error("expected operand on right-hand-side of operator");
+            ++it;
+
+            const int next_prec = precedence(string(*it));
+            if (prec < next_prec) {
+                rhs = binary(prec+1, rhs, it+1, end);
+                if (!rhs)
+                    return shared_ptr<AST::Expression>();
+                it = rhs->to();
+            }
+
+            lhs = prec_entry->second.create(lhs->from(), rhs->to(), lhs, rhs);
+        }
+    }
+
+
+
+    shared_ptr<AST::Expression> expression(token_iter it, token_iter end)
+    {
+        using namespace AST;
+
+        auto lhs = terminal(it, end);
+        if (!lhs) return shared_ptr<Expression>();
+        it = lhs->to();
+        return binary(0, lhs, it, end);
     }
 
 
@@ -397,8 +485,8 @@ namespace excyrender { namespace Nature { namespace Et1 { namespace {
     HeightFunction compile (vector<Token> const &toks) {
         if (toks.empty())
             throw std::runtime_error("no tokens");
-        if (call(toks.begin(), toks.end())) {
-            std::cout << "fun-call found" << std::endl;
+        if (expression(toks.begin(), toks.end())) {
+            std::cout << "expression found" << std::endl;
         }
         throw std::runtime_error("not implemented");
     }
