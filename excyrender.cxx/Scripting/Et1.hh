@@ -5,10 +5,9 @@
 #define ET1_HH_INCLUDED_20130813
 
 #include "Nature/HeightFunction.hh"
+#include "Et1/AST.hh"
 
 namespace excyrender { namespace Nature { namespace Et1 {
-
-    HeightFunction compile(std::string const &);
 
 } } }
 
