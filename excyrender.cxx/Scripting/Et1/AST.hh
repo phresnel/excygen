@@ -15,6 +15,8 @@ namespace excyrender { namespace Nature { namespace Et1 { namespace AST {
     struct Argument {
         string type;
         string name;
+
+        Argument(string type, string name) : type(type), name(name) {}
     };
 
     class Addition;
@@ -27,6 +29,7 @@ namespace excyrender { namespace Nature { namespace Et1 { namespace AST {
     class ParenExpression;
     class Binding;
     class Identifier;
+    class LetIn;
 
     struct Visitor {
         virtual void begin(Addition const &) = 0;
@@ -58,6 +61,9 @@ namespace excyrender { namespace Nature { namespace Et1 { namespace AST {
 
         virtual void begin(Identifier const &) = 0;
         virtual void end(Identifier const &) = 0;
+
+        virtual void begin(LetIn const &) = 0;
+        virtual void end(LetIn const &) = 0;
     };
 
 
@@ -80,22 +86,6 @@ namespace excyrender { namespace Nature { namespace Et1 { namespace AST {
     struct Expression : ASTNode {
         Expression (token_iter from, token_iter to) : ASTNode(from, to) {}
         virtual ~Expression() {}
-    };
-
-
-    // -- Bindings ---------------------------------------------------------------------------------
-    struct Binding final : ASTNode {
-        Binding(token_iter from, token_iter to, vector<Argument> arguments)
-            : ASTNode (from, to), arguments(arguments)
-        {}
-
-        void accept(Visitor &v) const {
-            v.begin(*this);
-            v.end(*this);
-        }
-
-    private:
-        vector<Argument> arguments;
     };
 
     // -- Binary operations ------------------------------------------------------------------------
@@ -226,6 +216,52 @@ namespace excyrender { namespace Nature { namespace Et1 { namespace AST {
     private:
         std::string id_;
         vector<shared_ptr<Expression>> arguments_;
+    };
+
+    struct Binding final : Terminal {
+        Binding(token_iter from, token_iter to,
+                string id,
+                vector<Argument> arguments,
+                shared_ptr<Expression> body)
+            : Terminal (from, to), id_(id), arguments_(arguments), body_(body)
+        {}
+
+        void accept(Visitor &v) const {
+            v.begin(*this);
+            body().accept(v);
+            v.end(*this);
+        }
+
+        string id() const { return id_; }
+        Expression const &body() const { return *body_; }
+        vector<Argument> const &arguments() const { return arguments_; }
+
+    private:
+        string id_;
+        vector<Argument> arguments_;
+        shared_ptr<Expression> body_;
+    };
+
+    struct LetIn final : Terminal {
+        LetIn(token_iter from, token_iter to,
+              vector<shared_ptr<Binding>> bindings,
+              shared_ptr<Expression> value)
+            : Terminal (from, to), bindings_(bindings), value_(value)
+        {}
+
+        void accept(Visitor &v) const {
+            v.begin(*this);
+            for (auto b : bindings_)
+                b->accept(v);
+            value().accept(v);
+            v.end(*this);
+        }
+
+        Expression const &value() const { return *value_; }
+
+    private:
+        vector<shared_ptr<Binding>> bindings_;
+        shared_ptr<Expression> value_;
     };
 
 

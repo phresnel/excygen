@@ -100,7 +100,13 @@ namespace excyrender { namespace Nature { namespace Et1 {
 
         void begin(AST::Binding const &binding)
         {
-            indent(); os << "binding " << "{\n";
+            indent(); os << "binding " << binding.id() << "\n";
+            ++indent_;
+            for (auto arg : binding.arguments()) {
+                indent(); os << arg.name << " : " << arg.type << '\n';
+            }
+            --indent_;
+            indent(); os << "{\n";
             ++indent_;
         }
         void end(AST::Binding const &)
@@ -115,6 +121,15 @@ namespace excyrender { namespace Nature { namespace Et1 {
             ++indent_;
         }
         void end(AST::Identifier const &)
+        {
+            --indent_;
+        }
+
+        void begin(AST::LetIn const &id)
+        {
+            ++indent_;
+        }
+        void end(AST::LetIn const &)
         {
             --indent_;
         }

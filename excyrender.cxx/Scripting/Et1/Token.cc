@@ -118,8 +118,17 @@ namespace excyrender { namespace Nature { namespace Et1 {
             } else if (*it == ',') {
                 tokens.emplace_back(Comma, it, it+1);
                 ++it;
+            } else if (*it == '=') {
+                tokens.emplace_back(Equal, it, it+1);
+                ++it;
             } else if (auto oit = identifier(it, end)) {
-                tokens.emplace_back(Identifier, it, *oit);
+                if (string(it,*oit) == "let") {
+                    tokens.emplace_back(Let, it, *oit);
+                } else if (string(it,*oit) == "in") {
+                    tokens.emplace_back(In, it, *oit);
+                } else {
+                    tokens.emplace_back(Identifier, it, *oit);
+                }
                 it = *oit;
             } else {
                 throw std::runtime_error("tokenization failure: ..." + string(it, end));

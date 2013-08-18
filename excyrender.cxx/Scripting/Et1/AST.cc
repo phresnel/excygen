@@ -64,7 +64,7 @@ namespace excyrender { namespace Nature { namespace Et1 { namespace {
     shared_ptr<AST::Terminal>       terminal (token_iter it, token_iter end);
 
 
-    // function-call : identifier '(' expression (',' expression)* ')'
+    // function-call : identifier '(' expression ')'
     shared_ptr<AST::Call> call(token_iter it, token_iter end)
     {
         using namespace AST;
@@ -113,8 +113,70 @@ namespace excyrender { namespace Nature { namespace Et1 { namespace {
 
         if (it == end || it->kind != RParen)
             throw std::runtime_error("unclosed '(' in function call");
-
+        ++it;
         return shared_ptr<Call>(new Call(call_begin, it, callee, arguments));
+    }
+
+
+
+    // binding : name ( '(' argument (',' argument)* ')' )? = expression
+    // argument: type? name
+    shared_ptr<AST::Binding> binding(token_iter it, token_iter end)
+    {
+        const auto start = it;
+        // name ( '(' argument (',' argument)* ')' )? = expression
+        // ^
+        if (it->kind != Identifier)
+            return shared_ptr<AST::Binding>();
+        const string name = *it;
+        ++it;
+
+        if (it == end)
+            return shared_ptr<AST::Binding>();
+
+        vector<AST::Argument> arguments;
+        if (it->kind == LParen) {
+            // name ( '(' argument (',' argument)* ')' )? = expression
+            //         ^
+            ++it;
+
+            if (it!=end && it->kind != RParen) {
+                while (it!=end) {
+                    if (it->kind != TokenKind::Identifier) // This can't be a binding, then.
+                        return shared_ptr<AST::Binding>();
+
+                    arguments.push_back(AST::Argument("any", *it));
+                    ++it;
+                    if (it == end)
+                        throw std::runtime_error("expected ',' or ')'");
+                    if (it->kind == RParen) {
+                        break;
+                    }
+                    if (it->kind != Comma)
+                        throw std::runtime_error("expected ',' or ')'");
+                    ++it;
+                }
+            }
+
+            if (it->kind != RParen)
+                throw std::runtime_error("expected ')'");
+            ++it;
+        }
+
+        // name ( '(' argument (',' argument)* ')' )? = expression
+        //                                            ^
+        if (it==end || it->kind!=Equal)
+            return shared_ptr<AST::Binding>();
+
+        ++it;
+        if (it == end)
+            throw std::runtime_error("expected binding expression");
+        auto e = expression(it, end);
+        if (!e)
+            throw std::runtime_error("expected binding expression");
+
+        return shared_ptr<AST::Binding>(new AST::Binding(start, e->to(),
+                                                         name, arguments, e));
     }
 
 
@@ -157,13 +219,15 @@ namespace excyrender { namespace Nature { namespace Et1 { namespace {
 
     shared_ptr<AST::Terminal> terminal (token_iter it, token_iter end)
     {
+        if (auto e = binding(it, end))
+            return e;
+        if (auto e = call(it, end))
+            return e;
         if (auto e = identifier(it, end))
             return e;
         if (auto e = integer_literal(it, end))
             return e;
         if (auto e = unary(it, end))
-            return e;
-        if (auto e = call(it, end))
             return e;
         if (it->kind == LParen) {
             if (auto e = expression(it+1, end)) {
@@ -172,6 +236,42 @@ namespace excyrender { namespace Nature { namespace Et1 { namespace {
                 return shared_ptr<AST::ParenExpression>(
                             new AST::ParenExpression(it, e->to()+1, e));
             }
+        }
+        if (it->kind == Let) {
+            const auto start = it;
+            vector<shared_ptr<AST::Binding>> bindings;
+
+            ++it;
+            while (it != end) {
+                auto e = binding(it, end);
+                if (!e)
+                    throw std::runtime_error("only bindings allowed within 'let/in'-sequence");
+                it = e->to();
+                bindings.push_back(e);
+
+                if (it==end)
+                    break;
+                if (it->kind == In)
+                    break;
+                if (it->kind == Comma) {
+                    ++it;
+                    continue;
+                }
+
+                throw std::runtime_error("expected 'in' or ',', got '" + string(*it) + "'");
+            }
+
+            if (it==end || it->kind!=In)
+                throw std::runtime_error("missing 'in' after 'let'");
+            ++it;
+            if (it == end)
+                throw std::runtime_error("missing value expression after 'in'");
+            auto value = expression(it, end);
+            if (!value)
+                throw std::runtime_error("missing value expression after 'in'");
+            it = value->to();
+
+            return shared_ptr<AST::LetIn>(new AST::LetIn(start, it, bindings, value));
         }
         return shared_ptr<AST::Terminal>();
     }
@@ -255,7 +355,8 @@ namespace excyrender { namespace Nature { namespace Et1 { namespace {
 namespace excyrender { namespace Nature { namespace Et1 {
 
 HeightFunction compile (std::string const &code) {
-    return compile(tokenize("x+2"));
+    return compile(tokenize("fac (x) = let foo(x) = (5+x), bar(y) = let f(y)=y*2 in f(y)  \n"
+                            "          in bar(3)"));
 }
 
 } } }

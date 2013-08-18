@@ -21,7 +21,9 @@ namespace excyrender { namespace Nature { namespace Et1 {
         LParen, RParen,
         Plus, Minus,
         Asterisk, Slash,
-        Comma
+        Comma,
+        Equal,
+        Let, In
     };
 
     struct Token {
