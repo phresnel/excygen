@@ -30,6 +30,7 @@ namespace excyrender { namespace Nature { namespace Et1 { namespace AST {
     class Binding;
     class Identifier;
     class LetIn;
+    class Program;
 
     struct Visitor {
         virtual void begin(Addition const &) = 0;
@@ -64,6 +65,9 @@ namespace excyrender { namespace Nature { namespace Et1 { namespace AST {
 
         virtual void begin(LetIn const &) = 0;
         virtual void end(LetIn const &) = 0;
+
+        virtual void begin(Program const &) = 0;
+        virtual void end(Program const &) = 0;
     };
 
 
@@ -87,6 +91,7 @@ namespace excyrender { namespace Nature { namespace Et1 { namespace AST {
         Expression (token_iter from, token_iter to) : ASTNode(from, to) {}
         virtual ~Expression() {}
     };
+
 
     // -- Binary operations ------------------------------------------------------------------------
     struct Binary : Expression {
@@ -313,8 +318,28 @@ namespace excyrender { namespace Nature { namespace Et1 { namespace AST {
         }
     };
 
+    // -- Unary operations -------------------------------------------------------------------------
+    struct Program final : ASTNode {
+        Program(token_iter from, token_iter to,
+                vector<shared_ptr<Binding>> static_bindings,
+                shared_ptr<Expression> value)
+            : ASTNode (from, to), static_bindings_(static_bindings), value_(value)
+        {}
 
+        void accept(Visitor &v) const {
+            v.begin(*this);
+            for (auto b : static_bindings_)
+                b->accept(v);
+            value().accept(v);
+            v.end(*this);
+        }
 
+        Expression const &value() const { return *value_; }
+
+    private:
+        vector<shared_ptr<Binding>> static_bindings_;
+        shared_ptr<Expression> value_;
+    };
 
 } } } }
 

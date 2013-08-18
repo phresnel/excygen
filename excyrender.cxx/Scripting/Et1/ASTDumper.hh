@@ -134,6 +134,16 @@ namespace excyrender { namespace Nature { namespace Et1 {
             --indent_;
         }
 
+        void begin(AST::Program const &id)
+        {
+            indent(); os << "program " << "\n";
+            ++indent_;
+        }
+        void end(AST::Program const &)
+        {
+            --indent_;
+        }
+
     private:
         std::ostream &os = std::cout;
         int indent_ = 0;

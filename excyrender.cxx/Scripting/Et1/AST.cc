@@ -11,6 +11,11 @@
 
 namespace excyrender { namespace Nature { namespace Et1 {  namespace {
 
+    class SymbolTable {
+    public:
+
+    };
+
 
 } } } }
 
@@ -334,16 +339,64 @@ namespace excyrender { namespace Nature { namespace Et1 { namespace {
     }
 
 
+    shared_ptr<AST::Program> program(token_iter it, token_iter end) {
+        // TODO: extract the following as "bindings(it,end, Static, Dynamic)", same for "LetIn"
+        if (it->kind == Static) {
+            const auto start = it;
+            vector<shared_ptr<AST::Binding>> bindings;
+
+            ++it;
+            while (it != end) {
+                auto e = binding(it, end);
+                if (!e)
+                    throw std::runtime_error("only bindings allowed within 'static/dynamic'-sequence");
+                it = e->to();
+                bindings.push_back(e);
+
+                if (it==end)
+                    break;
+                if (it->kind == Dynamic)
+                    break;
+                if (it->kind == Comma) {
+                    ++it;
+                    continue;
+                }
+
+                throw std::runtime_error("expected 'in' or ',', got '" + string(*it) + "'");
+            }
+
+            if (it==end || it->kind!=Dynamic)
+                throw std::runtime_error("missing 'dynamic' after 'static'");
+            ++it;
+            if (it == end)
+                throw std::runtime_error("missing value expression after 'dynamic'");
+            auto value = expression(it, end);
+            if (!value)
+                throw std::runtime_error("missing value expression after 'dynamic'");
+            it = value->to();
+
+            return shared_ptr<AST::Program>(new AST::Program(start, it, bindings, value));
+        } else if (auto e = expression(it, end)) {
+            return shared_ptr<AST::Program>(
+                      new AST::Program(it, end,
+                                       vector<shared_ptr<AST::Binding>>(),
+                                       e));
+        }
+
+        return shared_ptr<AST::Program>();
+    }
+
+
     HeightFunction compile (vector<Token> const &toks) {
         if (toks.empty())
             throw std::runtime_error("no tokens");
         std::cout << toks << std::endl;
-        if (auto e = expression(toks.begin(), toks.end())) {
-            std::cout << "expression found" << std::endl;
 
-            ASTDumper dumper;
-            e->accept(dumper);
-        }
+        shared_ptr<AST::Program> prog = program(toks.begin(), toks.end());
+
+        ASTDumper dumper;
+        prog->accept(dumper);
+
         throw std::runtime_error("no expression found");
     }
 
@@ -355,8 +408,14 @@ namespace excyrender { namespace Nature { namespace Et1 { namespace {
 namespace excyrender { namespace Nature { namespace Et1 {
 
 HeightFunction compile (std::string const &code) {
-    return compile(tokenize("fac (x) = let foo(x) = (5+x), bar(y) = let f(y)=y*2 in f(y)  \n"
-                            "          in bar(3)"));
+    return compile(tokenize("3*2"));
+    /*
+       "static \n"
+       "  x = 3*2*1 \n"
+       "dynamic \n"
+       "fac (x) = let foo(x) = (5+x), bar(y) = let f(y)=y*2 in f(y)  \n"
+       "          in bar(3)"));
+    */
 }
 
 } } }

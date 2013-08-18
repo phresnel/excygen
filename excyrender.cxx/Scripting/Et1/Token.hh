@@ -23,7 +23,8 @@ namespace excyrender { namespace Nature { namespace Et1 {
         Asterisk, Slash,
         Comma,
         Equal,
-        Let, In
+        Let, In,
+        Static, Dynamic
     };
 
     struct Token {

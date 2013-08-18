@@ -126,6 +126,10 @@ namespace excyrender { namespace Nature { namespace Et1 {
                     tokens.emplace_back(Let, it, *oit);
                 } else if (string(it,*oit) == "in") {
                     tokens.emplace_back(In, it, *oit);
+                } else if (string(it,*oit) == "static") {
+                    tokens.emplace_back(Static, it, *oit);
+                } else if (string(it,*oit) == "dynamic") {
+                    tokens.emplace_back(Dynamic, it, *oit);
                 } else {
                     tokens.emplace_back(Identifier, it, *oit);
                 }
