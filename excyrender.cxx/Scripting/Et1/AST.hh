@@ -12,6 +12,11 @@
 // -- Compilation ----------------------------------------------------------------------------------
 namespace excyrender { namespace Nature { namespace Et1 { namespace AST {
 
+    struct Argument {
+        string type;
+        string name;
+    };
+
     class Addition;
     class Subtraction;
     class Multiplication;
@@ -20,6 +25,8 @@ namespace excyrender { namespace Nature { namespace Et1 { namespace AST {
     class Call;
     class Negation;
     class ParenExpression;
+    class Binding;
+    class Identifier;
 
     struct Visitor {
         virtual void begin(Addition const &) = 0;
@@ -45,6 +52,12 @@ namespace excyrender { namespace Nature { namespace Et1 { namespace AST {
 
         virtual void begin(ParenExpression const &) = 0;
         virtual void end(ParenExpression const &) = 0;
+
+        virtual void begin(Binding const &) = 0;
+        virtual void end(Binding const &) = 0;
+
+        virtual void begin(Identifier const &) = 0;
+        virtual void end(Identifier const &) = 0;
     };
 
 
@@ -68,6 +81,41 @@ namespace excyrender { namespace Nature { namespace Et1 { namespace AST {
         Expression (token_iter from, token_iter to) : ASTNode(from, to) {}
         virtual ~Expression() {}
     };
+
+
+    // -- Bindings ---------------------------------------------------------------------------------
+    struct Binding final : ASTNode {
+        Binding(token_iter from, token_iter to, vector<Argument> arguments)
+            : ASTNode (from, to), arguments(arguments)
+        {}
+
+        void accept(Visitor &v) const {
+            v.begin(*this);
+            v.end(*this);
+        }
+
+    private:
+        vector<Argument> arguments;
+    };
+
+    /*struct Binding : ASTNode {
+        virtual ~Binding() {}
+    };
+
+    struct StaticBinding final : Binding {
+        StaticBinding (token_iter from, token_iter to) : Binding (from, to)
+        {}
+    };
+
+    struct DynamicBinding final : Binding {
+        DynamicBinding (token_iter from, token_iter to) : Binding (from, to)
+        {}
+    };
+
+    struct Argument final : Binding {
+        Argument (token_iter from, token_iter to) : Binding(from, to)
+        {}
+    };*/
 
 
     // -- Binary operations ------------------------------------------------------------------------
@@ -160,6 +208,21 @@ namespace excyrender { namespace Nature { namespace Et1 { namespace AST {
             v.begin(*this);
             v.end(*this);
         }
+    };
+
+    struct Identifier final : Terminal {
+        Identifier (token_iter from, token_iter to, string name) : Terminal(from, to), name(name) {}
+        virtual ~Identifier() {}
+
+        string id() const { return name; }
+
+        void accept(Visitor &v) const {
+            v.begin(*this);
+            v.end(*this);
+        }
+
+    private:
+        string name;
     };
 
     struct Call final : Terminal {

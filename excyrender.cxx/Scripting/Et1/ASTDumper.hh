@@ -98,6 +98,27 @@ namespace excyrender { namespace Nature { namespace Et1 {
             //indent(); os << "}\n";
         }
 
+        void begin(AST::Binding const &binding)
+        {
+            indent(); os << "binding " << "{\n";
+            ++indent_;
+        }
+        void end(AST::Binding const &)
+        {
+            --indent_;
+            indent(); os << "}\n";
+        }
+
+        void begin(AST::Identifier const &id)
+        {
+            indent(); os << "id " << id.id() << "\n";
+            ++indent_;
+        }
+        void end(AST::Identifier const &)
+        {
+            --indent_;
+        }
+
     private:
         std::ostream &os = std::cout;
         int indent_ = 0;

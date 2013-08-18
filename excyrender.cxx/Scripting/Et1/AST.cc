@@ -4,9 +4,17 @@
 
 #include "AST.hh"
 #include <map>
+#include <set>
 #include <stdexcept>
 #include <iostream>
 #include "ASTDumper.hh"
+
+namespace excyrender { namespace Nature { namespace Et1 {  namespace {
+
+
+} } } }
+
+
 
 namespace excyrender { namespace Nature { namespace Et1 { namespace {
 
@@ -65,7 +73,7 @@ namespace excyrender { namespace Nature { namespace Et1 { namespace {
 
         // some-call ( foo , bar )
         // ^^^^^^^^^
-        if (it->kind != Identifier)
+        if (it->kind != TokenKind::Identifier)
             return shared_ptr<Call>();
         const string callee = *it;
         ++it;
@@ -121,6 +129,16 @@ namespace excyrender { namespace Nature { namespace Et1 { namespace {
 
 
 
+    shared_ptr<AST::Identifier> identifier(token_iter it, token_iter end)
+    {
+        using namespace AST;
+
+        if (it->kind != TokenKind::Identifier) return shared_ptr<AST::Identifier>();
+        return shared_ptr<AST::Identifier>(new AST::Identifier(it, it+1, *it));
+    }
+
+
+
     shared_ptr<AST::Unary> unary(token_iter it, token_iter end)
     {
         using namespace AST;
@@ -139,6 +157,8 @@ namespace excyrender { namespace Nature { namespace Et1 { namespace {
 
     shared_ptr<AST::Terminal> terminal (token_iter it, token_iter end)
     {
+        if (auto e = identifier(it, end))
+            return e;
         if (auto e = integer_literal(it, end))
             return e;
         if (auto e = unary(it, end))
@@ -205,7 +225,10 @@ namespace excyrender { namespace Nature { namespace Et1 { namespace {
         using namespace AST;
 
         auto lhs = terminal(it, end);
-        if (!lhs) return shared_ptr<Expression>();
+        if (!lhs) {
+            std::clog << "no terminal found" << std::endl;
+            return shared_ptr<Expression>();
+        }
         it = lhs->to();
         return binary(0, lhs, it, end);
     }
@@ -221,7 +244,7 @@ namespace excyrender { namespace Nature { namespace Et1 { namespace {
             ASTDumper dumper;
             e->accept(dumper);
         }
-        throw std::runtime_error("not implemented");
+        throw std::runtime_error("no expression found");
     }
 
 } } } }
@@ -232,7 +255,7 @@ namespace excyrender { namespace Nature { namespace Et1 { namespace {
 namespace excyrender { namespace Nature { namespace Et1 {
 
 HeightFunction compile (std::string const &code) {
-    return compile(tokenize("x+2*(3+4)"));
+    return compile(tokenize("x+2"));
 }
 
 } } }

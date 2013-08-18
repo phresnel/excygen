@@ -70,6 +70,10 @@ namespace excyrender { namespace Nature { namespace Et1 {
             return is_uppercase_letter(c) || is_lowercase_letter(c);
         }
 
+        bool is_whitespace(char c) {
+            return c==' ' || c=='\t' || c=='\n';
+        }
+
         optional<iterator> integer(iterator it, iterator end) {
             /*int sign = 1;
             while (it != end) {
@@ -110,6 +114,8 @@ namespace excyrender { namespace Nature { namespace Et1 {
 
         std::cout << "tokenizing [" << str << "]\n";
         for (auto it = str.begin(), end=str.end(); it!=end; ) {
+            while (it!=end && is_whitespace(*it))
+                ++it;
             if (auto oit = integer(it, end)) {
                 tokens.emplace_back(Integer, it, *oit);
                 it = *oit;
