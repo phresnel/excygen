@@ -98,26 +98,6 @@ namespace excyrender { namespace Nature { namespace Et1 { namespace AST {
         vector<Argument> arguments;
     };
 
-    /*struct Binding : ASTNode {
-        virtual ~Binding() {}
-    };
-
-    struct StaticBinding final : Binding {
-        StaticBinding (token_iter from, token_iter to) : Binding (from, to)
-        {}
-    };
-
-    struct DynamicBinding final : Binding {
-        DynamicBinding (token_iter from, token_iter to) : Binding (from, to)
-        {}
-    };
-
-    struct Argument final : Binding {
-        Argument (token_iter from, token_iter to) : Binding(from, to)
-        {}
-    };*/
-
-
     // -- Binary operations ------------------------------------------------------------------------
     struct Binary : Expression {
         virtual ~Binary() {}
