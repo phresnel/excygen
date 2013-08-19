@@ -7,10 +7,32 @@
 #include "Token.hh"
 #include "Nature/HeightFunction.hh"
 #include "memory.hh"
+#include <ostream>
 
 
 // -- Compilation ----------------------------------------------------------------------------------
 namespace excyrender { namespace Nature { namespace Et1 { namespace AST {
+
+    struct Reference {
+        enum Kind {
+            Local,
+            NonLocal,
+            Global
+        };
+
+        Kind kind;
+        string name;
+    };
+
+    inline
+    std::ostream& operator<< (std::ostream &os, Reference const &ref) {
+        switch (ref.kind) {
+        case Reference::Local: os << "loc:" << ref.name; break;
+        case Reference::NonLocal: os << "non-loc:" << ref.name; break;
+        case Reference::Global: os << "glob:" << ref.name; break;
+        }
+        return os;
+    }
 
     struct Argument {
         string type;
@@ -186,10 +208,11 @@ namespace excyrender { namespace Nature { namespace Et1 { namespace AST {
     };
 
     struct Identifier final : Terminal {
-        Identifier (token_iter from, token_iter to, string name) : Terminal(from, to), name(name) {}
+        Identifier (token_iter from, token_iter to, Reference ref) : Terminal(from, to), ref(ref) {}
         virtual ~Identifier() {}
 
-        string id() const { return name; }
+        string id() const { return ref.name; }
+        Reference reference() const { return ref; }
 
         void accept(Visitor &v) const {
             v.begin(*this);
@@ -197,7 +220,7 @@ namespace excyrender { namespace Nature { namespace Et1 { namespace AST {
         }
 
     private:
-        string name;
+        Reference ref;
     };
 
     struct Call final : Terminal {
