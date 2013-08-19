@@ -117,7 +117,7 @@ namespace excyrender { namespace Nature { namespace Et1 {
 
         void begin(AST::Identifier const &id)
         {
-            indent(); os << "id " << id.id() << " : [" << id.address() << "]\n";
+            indent(); os << "id " << id.id() << "\n";
             ++indent_;
         }
         void end(AST::Identifier const &)
