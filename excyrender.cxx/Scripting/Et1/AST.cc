@@ -14,56 +14,23 @@
 namespace excyrender { namespace Nature { namespace Et1 { namespace {
 
     using AST::Argument;
-    using AST::Address;
     using std::vector;
 
     class Scope {
     public:
-        Scope() = default;
-        Scope(Scope &&) = default;
-        Scope& operator= (Scope &&) = default;
 
-        Scope(Scope const &) = delete;
-        Scope& operator= (Scope const &) = delete;
-
-
-        void declare_argument(string type, string name) {
-            addresses.push_back(Address::Index(type, name, index++));
+        void declare_argument(Argument const &arg) {
+            arguments.push_back(arg);
         }
 
-        Scope localize() const {
-            std::cout << "Scope::localize()" << std::endl;
-            Scope s;
-            s.base_index = base_index + 1;
-
-            for (auto adr : addresses) {
-                if (adr.kind() == Address::StackIndex) {
-                    s.addresses.push_back(adr.toBigIndex(base_index));
-                } else {
-                    s.addresses.push_back(adr);
-                }
-            }
-            return s;
-        }
-
-        Scope copy() const {
-            Scope s;
-            s.base_index = base_index;
-            s.addresses = addresses;
-            s.index = index;
-            return s;
-        }
-
-        Address lookup(string const &name) const {
-            for (auto adr : addresses)
-                if (adr.name() == name) return adr;
-            return Address();
+        optional<Argument> lookup(string const &name) const {
+            for (auto arg : arguments)
+                if (arg.name == name) return arg;
+            return optional<Argument>();
         }
 
     private:
-        vector<Address> addresses;
-        int index = 0;
-        int base_index = 0;
+        vector<Argument> arguments;
     };
 
 
@@ -178,6 +145,8 @@ namespace excyrender { namespace Nature { namespace Et1 { namespace {
     // argument: type? name
     shared_ptr<AST::Binding> binding(token_iter it, token_iter end, Scope const &scope_)
     {
+        Scope scope = scope_;
+
         const auto start = it;
         // name ( '(' argument (',' argument)* ')' )? = expression
         // ^
@@ -188,8 +157,6 @@ namespace excyrender { namespace Nature { namespace Et1 { namespace {
 
         if (it == end)
             return shared_ptr<AST::Binding>();
-
-        Scope scope = scope_.localize();
 
         vector<AST::Argument> arguments;
         if (it->kind == LParen) {
@@ -202,18 +169,16 @@ namespace excyrender { namespace Nature { namespace Et1 { namespace {
                     if (it->kind != TokenKind::Identifier) // This can't be a binding, then.
                         return shared_ptr<AST::Binding>();
 
-                    const auto arg = AST::Argument("any", *it, arguments.size());
-                    arguments.push_back(arg);
-                    scope.declare_argument(arg.type, arg.name);
-
+                    arguments.push_back(AST::Argument("any", *it));
+                    scope.declare_argument(arguments.back());
                     ++it;
                     if (it == end)
-                        return shared_ptr<AST::Binding>();//throw std::runtime_error("expected ',' or ')' got EOF");
+                        throw std::runtime_error("expected ',' or ')'");
                     if (it->kind == RParen) {
                         break;
                     }
                     if (it->kind != Comma)
-                        return shared_ptr<AST::Binding>();//throw std::runtime_error("expected ',' or ')', got " + string(*it));
+                        throw std::runtime_error("expected ',' or ')'");
                     ++it;
                 }
             }
@@ -258,8 +223,11 @@ namespace excyrender { namespace Nature { namespace Et1 { namespace {
         if (it->kind != TokenKind::Identifier)
             return shared_ptr<AST::Identifier>();
 
-        auto address = scope.lookup(*it);
-        return shared_ptr<AST::Identifier>(new AST::Identifier(it, it+1, *it, address));
+        auto lookup = scope.lookup(*it);
+        if (!lookup)
+            throw std::runtime_error("undeclared: '" + string(*it) + "'");
+
+        return shared_ptr<AST::Identifier>(new AST::Identifier(it, it+1, *it));
     }
 
 
@@ -280,20 +248,20 @@ namespace excyrender { namespace Nature { namespace Et1 { namespace {
 
 
 
-    shared_ptr<AST::Terminal> terminal (token_iter it, token_iter end, Scope const &scope_)
+    shared_ptr<AST::Terminal> terminal (token_iter it, token_iter end, Scope const &scope)
     {
-        if (auto e = binding(it, end, scope_))
+        if (auto e = binding(it, end, scope))
             return e;
-        if (auto e = call(it, end, scope_))
+        if (auto e = call(it, end, scope))
             return e;
-        if (auto e = identifier(it, end, scope_))
+        if (auto e = identifier(it, end, scope))
             return e;
         if (auto e = integer_literal(it, end))
             return e;
-        if (auto e = unary(it, end, scope_))
+        if (auto e = unary(it, end, scope))
             return e;
         if (it->kind == LParen) {
-            if (auto e = expression(it+1, end, scope_)) {
+            if (auto e = expression(it+1, end, scope)) {
                 if (e->to()->kind != RParen)
                     throw std::runtime_error("missing ')'");
                 return shared_ptr<AST::ParenExpression>(
@@ -304,8 +272,6 @@ namespace excyrender { namespace Nature { namespace Et1 { namespace {
             const auto start = it;
             vector<shared_ptr<AST::Binding>> bindings;
 
-            Scope scope = scope_.copy();
-
             ++it;
             while (it != end) {
                 auto e = binding(it, end, scope);
@@ -313,7 +279,6 @@ namespace excyrender { namespace Nature { namespace Et1 { namespace {
                     throw std::runtime_error("only bindings allowed within 'let/in'-sequence");
                 it = e->to();
                 bindings.push_back(e);
-                scope.declare_argument("any", e->id());
 
                 if (it==end)
                     break;
@@ -470,7 +435,7 @@ namespace excyrender { namespace Nature { namespace Et1 { namespace {
 namespace excyrender { namespace Nature { namespace Et1 {
 
 HeightFunction compile (std::string const &code) {
-    return compile(tokenize("bar(x,y,z) = let b=0, bar(a)=let Y=a*b+z in a+Y in x+y+z"));
+    return compile(tokenize("bar(x,y,z) = x+y+z+a"));
     /*
        "static \n"
        "  x = 3*2*1 \n"
