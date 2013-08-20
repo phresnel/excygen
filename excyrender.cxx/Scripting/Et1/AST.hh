@@ -7,6 +7,8 @@
 #include "Token.hh"
 #include "Nature/HeightFunction.hh"
 #include "memory.hh"
+#include <ostream>
+#include <stdexcept>
 
 
 // -- Compilation ----------------------------------------------------------------------------------
@@ -15,9 +17,87 @@ namespace excyrender { namespace Nature { namespace Et1 { namespace AST {
     struct Argument {
         string type;
         string name;
+        int index;
 
-        Argument(string type, string name) : type(type), name(name) {}
+        Argument(string type, string name, int index) : type(type), name(name), index(index) {}
     };
+
+    struct Address {
+        enum Kind {
+            StackIndex,
+            BigStackIndex,
+            Unresolved
+        };
+
+        static Address Index(string type, string name, int i) {
+            if (i<0)
+                throw std::logic_error("called Address::Index(i) with negative i");
+            Address adr;
+            adr.type_ = type;
+            adr.name_ = name;
+            adr.kind_ = StackIndex;
+            adr.index_ = i;
+            return adr;
+        }
+
+        static Address BigIndex(string type, string name, int i, int base_index) {
+            if (i<0)
+                throw std::logic_error("called Address::BigIndex(i,base) with negative i");
+            if (i<0)
+                throw std::logic_error("called Address::BigIndex(i,base) with negative base");
+            Address adr;
+            adr.type_ = type;
+            adr.name_ = name;
+            adr.kind_ = BigStackIndex;
+            adr.index_ = i;
+            adr.base_index_ = base_index;
+            return adr;
+        }
+
+        Address() = default;
+
+        Kind kind() const { return kind_; }
+
+        string type() const {
+            return type_;
+        }
+        string name() const {
+            return name_;
+        }
+
+        int index() const {
+            if (kind_ != StackIndex && kind_ != BigStackIndex)
+                throw std::logic_error("called Address::index() on non-index-Address");
+            return index_;
+        }
+        int base_index() const {
+            if (kind_ != BigStackIndex)
+                throw std::logic_error("called Address::index() on non-index-Address");
+            return base_index_;
+        }
+
+
+        Address toBigIndex(int base) const {
+            return BigIndex(type_, name_, index_, base);
+        }
+
+    private:
+        Kind kind_ = Unresolved;
+        string type_, name_;
+        int index_ = -1;
+        int base_index_ = -1;
+    };
+
+    inline std::ostream& operator<< (std::ostream &os, Address const &adr) {
+        switch (adr.kind()) {
+        case Address::StackIndex: os << adr.index(); break;
+        case Address::BigStackIndex: os << adr.base_index() << ":" << adr.index(); break;
+        case Address::Unresolved: os << "<unresolved>"; break;
+        }
+        return os;
+    }
+
+
 
     class Addition;
     class Subtraction;
@@ -186,10 +266,12 @@ namespace excyrender { namespace Nature { namespace Et1 { namespace AST {
     };
 
     struct Identifier final : Terminal {
-        Identifier (token_iter from, token_iter to, string name) : Terminal(from, to), name(name) {}
+        Identifier (token_iter from, token_iter to, string name, Address const &adr)
+            : Terminal(from, to), name_(name), address_(adr) {}
         virtual ~Identifier() {}
 
-        string id() const { return name; }
+        string id() const { return name_; }
+        Address address() const { return address_; }
 
         void accept(Visitor &v) const {
             v.begin(*this);
@@ -197,7 +279,8 @@ namespace excyrender { namespace Nature { namespace Et1 { namespace AST {
         }
 
     private:
-        string name;
+        string name_;
+        Address address_;
     };
 
     struct Call final : Terminal {
