@@ -9,6 +9,8 @@
 #include <iostream>
 #include "ASTDumper.hh"
 
+#include "ASTPasses/1000_lambda_lift.hh"
+
 namespace excyrender { namespace Nature { namespace Et1 {  namespace {
 
     class SymbolTable {
@@ -153,12 +155,12 @@ namespace excyrender { namespace Nature { namespace Et1 { namespace {
                     arguments.push_back(AST::Argument("any", *it));
                     ++it;
                     if (it == end)
-                        throw std::runtime_error("expected ',' or ')'");
+                        throw std::runtime_error("expected ',' or ')', got eof");
                     if (it->kind == RParen) {
                         break;
                     }
                     if (it->kind != Comma)
-                        throw std::runtime_error("expected ',' or ')'");
+                        shared_ptr<AST::Binding>(); // Could  also be a function call -> no throw.
                     ++it;
                 }
             }
@@ -397,6 +399,11 @@ namespace excyrender { namespace Nature { namespace Et1 { namespace {
         ASTDumper dumper;
         prog->accept(dumper);
 
+        std::cout << "-- lambda lifted -------------------------------------------------------\n";
+        ASTPasses::lambda_lift(prog);
+
+        prog->accept(dumper);
+
         throw std::runtime_error("no expression found");
     }
 
@@ -408,7 +415,14 @@ namespace excyrender { namespace Nature { namespace Et1 { namespace {
 namespace excyrender { namespace Nature { namespace Et1 {
 
 HeightFunction compile (std::string const &code) {
-    return compile(tokenize("3*2"));
+    std::string code_ = "\
+\n\
+let f(x) =                 \n\
+   let g(y) = let z=x in z \n\
+   in g(x)                 \n\
+in f(1)                    \n\
+";
+    return compile(tokenize(code_));
     /*
        "static \n"
        "  x = 3*2*1 \n"

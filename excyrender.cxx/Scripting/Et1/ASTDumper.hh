@@ -13,57 +13,52 @@ namespace excyrender { namespace Nature { namespace Et1 {
 
         void begin(AST::Addition const &)
         {
-            indent(); os << "(+) {\n";
+            indent(); os << "(+) \n";
             ++indent_;
         }
         void end(AST::Addition const &)
         {
             --indent_;
-            indent(); os << "}\n";
         }
 
         void begin(AST::Subtraction const &)
         {
-            indent(); os << "(-) {\n";
+            indent(); os << "(-) \n";
             ++indent_;
         }
         void end(AST::Subtraction const &)
         {
             --indent_;
-            indent(); os << "}\n";
         }
 
         void begin(AST::Negation const &)
         {
-            indent(); os << "(neg) {\n";
+            indent(); os << "(neg) \n";
             ++indent_;
         }
         void end(AST::Negation const &)
         {
             --indent_;
-            indent(); os << "}\n";
         }
 
         void begin(AST::Multiplication const &)
         {
-            indent(); os << "(*) {\n";
+            indent(); os << "(*) \n";
             ++indent_;
         }
         void end(AST::Multiplication const &)
         {
             --indent_;
-            indent(); os << "}\n";
         }
 
         void begin(AST::Division const &)
         {
-            indent(); os << "(/) {\n";
+            indent(); os << "(/) \n";
             ++indent_;
         }
         void end(AST::Division const &)
         {
             --indent_;
-            indent(); os << "}\n";
         }
 
         void begin(AST::IntegerLiteral const &lit)
@@ -100,19 +95,19 @@ namespace excyrender { namespace Nature { namespace Et1 {
 
         void begin(AST::Binding const &binding)
         {
-            indent(); os << "binding " << binding.id() << "\n";
+            indent(); os << "binding " << binding.id() << " ( ";
             ++indent_;
             for (auto arg : binding.arguments()) {
-                indent(); os << arg.name << " : " << arg.type << '\n';
+                os << "[" << arg.name << ":" << arg.type << "] ";
             }
+            os << ")\n";
+
             --indent_;
-            indent(); os << "{\n";
             ++indent_;
         }
         void end(AST::Binding const &)
         {
             --indent_;
-            indent(); os << "}\n";
         }
 
         void begin(AST::Identifier const &id)

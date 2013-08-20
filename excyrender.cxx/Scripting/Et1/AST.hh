@@ -281,9 +281,9 @@ namespace excyrender { namespace Nature { namespace Et1 { namespace AST {
         {}
 
         std::string id() const { return id_; }
-        vector<shared_ptr<Expression>>::size_type      args_size()  const { return arguments_.size(); }
-        vector<shared_ptr<Expression>>::const_iterator args_begin() const { return arguments_.begin(); }
-        vector<shared_ptr<Expression>>::const_iterator args_end()   const { return arguments_.end(); }
+
+        vector<shared_ptr<Expression>> const &arguments() const { return arguments_; }
+        vector<shared_ptr<Expression>> &arguments() { return arguments_; }
 
         void accept(Visitor &v) const {
             v.begin(*this);
@@ -359,6 +359,9 @@ namespace excyrender { namespace Nature { namespace Et1 { namespace AST {
 
         Expression const &value() const { return *value_; }
         Expression &value() { return *value_; }
+
+        vector<shared_ptr<Binding>> &bindings() { return bindings_; }
+        vector<shared_ptr<Binding>> const &bindings() const { return bindings_; }
 
     private:
         vector<shared_ptr<Binding>> bindings_;

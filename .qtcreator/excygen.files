@@ -91,4 +91,12 @@
 ../excyrender.cxx/Scripting/Et1/AST.cc
 ../excyrender.cxx/Scripting/Et1/ASTDumper.hh
 
+../excyrender.cxx/Scripting/Et1/ASTPasses/1000_lambda_lift.hh
+../excyrender.cxx/Scripting/Et1/ASTPasses/1000_lambda_lift.cc
+
+../excyrender.cxx/Scripting/Et1/ASTQueries/find_references.hh
+../excyrender.cxx/Scripting/Et1/ASTQueries/find_references.cc
+../excyrender.cxx/Scripting/Et1/ASTQueries/find_binding_names.hh
+../excyrender.cxx/Scripting/Et1/ASTQueries/find_binding_names.cc
+
 
