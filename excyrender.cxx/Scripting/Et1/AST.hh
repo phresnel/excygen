@@ -70,6 +70,44 @@ namespace excyrender { namespace Nature { namespace Et1 { namespace AST {
         virtual void end(Program const &) = 0;
     };
 
+    struct Transform {
+        virtual void begin(Addition &) = 0;
+        virtual void end(Addition &) = 0;
+
+        virtual void begin(Subtraction &) = 0;
+        virtual void end(Subtraction &) = 0;
+
+        virtual void begin(Multiplication &) = 0;
+        virtual void end(Multiplication &) = 0;
+
+        virtual void begin(Division &) = 0;
+        virtual void end(Division &) = 0;
+
+        virtual void begin(IntegerLiteral &) = 0;
+        virtual void end(IntegerLiteral &) = 0;
+
+        virtual void begin(Call &) = 0;
+        virtual void end(Call &) = 0;
+
+        virtual void begin(Negation &) = 0;
+        virtual void end(Negation &) = 0;
+
+        virtual void begin(ParenExpression &) = 0;
+        virtual void end(ParenExpression &) = 0;
+
+        virtual void begin(Binding &) = 0;
+        virtual void end(Binding &) = 0;
+
+        virtual void begin(Identifier &) = 0;
+        virtual void end(Identifier &) = 0;
+
+        virtual void begin(LetIn &) = 0;
+        virtual void end(LetIn &) = 0;
+
+        virtual void begin(Program &) = 0;
+        virtual void end(Program &) = 0;
+    };
+
 
     class ASTNode {
     public:
@@ -80,6 +118,7 @@ namespace excyrender { namespace Nature { namespace Et1 { namespace AST {
         token_iter to()   const noexcept { return to_; }
 
         virtual void accept(Visitor &v) const = 0;
+        virtual void accept(Transform &v) = 0;
     protected:
         ASTNode(token_iter from, token_iter to) : from_(from), to_(to) {}
 
@@ -98,6 +137,8 @@ namespace excyrender { namespace Nature { namespace Et1 { namespace AST {
         virtual ~Binary() {}
         Expression const &lhs() const { return *lhs_; }
         Expression const &rhs() const { return *rhs_; }
+        Expression &lhs() { return *lhs_; }
+        Expression &rhs() { return *rhs_; }
 
     protected:
         Binary (token_iter from, token_iter to,
@@ -120,6 +161,13 @@ namespace excyrender { namespace Nature { namespace Et1 { namespace AST {
             rhs().accept(v);
             v.end(*this);
         }
+
+        void accept(Transform &v) {
+            v.begin(*this);
+            lhs().accept(v);
+            rhs().accept(v);
+            v.end(*this);
+        }
     };
 
     struct Subtraction final : Binary {
@@ -129,6 +177,12 @@ namespace excyrender { namespace Nature { namespace Et1 { namespace AST {
         {}
 
         void accept(Visitor &v) const {
+            v.begin(*this);
+            lhs().accept(v);
+            rhs().accept(v);
+            v.end(*this);
+        }
+        void accept(Transform &v) {
             v.begin(*this);
             lhs().accept(v);
             rhs().accept(v);
@@ -148,6 +202,12 @@ namespace excyrender { namespace Nature { namespace Et1 { namespace AST {
             rhs().accept(v);
             v.end(*this);
         }
+        void accept(Transform &v) {
+            v.begin(*this);
+            lhs().accept(v);
+            rhs().accept(v);
+            v.end(*this);
+        }
     };
 
     struct Division final : Binary {
@@ -157,6 +217,12 @@ namespace excyrender { namespace Nature { namespace Et1 { namespace AST {
         {}
 
         void accept(Visitor &v) const {
+            v.begin(*this);
+            lhs().accept(v);
+            rhs().accept(v);
+            v.end(*this);
+        }
+        void accept(Transform &v) {
             v.begin(*this);
             lhs().accept(v);
             rhs().accept(v);
@@ -183,6 +249,10 @@ namespace excyrender { namespace Nature { namespace Et1 { namespace AST {
             v.begin(*this);
             v.end(*this);
         }
+        void accept(Transform &v) {
+            v.begin(*this);
+            v.end(*this);
+        }
     };
 
     struct Identifier final : Terminal {
@@ -192,6 +262,10 @@ namespace excyrender { namespace Nature { namespace Et1 { namespace AST {
         string id() const { return name; }
 
         void accept(Visitor &v) const {
+            v.begin(*this);
+            v.end(*this);
+        }
+        void accept(Transform &v) {
             v.begin(*this);
             v.end(*this);
         }
@@ -217,6 +291,12 @@ namespace excyrender { namespace Nature { namespace Et1 { namespace AST {
                 arg->accept(v);
             v.end(*this);
         }
+        void accept(Transform &v) {
+            v.begin(*this);
+            for (auto arg : arguments_)
+                arg->accept(v);
+            v.end(*this);
+        }
 
     private:
         std::string id_;
@@ -236,10 +316,18 @@ namespace excyrender { namespace Nature { namespace Et1 { namespace AST {
             body().accept(v);
             v.end(*this);
         }
+        void accept(Transform &v) {
+            v.begin(*this);
+            body().accept(v);
+            v.end(*this);
+        }
 
         string id() const { return id_; }
+
         Expression const &body() const { return *body_; }
+        Expression &body() { return *body_; }
         vector<Argument> const &arguments() const { return arguments_; }
+        vector<Argument> &arguments() { return arguments_; }
 
     private:
         string id_;
@@ -261,8 +349,16 @@ namespace excyrender { namespace Nature { namespace Et1 { namespace AST {
             value().accept(v);
             v.end(*this);
         }
+        void accept(Transform &v) {
+            v.begin(*this);
+            for (auto b : bindings_)
+                b->accept(v);
+            value().accept(v);
+            v.end(*this);
+        }
 
         Expression const &value() const { return *value_; }
+        Expression &value() { return *value_; }
 
     private:
         vector<shared_ptr<Binding>> bindings_;
@@ -280,8 +376,14 @@ namespace excyrender { namespace Nature { namespace Et1 { namespace AST {
         }
 
         Expression const &expression() const { return *expression_; }
+        Expression &expression() { return *expression_; }
 
         void accept(Visitor &v) const {
+            v.begin(*this);
+            expression().accept(v);
+            v.end(*this);
+        }
+        void accept(Transform &v) {
             v.begin(*this);
             expression().accept(v);
             v.end(*this);
@@ -296,6 +398,7 @@ namespace excyrender { namespace Nature { namespace Et1 { namespace AST {
     struct Unary : Terminal {
         virtual ~Unary() {}
         Expression const &rhs() const { return *rhs_; }
+        Expression &rhs() { return *rhs_; }
 
     protected:
         Unary (token_iter from, token_iter to, shared_ptr<Expression> rhs) :
@@ -312,6 +415,11 @@ namespace excyrender { namespace Nature { namespace Et1 { namespace AST {
         {}
 
         void accept(Visitor &v) const {
+            v.begin(*this);
+            rhs().accept(v);
+            v.end(*this);
+        }
+        void accept(Transform &v) {
             v.begin(*this);
             rhs().accept(v);
             v.end(*this);
@@ -333,8 +441,16 @@ namespace excyrender { namespace Nature { namespace Et1 { namespace AST {
             value().accept(v);
             v.end(*this);
         }
+        void accept(Transform &v) {
+            v.begin(*this);
+            for (auto b : static_bindings_)
+                b->accept(v);
+            value().accept(v);
+            v.end(*this);
+        }
 
         Expression const &value() const { return *value_; }
+        Expression &value() { return *value_; }
 
     private:
         vector<shared_ptr<Binding>> static_bindings_;
