@@ -3,34 +3,17 @@
 // See COPYING in the root-folder of the excygen project folder.
 
 #include "AST.hh"
-#include "ASTDumper.hh"
-#include "optional.hh"
 #include <map>
 #include <set>
-#include <vector>
 #include <stdexcept>
 #include <iostream>
+#include "ASTDumper.hh"
 
-namespace excyrender { namespace Nature { namespace Et1 { namespace {
+namespace excyrender { namespace Nature { namespace Et1 {  namespace {
 
-    using AST::Argument;
-    using std::vector;
-
-    class Scope {
+    class SymbolTable {
     public:
 
-        void declare_argument(Argument const &arg) {
-            arguments.push_back(arg);
-        }
-
-        optional<Argument> lookup(string const &name) const {
-            for (auto arg : arguments)
-                if (arg.name == name) return arg;
-            return optional<Argument>();
-        }
-
-    private:
-        vector<Argument> arguments;
     };
 
 
@@ -81,13 +64,13 @@ namespace excyrender { namespace Nature { namespace Et1 { namespace {
     }
 
 
-    shared_ptr<AST::Expression>     expression(token_iter, token_iter, Scope const &);
+    shared_ptr<AST::Expression>     expression(token_iter, token_iter);
     shared_ptr<AST::IntegerLiteral> integer_literal(token_iter, token_iter);
-    shared_ptr<AST::Terminal>       terminal (token_iter it, token_iter end, Scope const &);
+    shared_ptr<AST::Terminal>       terminal (token_iter it, token_iter end);
 
 
     // function-call : identifier '(' expression ')'
-    shared_ptr<AST::Call> call(token_iter it, token_iter end, Scope const &scope)
+    shared_ptr<AST::Call> call(token_iter it, token_iter end)
     {
         using namespace AST;
 
@@ -116,7 +99,7 @@ namespace excyrender { namespace Nature { namespace Et1 { namespace {
                 // some-call ( foo , bar )
                 //             ^^^
                 {
-                    auto arg = expression(it, end, scope);
+                    auto arg = expression(it, end);
                     if (!arg)
                         throw std::runtime_error("expected argument");
                     it = arg->to();
@@ -143,10 +126,8 @@ namespace excyrender { namespace Nature { namespace Et1 { namespace {
 
     // binding : name ( '(' argument (',' argument)* ')' )? = expression
     // argument: type? name
-    shared_ptr<AST::Binding> binding(token_iter it, token_iter end, Scope const &scope_)
+    shared_ptr<AST::Binding> binding(token_iter it, token_iter end)
     {
-        Scope scope = scope_;
-
         const auto start = it;
         // name ( '(' argument (',' argument)* ')' )? = expression
         // ^
@@ -170,7 +151,6 @@ namespace excyrender { namespace Nature { namespace Et1 { namespace {
                         return shared_ptr<AST::Binding>();
 
                     arguments.push_back(AST::Argument("any", *it));
-                    scope.declare_argument(arguments.back());
                     ++it;
                     if (it == end)
                         throw std::runtime_error("expected ',' or ')'");
@@ -196,7 +176,7 @@ namespace excyrender { namespace Nature { namespace Et1 { namespace {
         ++it;
         if (it == end)
             throw std::runtime_error("expected binding expression");
-        auto e = expression(it, end, scope);
+        auto e = expression(it, end);
         if (!e)
             throw std::runtime_error("expected binding expression");
 
@@ -216,28 +196,22 @@ namespace excyrender { namespace Nature { namespace Et1 { namespace {
 
 
 
-    shared_ptr<AST::Identifier> identifier(token_iter it, token_iter end, Scope const &scope)
+    shared_ptr<AST::Identifier> identifier(token_iter it, token_iter end)
     {
         using namespace AST;
 
-        if (it->kind != TokenKind::Identifier)
-            return shared_ptr<AST::Identifier>();
-
-        auto lookup = scope.lookup(*it);
-        if (!lookup)
-            throw std::runtime_error("undeclared: '" + string(*it) + "'");
-
+        if (it->kind != TokenKind::Identifier) return shared_ptr<AST::Identifier>();
         return shared_ptr<AST::Identifier>(new AST::Identifier(it, it+1, *it));
     }
 
 
 
-    shared_ptr<AST::Unary> unary(token_iter it, token_iter end, Scope const &scope)
+    shared_ptr<AST::Unary> unary(token_iter it, token_iter end)
     {
         using namespace AST;
 
         if (it->kind == Minus) {
-            auto rhs = terminal(it+1, end, scope);
+            auto rhs = terminal(it+1, end);
             if (!rhs)
                 throw std::runtime_error("expected argument to negation-operator");
             return shared_ptr<Negation>(new Negation(it, rhs->to(), rhs));
@@ -248,20 +222,20 @@ namespace excyrender { namespace Nature { namespace Et1 { namespace {
 
 
 
-    shared_ptr<AST::Terminal> terminal (token_iter it, token_iter end, Scope const &scope)
+    shared_ptr<AST::Terminal> terminal (token_iter it, token_iter end)
     {
-        if (auto e = binding(it, end, scope))
+        if (auto e = binding(it, end))
             return e;
-        if (auto e = call(it, end, scope))
+        if (auto e = call(it, end))
             return e;
-        if (auto e = identifier(it, end, scope))
+        if (auto e = identifier(it, end))
             return e;
         if (auto e = integer_literal(it, end))
             return e;
-        if (auto e = unary(it, end, scope))
+        if (auto e = unary(it, end))
             return e;
         if (it->kind == LParen) {
-            if (auto e = expression(it+1, end, scope)) {
+            if (auto e = expression(it+1, end)) {
                 if (e->to()->kind != RParen)
                     throw std::runtime_error("missing ')'");
                 return shared_ptr<AST::ParenExpression>(
@@ -274,7 +248,7 @@ namespace excyrender { namespace Nature { namespace Et1 { namespace {
 
             ++it;
             while (it != end) {
-                auto e = binding(it, end, scope);
+                auto e = binding(it, end);
                 if (!e)
                     throw std::runtime_error("only bindings allowed within 'let/in'-sequence");
                 it = e->to();
@@ -297,7 +271,7 @@ namespace excyrender { namespace Nature { namespace Et1 { namespace {
             ++it;
             if (it == end)
                 throw std::runtime_error("missing value expression after 'in'");
-            auto value = expression(it, end, scope);
+            auto value = expression(it, end);
             if (!value)
                 throw std::runtime_error("missing value expression after 'in'");
             it = value->to();
@@ -310,7 +284,7 @@ namespace excyrender { namespace Nature { namespace Et1 { namespace {
 
 
     shared_ptr<AST::Expression> binary(int min_prec, shared_ptr<AST::Expression> lhs,
-                                       token_iter it, token_iter end, Scope const &scope)
+                                       token_iter it, token_iter end)
     {
         using namespace AST;
 
@@ -329,7 +303,7 @@ namespace excyrender { namespace Nature { namespace Et1 { namespace {
 
             // 1 + 2 + 3
             //     ^
-            shared_ptr<AST::Expression> rhs = terminal(it, end, scope);
+            shared_ptr<AST::Expression> rhs = terminal(it, end);
             if (!rhs)
                 throw std::runtime_error("expected operand on right-hand-side of operator");
             it = rhs->to();
@@ -339,7 +313,7 @@ namespace excyrender { namespace Nature { namespace Et1 { namespace {
             const int next_prec = precedence(string(*it));
             if (prec < next_prec) {
                 // This means '?' has higher precedence (e.g. '*').
-                rhs = binary(next_prec, rhs, it, end, scope); // Therefore, what is our rhs should really be ?'s lhs.
+                rhs = binary(next_prec, rhs, it, end); // Therefore, what is our rhs should really be ?'s lhs.
                 if (!rhs)
                     return shared_ptr<AST::Expression>();
                 it = rhs->to();
@@ -351,21 +325,21 @@ namespace excyrender { namespace Nature { namespace Et1 { namespace {
 
 
 
-    shared_ptr<AST::Expression> expression(token_iter it, token_iter end, Scope const &scope)
+    shared_ptr<AST::Expression> expression(token_iter it, token_iter end)
     {
         using namespace AST;
 
-        auto lhs = terminal(it, end, scope);
+        auto lhs = terminal(it, end);
         if (!lhs) {
             std::clog << "no terminal found" << std::endl;
             return shared_ptr<Expression>();
         }
         it = lhs->to();
-        return binary(0, lhs, it, end, scope);
+        return binary(0, lhs, it, end);
     }
 
 
-    shared_ptr<AST::Program> program(token_iter it, token_iter end, Scope const &scope) {
+    shared_ptr<AST::Program> program(token_iter it, token_iter end) {
         // TODO: extract the following as "bindings(it,end, Static, Dynamic)", same for "LetIn"
         if (it->kind == Static) {
             const auto start = it;
@@ -373,7 +347,7 @@ namespace excyrender { namespace Nature { namespace Et1 { namespace {
 
             ++it;
             while (it != end) {
-                auto e = binding(it, end, scope);
+                auto e = binding(it, end);
                 if (!e)
                     throw std::runtime_error("only bindings allowed within 'static/dynamic'-sequence");
                 it = e->to();
@@ -396,13 +370,13 @@ namespace excyrender { namespace Nature { namespace Et1 { namespace {
             ++it;
             if (it == end)
                 throw std::runtime_error("missing value expression after 'dynamic'");
-            auto value = expression(it, end, scope);
+            auto value = expression(it, end);
             if (!value)
                 throw std::runtime_error("missing value expression after 'dynamic'");
             it = value->to();
 
             return shared_ptr<AST::Program>(new AST::Program(start, it, bindings, value));
-        } else if (auto e = expression(it, end, scope)) {
+        } else if (auto e = expression(it, end)) {
             return shared_ptr<AST::Program>(
                       new AST::Program(it, end,
                                        vector<shared_ptr<AST::Binding>>(),
@@ -418,8 +392,7 @@ namespace excyrender { namespace Nature { namespace Et1 { namespace {
             throw std::runtime_error("no tokens");
         std::cout << toks << std::endl;
 
-        Scope scope;
-        shared_ptr<AST::Program> prog = program(toks.begin(), toks.end(), scope);
+        shared_ptr<AST::Program> prog = program(toks.begin(), toks.end());
 
         ASTDumper dumper;
         prog->accept(dumper);
@@ -435,7 +408,7 @@ namespace excyrender { namespace Nature { namespace Et1 { namespace {
 namespace excyrender { namespace Nature { namespace Et1 {
 
 HeightFunction compile (std::string const &code) {
-    return compile(tokenize("bar(x,y,z) = x+y+z+a"));
+    return compile(tokenize("3*2"));
     /*
        "static \n"
        "  x = 3*2*1 \n"
