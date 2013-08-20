@@ -60,7 +60,7 @@ namespace excyrender { namespace Nature { namespace Et1 {
         }
 
         bool is_whitespace(char c) {
-            return c==' ' || c=='\t' || c=='\n';
+            return c==' ' || c=='\t' || c=='\n' || c=='\r';
         }
 
         optional<iterator> integer(iterator it, iterator end) {
@@ -94,6 +94,8 @@ namespace excyrender { namespace Nature { namespace Et1 {
         for (auto it = str.begin(), end=str.end(); it!=end; ) {
             while (it!=end && is_whitespace(*it))
                 ++it;
+            if (it==end)
+                break;
             if (auto oit = integer(it, end)) {
                 tokens.emplace_back(Integer, it, *oit);
                 it = *oit;
@@ -135,7 +137,7 @@ namespace excyrender { namespace Nature { namespace Et1 {
                 }
                 it = *oit;
             } else {
-                throw std::runtime_error("tokenization failure: ..." + string(it, end));
+                throw std::runtime_error("tokenization failure: ...\"" + string(it, end) + "\"");
             }
         }
         return tokens;
