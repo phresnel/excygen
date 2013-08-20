@@ -3,7 +3,7 @@
 // See COPYING in the root-folder of the excygen project folder.
 
 #include "AST.hh"
-#include "transform/lambda_lift.hh"
+#include "ASTDumper.hh"
 #include "optional.hh"
 #include <map>
 #include <set>
@@ -219,8 +219,6 @@ namespace excyrender { namespace Nature { namespace Et1 { namespace {
                 throw std::runtime_error("expected ')'");
             ++it;
         }
-
-        // Lambda lifting.
 
         // name ( '(' argument (',' argument)* ')' )? = expression
         //                                            ^
@@ -456,7 +454,8 @@ namespace excyrender { namespace Nature { namespace Et1 { namespace {
         Scope scope;
         shared_ptr<AST::Program> prog = program(toks.begin(), toks.end(), scope);
 
-        prog = lambda_lift(prog);
+        ASTDumper dumper;
+        prog->accept(dumper);
 
         throw std::runtime_error("no expression found");
     }
@@ -469,7 +468,7 @@ namespace excyrender { namespace Nature { namespace Et1 { namespace {
 namespace excyrender { namespace Nature { namespace Et1 {
 
 HeightFunction compile (std::string const &code) {
-    return compile(tokenize("static a=0 dynamic let c=1, bar(x) = c+x in bar(1)"));
+    return compile(tokenize("static a=0 dynamic let c=1, bar(x) = a+x in c"));
     /*
        "static \n"
        "  x = 3*2*1 \n"
