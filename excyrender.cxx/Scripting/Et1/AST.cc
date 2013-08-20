@@ -10,7 +10,6 @@
 #include <vector>
 #include <stdexcept>
 #include <iostream>
-#include <sstream>
 
 namespace excyrender { namespace Nature { namespace Et1 { namespace {
 
@@ -20,49 +19,18 @@ namespace excyrender { namespace Nature { namespace Et1 { namespace {
     class Scope {
     public:
 
-        Scope() = default;
-        Scope(Scope &&) = default;
-        Scope& operator= (Scope &&) = default;
-
-        Scope(Scope const &) = delete;
-        Scope& operator= (Scope const &) = delete;
-
-        Scope localize() const {
-            // In order to generate Local and NonLocal properties for later lambda-lifting,
-            // only the global_bindings persist upon localization.
-            Scope ret;
-            ret.global_bindings = global_bindings;
-            return ret;
-        }
-
         void declare_argument(Argument const &arg) {
             arguments.push_back(arg);
         }
 
-        void declare(shared_ptr<AST::Binding> binding) {
-            bindings.push_back(binding);
-        }
-
-        void declare_global(shared_ptr<AST::Binding> binding) {
-            global_bindings.push_back(binding);
-        }
-
-        AST::Reference lookup(string const &name) const {
-            // TODO: Review this code later and see whether differentiation between
-            //       arguments and local bindings is still needed.
+        optional<Argument> lookup(string const &name) const {
             for (auto arg : arguments)
-                if (arg.name == name) return {AST::Reference::Local, name};
-            for (auto arg : bindings)
-                if (arg->id() == name) return {AST::Reference::Local, name};
-            for (auto bind : global_bindings)
-                if (bind->id() == name) return {AST::Reference::Global, name};
-            return {AST::Reference::NonLocal, name};
+                if (arg.name == name) return arg;
+            return optional<Argument>();
         }
 
     private:
         vector<Argument> arguments;
-        vector<shared_ptr<AST::Binding>> bindings;
-        vector<shared_ptr<AST::Binding>> global_bindings;
     };
 
 
@@ -177,7 +145,7 @@ namespace excyrender { namespace Nature { namespace Et1 { namespace {
     // argument: type? name
     shared_ptr<AST::Binding> binding(token_iter it, token_iter end, Scope const &scope_)
     {
-        Scope scope = scope_.localize();
+        Scope scope = scope_;
 
         const auto start = it;
         // name ( '(' argument (',' argument)* ')' )? = expression
@@ -255,7 +223,11 @@ namespace excyrender { namespace Nature { namespace Et1 { namespace {
         if (it->kind != TokenKind::Identifier)
             return shared_ptr<AST::Identifier>();
 
-        return shared_ptr<AST::Identifier>(new AST::Identifier(it, it+1, scope.lookup(*it)));
+        auto lookup = scope.lookup(*it);
+        if (!lookup)
+            throw std::runtime_error("undeclared: '" + string(*it) + "'");
+
+        return shared_ptr<AST::Identifier>(new AST::Identifier(it, it+1, *it));
     }
 
 
@@ -276,20 +248,20 @@ namespace excyrender { namespace Nature { namespace Et1 { namespace {
 
 
 
-    shared_ptr<AST::Terminal> terminal (token_iter it, token_iter end, Scope const &scope_)
+    shared_ptr<AST::Terminal> terminal (token_iter it, token_iter end, Scope const &scope)
     {
-        if (auto e = binding(it, end, scope_))
+        if (auto e = binding(it, end, scope))
             return e;
-        if (auto e = call(it, end, scope_))
+        if (auto e = call(it, end, scope))
             return e;
-        if (auto e = identifier(it, end, scope_))
+        if (auto e = identifier(it, end, scope))
             return e;
         if (auto e = integer_literal(it, end))
             return e;
-        if (auto e = unary(it, end, scope_))
+        if (auto e = unary(it, end, scope))
             return e;
         if (it->kind == LParen) {
-            if (auto e = expression(it+1, end, scope_)) {
+            if (auto e = expression(it+1, end, scope)) {
                 if (e->to()->kind != RParen)
                     throw std::runtime_error("missing ')'");
                 return shared_ptr<AST::ParenExpression>(
@@ -299,7 +271,6 @@ namespace excyrender { namespace Nature { namespace Et1 { namespace {
         if (it->kind == Let) {
             const auto start = it;
             vector<shared_ptr<AST::Binding>> bindings;
-            Scope scope = scope.localize();
 
             ++it;
             while (it != end) {
@@ -308,7 +279,6 @@ namespace excyrender { namespace Nature { namespace Et1 { namespace {
                     throw std::runtime_error("only bindings allowed within 'let/in'-sequence");
                 it = e->to();
                 bindings.push_back(e);
-                scope.declare(e);
 
                 if (it==end)
                     break;
@@ -395,12 +365,11 @@ namespace excyrender { namespace Nature { namespace Et1 { namespace {
     }
 
 
-    shared_ptr<AST::Program> program(token_iter it, token_iter end, Scope const &scope_) {
+    shared_ptr<AST::Program> program(token_iter it, token_iter end, Scope const &scope) {
         // TODO: extract the following as "bindings(it,end, Static, Dynamic)", same for "LetIn"
         if (it->kind == Static) {
             const auto start = it;
             vector<shared_ptr<AST::Binding>> bindings;
-            Scope scope = scope.localize();
 
             ++it;
             while (it != end) {
@@ -409,7 +378,6 @@ namespace excyrender { namespace Nature { namespace Et1 { namespace {
                     throw std::runtime_error("only bindings allowed within 'static/dynamic'-sequence");
                 it = e->to();
                 bindings.push_back(e);
-                scope.declare_global(e);
 
                 if (it==end)
                     break;
@@ -428,14 +396,13 @@ namespace excyrender { namespace Nature { namespace Et1 { namespace {
             ++it;
             if (it == end)
                 throw std::runtime_error("missing value expression after 'dynamic'");
-
             auto value = expression(it, end, scope);
             if (!value)
                 throw std::runtime_error("missing value expression after 'dynamic'");
             it = value->to();
 
             return shared_ptr<AST::Program>(new AST::Program(start, it, bindings, value));
-        } else if (auto e = expression(it, end, scope_)) {
+        } else if (auto e = expression(it, end, scope)) {
             return shared_ptr<AST::Program>(
                       new AST::Program(it, end,
                                        vector<shared_ptr<AST::Binding>>(),
@@ -468,7 +435,7 @@ namespace excyrender { namespace Nature { namespace Et1 { namespace {
 namespace excyrender { namespace Nature { namespace Et1 {
 
 HeightFunction compile (std::string const &code) {
-    return compile(tokenize("static a=0 dynamic let c=1, bar(x) = a+x in c"));
+    return compile(tokenize("bar(x,y,z) = x+y+z+a"));
     /*
        "static \n"
        "  x = 3*2*1 \n"
