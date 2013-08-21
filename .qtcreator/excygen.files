@@ -91,6 +91,8 @@
 ../excyrender.cxx/Scripting/Et1/AST.cc
 ../excyrender.cxx/Scripting/Et1/ASTDumper.hh
 
+../excyrender.cxx/Scripting/Et1/ASTPasses/0500_lift_identifiers_to_calls.hh
+../excyrender.cxx/Scripting/Et1/ASTPasses/0500_lift_identifiers_to_calls.cc
 ../excyrender.cxx/Scripting/Et1/ASTPasses/1000_lambda_lift.hh
 ../excyrender.cxx/Scripting/Et1/ASTPasses/1000_lambda_lift.cc
 

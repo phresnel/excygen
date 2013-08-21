@@ -140,6 +140,9 @@ namespace excyrender { namespace Nature { namespace Et1 { namespace AST {
         Expression &lhs() { return *lhs_; }
         Expression &rhs() { return *rhs_; }
 
+        void reset_lhs(Expression *e) { lhs_.reset(e); }
+        void reset_rhs(Expression *e) { rhs_.reset(e); }
+
     protected:
         Binary (token_iter from, token_iter to,
                 shared_ptr<Expression> lhs, shared_ptr<Expression> rhs
@@ -329,6 +332,8 @@ namespace excyrender { namespace Nature { namespace Et1 { namespace AST {
         vector<Argument> const &arguments() const { return arguments_; }
         vector<Argument> &arguments() { return arguments_; }
 
+        void reset_body(Expression *e) { body_.reset(e); }
+
     private:
         string id_;
         vector<Argument> arguments_;
@@ -359,6 +364,7 @@ namespace excyrender { namespace Nature { namespace Et1 { namespace AST {
 
         Expression const &value() const { return *value_; }
         Expression &value() { return *value_; }
+        void reset_value(Expression *e) { value_.reset(e); }
 
         vector<shared_ptr<Binding>> &bindings() { return bindings_; }
         vector<shared_ptr<Binding>> const &bindings() const { return bindings_; }
@@ -402,6 +408,8 @@ namespace excyrender { namespace Nature { namespace Et1 { namespace AST {
         virtual ~Unary() {}
         Expression const &rhs() const { return *rhs_; }
         Expression &rhs() { return *rhs_; }
+
+        void reset_rhs(Expression *e) { rhs_.reset(e); }
 
     protected:
         Unary (token_iter from, token_iter to, shared_ptr<Expression> rhs) :
@@ -454,6 +462,8 @@ namespace excyrender { namespace Nature { namespace Et1 { namespace AST {
 
         Expression const &value() const { return *value_; }
         Expression &value() { return *value_; }
+
+        void reset_value(Expression *e) { value_.reset(e); }
 
     private:
         vector<shared_ptr<Binding>> static_bindings_;

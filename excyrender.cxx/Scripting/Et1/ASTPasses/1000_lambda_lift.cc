@@ -2,6 +2,7 @@
 // GNU General Public License, Version 3 (a.k.a. GPLv3).
 // See COPYING in the root-folder of the excygen project folder.
 
+#include "0500_lift_identifiers_to_calls.hh"
 #include "1000_lambda_lift.hh"
 #include "../ASTQueries/find_references.hh"
 #include "../ASTQueries/find_binding_names.hh"
@@ -51,6 +52,8 @@ namespace {
 
         void begin(Call &call)
         {
+            if (binding_depth != 1)
+                return;
             if (call.id() != call_name)
                 return;
             for (auto a : lifted_args) {
@@ -75,7 +78,14 @@ namespace {
             --binding_depth;
         }
 
-        void begin(AST::Identifier &) {}
+        void begin(AST::Identifier &id)
+        {
+            if (binding_depth != 1)
+                return;
+            if (id.id() != call_name)
+                return;
+            throw std::logic_error("AppendLifted::begin(Identifier): reached point deemed unreachable");
+        }
         void end(AST::Identifier &) {}
 
         void begin(LetIn &) {}
@@ -148,6 +158,11 @@ namespace {
 
             // Inject new argument at all call sites.
             if (auto parent = scope.top().parent) {
+                // There might be identifiers within the parent's body which must now be promoted
+                // to calls.
+                lift_identifiers_to_calls(parent->body(), {binding.id()}, false);
+
+                // Append the lifted variable-names to all calls of us.
                 AppendLifted al(binding.id(), non_locals);
                 parent->accept(al);
             } else {
@@ -177,13 +192,15 @@ namespace {
 }
 
 void lambda_lift(shared_ptr<AST::ASTNode> ast) {
+    int i = 0;
     while (1) {
-        std::cout << "lambda-lift ...\n";
+        ++i;
         LambdaLift ll;
         ast->accept(ll);
         if (!ll.transformed())
             break;
     }
+    std::clog << "pass: lambda-lifting (" << i << "x)\n";
 }
 
 

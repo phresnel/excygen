@@ -16,6 +16,7 @@ t = env.Program(target='excygen',
                         'Scripting/Et1/Token.cc',
                         'Scripting/Et1/AST.cc',
                         'Scripting/Et1/ASTPasses/1000_lambda_lift.cc',
+                        'Scripting/Et1/ASTPasses/0500_lift_identifiers_to_calls.cc',
                         'Scripting/Et1/ASTQueries/find_references.cc',
                         'Scripting/Et1/ASTQueries/find_binding_names.cc'
                        ],

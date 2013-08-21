@@ -418,7 +418,9 @@ HeightFunction compile (std::string const &code) {
     std::string code_ = "\
 \n\
 let f(x) =                 \n\
-   let g(y) = let z=x in z \n\
+   let g(y) = let z=x*2,   \n\
+                  P(z)=z   \n\
+              in z         \n\
    in g(x)                 \n\
 in f(1)                    \n\
 ";
