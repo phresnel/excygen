@@ -64,6 +64,7 @@ namespace excyrender { namespace Nature { namespace Et1 { namespace AST {
         virtual void end(Identifier const &) = 0;
 
         virtual void begin(LetIn const &) = 0;
+        virtual void before_body(LetIn const &) {}
         virtual void end(LetIn const &) = 0;
 
         virtual void begin(Program const &) = 0;
@@ -246,7 +247,8 @@ namespace excyrender { namespace Nature { namespace Et1 { namespace AST {
     };
 
     struct IntegerLiteral final : Literal {
-        IntegerLiteral (token_iter from, token_iter to) : Literal(from, to) {}
+        IntegerLiteral (token_iter from, token_iter to, string value) :
+            Literal(from, to), value_(value) {}
 
         void accept(Visitor &v) const {
             v.begin(*this);
@@ -256,6 +258,12 @@ namespace excyrender { namespace Nature { namespace Et1 { namespace AST {
             v.begin(*this);
             v.end(*this);
         }
+
+        string value() const {
+            return value_;
+        }
+    private:
+        string value_; // Using string as C++ int is not necessarily the same as Et1 int.
     };
 
     struct Identifier final : Terminal {
@@ -351,6 +359,7 @@ namespace excyrender { namespace Nature { namespace Et1 { namespace AST {
             v.begin(*this);
             for (auto b : bindings_)
                 b->accept(v);
+            v.before_body(*this);
             value().accept(v);
             v.end(*this);
         }

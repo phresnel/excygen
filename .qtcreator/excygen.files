@@ -101,4 +101,7 @@
 ../excyrender.cxx/Scripting/Et1/ASTQueries/find_binding_names.hh
 ../excyrender.cxx/Scripting/Et1/ASTQueries/find_binding_names.cc
 
+../excyrender.cxx/Scripting/Et1/ASTPrinters/PrettyPrinter.hh
+../excyrender.cxx/Scripting/Et1/ASTPrinters/PrettyPrinter.cc
+
 

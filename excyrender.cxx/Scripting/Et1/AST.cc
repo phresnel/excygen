@@ -7,7 +7,7 @@
 #include <set>
 #include <stdexcept>
 #include <iostream>
-#include "ASTDumper.hh"
+#include "ASTPrinters/PrettyPrinter.hh"
 
 #include "ASTPasses/1000_lambda_lift.hh"
 
@@ -193,7 +193,7 @@ namespace excyrender { namespace Nature { namespace Et1 { namespace {
         using namespace AST;
 
         if (it->kind != Integer) return shared_ptr<IntegerLiteral>();
-        return shared_ptr<IntegerLiteral>(new IntegerLiteral(it, it+1));
+        return shared_ptr<IntegerLiteral>(new IntegerLiteral(it, it+1, *it));
     }
 
 
@@ -396,7 +396,7 @@ namespace excyrender { namespace Nature { namespace Et1 { namespace {
 
         shared_ptr<AST::Program> prog = program(toks.begin(), toks.end());
 
-        ASTDumper dumper;
+        ASTPrinters::PrettyPrinter dumper;
         prog->accept(dumper);
 
         std::cout << "-- lambda lifted -------------------------------------------------------\n";
@@ -415,13 +415,15 @@ namespace excyrender { namespace Nature { namespace Et1 { namespace {
 namespace excyrender { namespace Nature { namespace Et1 {
 
 HeightFunction compile (std::string const &code) {
-    std::string code_ = "\
+    std::string code_ = //"let x=1 in x*2\n";
+
+    "\
 \n\
 let f(x) =                 \n\
    let g(y) = let z=x*2,   \n\
                   P(z)=z   \n\
               in z         \n\
-   in g(x)                 \n\
+   in 2+g(-(1+g(42)))             \n\
 in f(1)                    \n\
 ";
     return compile(tokenize(code_));
