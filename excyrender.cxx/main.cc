@@ -112,8 +112,32 @@ namespace excyrender {
 
 
 #include "Primitives/BoundingIntervalHierarchy.hh"
+#include "main_test.hh"
 
-int main () {
+int main (int argc, char *argv[]) {
+
+    if (argc >= 2 && argv[1]==std::string("test")) {
+        // Short circuit the CLI arguments.
+        argc -= 2;
+        argv += 2;
+        std::vector<std::string> args;
+        args.push_back("excygen test");
+        while (*argv != 0) {
+            args.push_back(*argv);
+            ++argv;
+        }
+        std::vector<char*> args_c_str;
+        for (auto &s : args)
+            args_c_str.emplace_back(const_cast<char*>(s.c_str()));
+        return unit_tests(args_c_str.size(), &args_c_str[0]);
+    } else if (argc != 1) {
+        std::cerr << "invalid command line. use:\n"
+                  << " * <excygen>\n"
+                  << " * <excygen> test     <-- this will execute all unit tests\n"
+                  << " * <excygen> test -?  <-- this shows available options for unit tests\n";
+        return 1;
+    }
+
     try {
         using namespace excyrender;
         using namespace Primitives;

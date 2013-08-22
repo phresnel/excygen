@@ -39,6 +39,14 @@ namespace excyrender { namespace Nature { namespace Et1 {
             return !(*this == c_str);
         }
 
+        bool operator== (Token const &tok) const {
+            return string(from,to) == string(tok);
+        }
+
+        bool operator != (Token const &tok) const {
+            return !(*this == tok);
+        }
+
         operator string() const {
             return string(from,to);
         }

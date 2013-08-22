@@ -3,23 +3,11 @@
 // See COPYING in the root-folder of the excygen project folder.
 
 #include "AST.hh"
+#include "ASTPasses/1000_lambda_lift.hh"
 #include <map>
 #include <set>
 #include <stdexcept>
 #include <iostream>
-#include "ASTPrinters/PrettyPrinter.hh"
-
-#include "ASTPasses/1000_lambda_lift.hh"
-
-namespace excyrender { namespace Nature { namespace Et1 {  namespace {
-
-    class SymbolTable {
-    public:
-
-    };
-
-
-} } } }
 
 
 
@@ -80,7 +68,7 @@ namespace excyrender { namespace Nature { namespace Et1 { namespace {
 
         // some-call ( foo , bar )
         // ^^^^^^^^^
-        if (it->kind != TokenKind::Identifier)
+        if (it == end || it->kind != TokenKind::Identifier)
             return shared_ptr<Call>();
         const string callee = *it;
         ++it;
@@ -133,7 +121,7 @@ namespace excyrender { namespace Nature { namespace Et1 { namespace {
         const auto start = it;
         // name ( '(' argument (',' argument)* ')' )? = expression
         // ^
-        if (it->kind != Identifier)
+        if (it == end || it->kind != Identifier)
             return shared_ptr<AST::Binding>();
         const string name = *it;
         ++it;
@@ -192,7 +180,8 @@ namespace excyrender { namespace Nature { namespace Et1 { namespace {
     {
         using namespace AST;
 
-        if (it->kind != Integer) return shared_ptr<IntegerLiteral>();
+        if (it == end || it->kind != Integer)
+            return shared_ptr<IntegerLiteral>();
         return shared_ptr<IntegerLiteral>(new IntegerLiteral(it, it+1, *it));
     }
 
@@ -202,7 +191,8 @@ namespace excyrender { namespace Nature { namespace Et1 { namespace {
     {
         using namespace AST;
 
-        if (it->kind != TokenKind::Identifier) return shared_ptr<AST::Identifier>();
+        if (it == end || it->kind != TokenKind::Identifier)
+            return shared_ptr<AST::Identifier>();
         return shared_ptr<AST::Identifier>(new AST::Identifier(it, it+1, *it));
     }
 
@@ -211,6 +201,8 @@ namespace excyrender { namespace Nature { namespace Et1 { namespace {
     shared_ptr<AST::Unary> unary(token_iter it, token_iter end)
     {
         using namespace AST;
+        if (it == end)
+            return shared_ptr<AST::Unary>();
 
         if (it->kind == Minus) {
             auto rhs = terminal(it+1, end);
@@ -226,8 +218,10 @@ namespace excyrender { namespace Nature { namespace Et1 { namespace {
 
     shared_ptr<AST::Terminal> terminal (token_iter it, token_iter end)
     {
+        if (it==end)
+            return shared_ptr<AST::Terminal>();
         if (auto e = binding(it, end))
-            return e;
+            return shared_ptr<AST::Terminal>();
         if (auto e = call(it, end))
             return e;
         if (auto e = identifier(it, end))
@@ -312,15 +306,17 @@ namespace excyrender { namespace Nature { namespace Et1 { namespace {
 
             // 1 + 2 ? 3
             //       ^
-            const int next_prec = precedence(string(*it));
-            if (prec < next_prec) {
-                // This means '?' has higher precedence (e.g. '*').
-                rhs = binary(next_prec, rhs, it, end); // Therefore, what is our rhs should really be ?'s lhs.
-                if (!rhs)
-                    return shared_ptr<AST::Expression>();
-                it = rhs->to();
+            if (it != end) {
+                const int next_prec = precedence(string(*it));
+                if (prec < next_prec) {
+                    // This means '?' has higher precedence (e.g. '*').
+                    rhs = binary(next_prec, rhs, it, end); // Therefore, what is our rhs should really be ?'s lhs.
+                    if (!rhs) {
+                        return shared_ptr<AST::Expression>();
+                    }
+                    it = rhs->to();
+                }
             }
-
             lhs = prec_entry->second.create(lhs->from(), rhs->to(), lhs, rhs);
         }
     }
@@ -330,19 +326,25 @@ namespace excyrender { namespace Nature { namespace Et1 { namespace {
     shared_ptr<AST::Expression> expression(token_iter it, token_iter end)
     {
         using namespace AST;
-
+        if (it == end)
+            return shared_ptr<AST::Expression>();
         auto lhs = terminal(it, end);
         if (!lhs) {
-            std::clog << "no terminal found" << std::endl;
             return shared_ptr<Expression>();
         }
         it = lhs->to();
         return binary(0, lhs, it, end);
     }
 
+} } } }
+
+namespace excyrender { namespace Nature { namespace Et1 { namespace AST {
 
     shared_ptr<AST::Program> program(token_iter it, token_iter end) {
         // TODO: extract the following as "bindings(it,end, Static, Dynamic)", same for "LetIn"
+        if (it == end) {
+            return shared_ptr<AST::Program>();
+        }
         if (it->kind == Static) {
             const auto start = it;
             vector<shared_ptr<AST::Binding>> bindings;
@@ -392,19 +394,16 @@ namespace excyrender { namespace Nature { namespace Et1 { namespace {
     HeightFunction compile (vector<Token> const &toks) {
         if (toks.empty())
             throw std::runtime_error("no tokens");
-        std::cout << toks << std::endl;
 
         shared_ptr<AST::Program> prog = program(toks.begin(), toks.end());
+        if (!prog)
+            throw std::runtime_error("not compilable: " +
+                                     string(toks.begin()->from, (toks.end()-1)->to) +
+                                     "(" + __func__ + ")");
 
-        ASTPrinters::PrettyPrinter dumper;
-        prog->accept(dumper);
-
-        std::cout << "-- lambda lifted -------------------------------------------------------\n";
         ASTPasses::lambda_lift(prog);
 
-        prog->accept(dumper);
-
-        throw std::runtime_error("no expression found");
+        throw std::runtime_error("'" + string(__func__) + "' not fully implemented");
     }
 
 } } } }
@@ -415,25 +414,7 @@ namespace excyrender { namespace Nature { namespace Et1 { namespace {
 namespace excyrender { namespace Nature { namespace Et1 {
 
 HeightFunction compile (std::string const &code) {
-    std::string code_ = //"let x=1 in x*2\n";
-
-    "\
-\n\
-let f(x) =                 \n\
-   let g(y) = let z=x*2,   \n\
-                  P(z)=z   \n\
-              in z         \n\
-   in 2+g(-(1+g(42)))             \n\
-in f(1)                    \n\
-";
-    return compile(tokenize(code_));
-    /*
-       "static \n"
-       "  x = 3*2*1 \n"
-       "dynamic \n"
-       "fac (x) = let foo(x) = (5+x), bar(y) = let f(y)=y*2 in f(y)  \n"
-       "          in bar(3)"));
-    */
+    return AST::compile(tokenize(code));
 }
 
 } } }

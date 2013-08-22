@@ -4,7 +4,32 @@
 
 #include "PrettyPrinter.hh"
 
-namespace excyrender { namespace Nature { namespace Et1 { namespace ASTPrinters {
 
+//- Tests ------------------------------------------------------------------------------------------
+#include "../UnitTesting.hh"
 
-} } } }
+bool compare_token_sequence (std::string const &code) {
+    using namespace excyrender::Nature::Et1;
+    std::stringstream ss;
+    auto tokens = tokenize(code);
+    ASTPrinters::PrettyPrinter pp(ss);
+    auto ast = AST::program(tokens.begin(), tokens.end());
+    if (!ast) {
+        throw std::logic_error("not a compilable program: [" + code + "]");
+    }
+    ast->accept(pp);
+    auto result = tokenize(ss.str()) == tokens;
+    if (!result) {
+        std::cout << "tokens: (\n " << tokenize(ss.str()) << "\n" << " " << tokenize(code) << "\n)\n";
+        std::cout << "input: {\n" << code << "\n}\n";
+        std::cout << "pretty: {\n" << ss.str() << "\n}\n";
+    }
+    return result;
+}
+
+TEST_CASE( "Et1/Printers/PrettyPrinter", "Pretty printing" ) {
+    REQUIRE(compare_token_sequence("let f(x) = x*2 in f(1)"));
+    REQUIRE(compare_token_sequence("let f(x) = x+1+2 in f(3)"));
+    REQUIRE(compare_token_sequence("let f(x,y,z) = x+y+z*f(x/y,2+z,-1-z) in f(1,2,3)"));
+}
+//--------------------------------------------------------------------------------------------------

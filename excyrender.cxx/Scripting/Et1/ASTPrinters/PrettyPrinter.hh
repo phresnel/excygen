@@ -16,6 +16,10 @@ namespace excyrender { namespace Nature { namespace Et1 { namespace ASTPrinters 
             scope.push({""});
         }
 
+        PrettyPrinter(std::ostream &os) : os(os) {
+            scope.push({""});
+        }
+
         void begin(AST::Addition const &)
         {
             scope.push({" + "});
@@ -32,14 +36,6 @@ namespace excyrender { namespace Nature { namespace Et1 { namespace ASTPrinters 
         void end(AST::Subtraction const &)
         {
             scope.pop();
-        }
-
-        void begin(AST::Negation const &)
-        {
-            os << "-";
-        }
-        void end(AST::Negation const &)
-        {
         }
 
         void begin(AST::Multiplication const &)
@@ -60,9 +56,22 @@ namespace excyrender { namespace Nature { namespace Et1 { namespace ASTPrinters 
             scope.pop();
         }
 
+        void infix()
+        {
+            if (!scope.empty()) os << scope.top().Operator;
+        }
+
+        void begin(AST::Negation const &)
+        {
+            os << " -";
+        }
+        void end(AST::Negation const &)
+        {
+        }
+
         void begin(AST::IntegerLiteral const &lit)
         {
-            if (scope.top().argCount++) os << scope.top().Operator;
+            //if (scope.top().argCount++) os << scope.top().Operator;
             os << lit.value();
         }
         void end(AST::IntegerLiteral const &)
@@ -71,7 +80,7 @@ namespace excyrender { namespace Nature { namespace Et1 { namespace ASTPrinters 
 
         void begin(AST::Call const &call)
         {
-            if (scope.top().argCount++) os << scope.top().Operator;
+            //if (scope.top().argCount++) os << scope.top().Operator;
             scope.push({", "});
             os << call.id() << "(";
         }
@@ -83,7 +92,7 @@ namespace excyrender { namespace Nature { namespace Et1 { namespace ASTPrinters 
 
         void begin(AST::ParenExpression const &call)
         {
-            if (scope.top().argCount++) os << scope.top().Operator;
+            //if (scope.top().argCount++) os << scope.top().Operator;
             os << "(";
         }
         void end(AST::ParenExpression const &)
@@ -93,6 +102,8 @@ namespace excyrender { namespace Nature { namespace Et1 { namespace ASTPrinters 
 
         void begin(AST::Binding const &binding)
         {
+            //if (scope.top().argCount++) os << scope.top().Operator;
+            scope.push({""});
             indent(); os << binding.id();
             if (!binding.arguments().empty()) {
                 os << "(";
@@ -110,12 +121,12 @@ namespace excyrender { namespace Nature { namespace Et1 { namespace ASTPrinters 
         }
         void end(AST::Binding const &)
         {
-            os << '\n';
+            scope.pop();
         }
 
         void begin(AST::Identifier const &id)
         {
-            if (scope.top().argCount++) os << scope.top().Operator;
+            //if (scope.top().argCount++) os << scope.top().Operator;
             os << id.id();
         }
         void end(AST::Identifier const &)
@@ -126,11 +137,14 @@ namespace excyrender { namespace Nature { namespace Et1 { namespace ASTPrinters 
         {
             os << "let\n";
             ++indent_; ++indent_;
+            scope.push({",\n"});
         }
         void before_body(AST::LetIn const &)
         {
             --indent_;
+            os << '\n';
             indent(-1); os << "in ";
+            scope.pop();
         }
         void end(AST::LetIn const &)
         {
@@ -142,7 +156,6 @@ namespace excyrender { namespace Nature { namespace Et1 { namespace ASTPrinters 
         }
         void end(AST::Program const &)
         {
-            os << "\n";
         }
 
     private:

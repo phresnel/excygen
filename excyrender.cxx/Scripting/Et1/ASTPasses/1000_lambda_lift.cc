@@ -13,6 +13,43 @@
 #include <algorithm>
 
 
+
+//- Tests ------------------------------------------------------------------------------------------
+#include "../UnitTesting.hh"
+#include "../ASTPrinters/PrettyPrinter.hh"
+
+TEST_CASE( "Et1/Passes/lambda_list", "Lambda Lifting" ) {
+    using namespace excyrender::Nature::Et1;
+    using detail::equal;
+
+    auto passes = [](std::shared_ptr<AST::Program> ast) { ASTPasses::lambda_lift(ast); };
+
+    REQUIRE(equal("1 + 2", "1 + 2", passes));
+
+    REQUIRE(equal("let f(x) = let z=x in z in f(1)",
+                  "let f(x) = let z(x) = x in z(x) in f(1)",
+                  passes));
+
+    // The following also tests that within P(), z shall not be replaced.
+    REQUIRE(equal("let f(x) = "
+                  "  let g(y) = let z=x*2, "
+                  "                 P(z)=z "
+                  "             in z "
+                  "  in 2+g(-(1+g(42))) "
+                  "in f(1) ",
+
+                  "let f(x) = "
+                  "  let g(y,x) = let z(x)=x*2, "
+                  "                   P(z)=z "
+                  "               in z(x) "
+                  "  in 2+g(-(1+g(42,x)),x) "
+                  "in f(1) ",
+                  passes));
+}
+//--------------------------------------------------------------------------------------------------
+
+
+
 namespace excyrender { namespace Nature { namespace Et1 { namespace ASTPasses {
 
 namespace {
@@ -192,6 +229,10 @@ namespace {
 }
 
 void lambda_lift(shared_ptr<AST::ASTNode> ast) {
+    if (!ast) {
+        //std::clog << "pass: lambda-lifting skipped, AST is empty\n";
+        return;
+    }
     int i = 0;
     while (1) {
         ++i;
@@ -200,7 +241,7 @@ void lambda_lift(shared_ptr<AST::ASTNode> ast) {
         if (!ll.transformed())
             break;
     }
-    std::clog << "pass: lambda-lifting (" << i << "x)\n";
+    //std::clog << "pass: lambda-lifting (" << i << "x)\n";
 }
 
 

@@ -45,6 +45,8 @@ namespace excyrender { namespace Nature { namespace Et1 { namespace AST {
         virtual void begin(Division const &) = 0;
         virtual void end(Division const &) = 0;
 
+        virtual void infix() {}
+
         virtual void begin(IntegerLiteral const &) = 0;
         virtual void end(IntegerLiteral const &) = 0;
 
@@ -162,6 +164,7 @@ namespace excyrender { namespace Nature { namespace Et1 { namespace AST {
         void accept(Visitor &v) const {
             v.begin(*this);
             lhs().accept(v);
+            v.infix();
             rhs().accept(v);
             v.end(*this);
         }
@@ -183,6 +186,7 @@ namespace excyrender { namespace Nature { namespace Et1 { namespace AST {
         void accept(Visitor &v) const {
             v.begin(*this);
             lhs().accept(v);
+            v.infix();
             rhs().accept(v);
             v.end(*this);
         }
@@ -203,6 +207,7 @@ namespace excyrender { namespace Nature { namespace Et1 { namespace AST {
         void accept(Visitor &v) const {
             v.begin(*this);
             lhs().accept(v);
+            v.infix();
             rhs().accept(v);
             v.end(*this);
         }
@@ -223,6 +228,7 @@ namespace excyrender { namespace Nature { namespace Et1 { namespace AST {
         void accept(Visitor &v) const {
             v.begin(*this);
             lhs().accept(v);
+            v.infix();
             rhs().accept(v);
             v.end(*this);
         }
@@ -298,8 +304,12 @@ namespace excyrender { namespace Nature { namespace Et1 { namespace AST {
 
         void accept(Visitor &v) const {
             v.begin(*this);
-            for (auto arg : arguments_)
+            bool first = true;
+            for (auto arg : arguments_) {
+                if (!first) v.infix();
+                first = false;
                 arg->accept(v);
+            }
             v.end(*this);
         }
         void accept(Transform &v) {
@@ -357,8 +367,12 @@ namespace excyrender { namespace Nature { namespace Et1 { namespace AST {
 
         void accept(Visitor &v) const {
             v.begin(*this);
-            for (auto b : bindings_)
+            bool first = true;
+            for (auto b : bindings_) {
+                if (!first) v.infix();
+                first = false;
                 b->accept(v);
+            }
             v.before_body(*this);
             value().accept(v);
             v.end(*this);
@@ -456,8 +470,12 @@ namespace excyrender { namespace Nature { namespace Et1 { namespace AST {
 
         void accept(Visitor &v) const {
             v.begin(*this);
-            for (auto b : static_bindings_)
+            bool first = true;
+            for (auto b : static_bindings_) {
+                if (!first) v.infix();
+                first = false;
                 b->accept(v);
+            }
             value().accept(v);
             v.end(*this);
         }
@@ -483,10 +501,12 @@ namespace excyrender { namespace Nature { namespace Et1 { namespace AST {
 
 
 
+namespace excyrender { namespace Nature { namespace Et1 { namespace AST {
+    shared_ptr<AST::Program> program(token_iter it, token_iter end);
+} } } }
+
 namespace excyrender { namespace Nature { namespace Et1 {
-
     HeightFunction compile (std::string const &code);
-
 } } }
 
 

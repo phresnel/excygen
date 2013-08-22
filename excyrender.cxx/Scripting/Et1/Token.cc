@@ -90,7 +90,7 @@ namespace excyrender { namespace Nature { namespace Et1 {
         using namespace detail;
         std::vector<Token> tokens;
 
-        std::cout << "tokenizing [" << str << "]\n";
+        //std::cout << "tokenizing [" << str << "]\n";
         for (auto it = str.begin(), end=str.end(); it!=end; ) {
             while (it!=end && is_whitespace(*it))
                 ++it;

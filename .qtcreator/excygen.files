@@ -105,3 +105,6 @@
 ../excyrender.cxx/Scripting/Et1/ASTPrinters/PrettyPrinter.cc
 
 
+../excyrender.cxx/main_test.cc
+../excyrender.cxx/Scripting/Et1/UnitTesting.hh
+../excyrender.cxx/main_test.hh
