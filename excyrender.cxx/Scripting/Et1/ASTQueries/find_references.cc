@@ -4,6 +4,61 @@
 
 #include "find_references.hh"
 
+
+//- Tests ------------------------------------------------------------------------------------------
+#include "../UnitTesting.hh"
+
+static bool test(std::string const &code, std::set<std::string> expected, bool cross_bindings) {
+    using namespace excyrender::Nature::Et1;
+
+    auto tokens = tokenize(code);
+    auto ast    = AST::program(tokens.begin(), tokens.end());
+    auto names  = ASTQueries::find_references(ast, cross_bindings);
+
+    return names == expected;
+}
+
+TEST_CASE( "Et1/ASTQueries/find_references", "Reference finding" ) {
+
+    using namespace excyrender::Nature::Et1;
+
+    // Simple check.
+    REQUIRE(test("let f = 1, "
+                 "    g = 2, "
+                 "    h = 3  "
+                 "in f+g+h   ",
+                 {"f","g","h"},
+                 false));
+
+    // Test that function callees are not found.
+    REQUIRE(test("let f(x) = 1, "
+                 "    g = 2, "
+                 "    h = 3  "
+                 "in f(g)+g+h   ",
+                 {"g","h"},
+                 false));
+
+    // Finding *with* crossing binding-boundaries.
+    REQUIRE(test("let f = 1, "
+                 "    g = let i = 2 in let j = 4 in j, "
+                 "    h = 3  "
+                 "in f+g+h   ",
+                 {"f","g","h", "j"},
+                 true));
+
+    // Finding *without* crossing binding-boundaries.
+    REQUIRE(test("let f = 1, "
+                 "    g = let i = 2 in let j = 4 in j, "
+                 "    h = 3  "
+                 "in f+g+h   ",
+                 {"f","g","h"},
+                 false));
+}
+//--------------------------------------------------------------------------------------------------
+
+
+
+
 namespace excyrender { namespace Nature { namespace Et1 { namespace ASTQueries {
 
 namespace {
