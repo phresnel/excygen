@@ -3,6 +3,71 @@
 // See COPYING in the root-folder of the excygen project folder.
 
 #include "0500_lift_identifiers_to_calls.hh"
+#include "1000_lambda_lift.hh"
+
+
+
+//- Tests ------------------------------------------------------------------------------------------
+#include "../UnitTesting.hh"
+#include "../ASTPrinters/PrettyPrinter.hh"
+
+TEST_CASE( "Et1/Passes/0500_lift_identifiers_to_calls", "Identifier to call promotion" ) {
+    using namespace excyrender::Nature::Et1;
+    using detail::equal;
+
+    auto passes = [](std::shared_ptr<AST::Program> ast) { ASTPasses::lambda_lift(ast); };
+
+    REQUIRE(equal("let x = "
+                  "   let y = x*2 "
+                  "   in y "
+                  "in x",
+                  "let x = "
+                  "   let y(x) = x*2 "
+                  "   in y(x) "
+                  "in x ",
+                  passes));
+
+    REQUIRE(equal("let x = "
+                  "   let a = "
+                  "      let b = "
+                  "         let c = "
+                  "             let d = x "
+                  "             in d "
+                  "         in c "
+                  "      in b "
+                  "   in a "
+                  "in x ",
+                  "let x = "
+                  "   let a(x) = "
+                  "      let b(x) = "
+                  "         let c(x) = "
+                  "             let d(x) = x "
+                  "             in d(x) "
+                  "         in c(x) "
+                  "      in b(x) "
+                  "   in a(x) "
+                  "in x ",
+                  passes));
+
+    // The following also tests that within P(), z shall not be replaced.
+    REQUIRE(equal("let f(x) = "
+                  "  let g(y) = let z=x*2, "
+                  "                 P(z)=z "
+                  "             in z "
+                  "  in 2+g(-(1+g(42))) "
+                  "in f(1) ",
+
+                  "let f(x) = "
+                  "  let g(y,x) = let z(x)=x*2, "
+                  "                   P(z)=z "
+                  "               in z(x) "
+                  "  in 2+g(-(1+g(42,x)),x) "
+                  "in f(1) ",
+                  passes));
+}
+//--------------------------------------------------------------------------------------------------
+
+
 
 namespace excyrender { namespace Nature { namespace Et1 { namespace ASTPasses {
 
