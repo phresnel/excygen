@@ -4,6 +4,7 @@
 
 #include "AST.hh"
 #include "ASTPasses/1000_lambda_lift.hh"
+#include "optional.hh"
 #include <map>
 #include <set>
 #include <stdexcept>
@@ -113,11 +114,34 @@ namespace excyrender { namespace Nature { namespace Et1 { namespace {
     }
 
 
+    optional<AST::Argument> parse_signature (token_iter from, token_iter to)
+    {
+        // In this version, we only have 'int', 'float', 'double', 'auto', 'typeof(x)',
+        // where in typeof, only the names of other arguments are allowed for now.
+        auto const num_toks = distance(from, to);
+
+        if (num_toks == 1) {
+            return AST::Argument{"auto", *from};
+        } else if (num_toks == 2) {
+            return AST::Argument{*from, *(from+1)};
+        } else if (num_toks == 5
+                   && *from == "typeof"
+                   && (from+1)->kind == LParen
+                   && (from+3)->kind == RParen)
+        {
+            return AST::Argument{"typeof(" + string(*(from+2)) + ")",
+                                 *(from+4)};
+        }
+        return optional<AST::Argument>();
+    }
+
 
     // binding : name ( '(' argument (',' argument)* ')' )? = expression
     // argument: type? name
     shared_ptr<AST::Binding> binding(token_iter it, token_iter end)
     {
+        using std::vector;
+
         const auto start = it;
         // name ( '(' argument (',' argument)* ')' )? = expression
         // ^
@@ -130,32 +154,76 @@ namespace excyrender { namespace Nature { namespace Et1 { namespace {
             return shared_ptr<AST::Binding>();
 
         vector<AST::Argument> arguments;
-        if (it->kind == LParen) {
-            // name ( '(' argument (',' argument)* ')' )? = expression
-            //         ^
-            ++it;
 
-            if (it!=end && it->kind != RParen) {
-                while (it!=end) {
-                    if (it->kind != TokenKind::Identifier) // This can't be a binding, then.
-                        return shared_ptr<AST::Binding>();
+        if (1) { // TODO: remove the if-statment and the else-body once this branch is stable.
+            if (it->kind == LParen) {
+                ++it;
 
-                    arguments.push_back(AST::Argument("any", *it));
-                    ++it;
-                    if (it == end)
-                        throw std::runtime_error("expected ',' or ')', got eof");
-                    if (it->kind == RParen) {
-                        break;
+                struct range { token_iter from, to;
+                               range(token_iter from, token_iter to) : from(from), to(to) {}
+                             };
+                vector<range> args;
+
+                int nesting = 0;
+                auto start_cur = it;
+                while(1) {
+                    if (it==end) {
+                        throw std::runtime_error("expected ',' or ')'");
                     }
-                    if (it->kind != Comma)
-                        shared_ptr<AST::Binding>(); // Could  also be a function call -> no throw.
+                    else if (it->kind==RParen) {
+                        if (nesting == 0) {
+                            args.emplace_back(start_cur, it);
+                            break;
+                        }
+                        --nesting;
+                    }
+                    else if (it->kind==LParen) {
+                        ++nesting;
+                    }
+                    else if (it->kind == Comma) {
+                        args.emplace_back(start_cur, it);
+                        start_cur = it+1;
+                    }
                     ++it;
                 }
-            }
 
-            if (it->kind != RParen)
-                throw std::runtime_error("expected ')'");
-            ++it;
+                // Now dissect the arguments.
+                for (auto arg : args) {
+                    auto a = parse_signature(arg.from, arg.to);
+                    if (!a) return shared_ptr<AST::Binding>();
+                    arguments.push_back(*a);
+                }
+
+                ++it;
+            }
+        } else {
+            if (it->kind == LParen) {
+                // name ( '(' type-related* argument (',' type-related* argument)* ')' )? = expression
+                //         ^
+                ++it;
+
+                if (it!=end && it->kind != RParen) {
+                    while (it!=end) {
+                        if (it->kind != TokenKind::Identifier) // This can't be a binding, then.
+                            return shared_ptr<AST::Binding>();
+
+                        arguments.push_back(AST::Argument("any", *it));
+                        ++it;
+                        if (it == end)
+                            throw std::runtime_error("expected ',' or ')', got eof");
+                        if (it->kind == RParen) {
+                            break;
+                        }
+                        if (it->kind != Comma)
+                            shared_ptr<AST::Binding>(); // Could  also be a function call -> no throw.
+                        ++it;
+                    }
+                }
+
+                if (it->kind != RParen)
+                    throw std::runtime_error("expected ')'");
+                ++it;
+            }
         }
 
         // name ( '(' argument (',' argument)* ')' )? = expression

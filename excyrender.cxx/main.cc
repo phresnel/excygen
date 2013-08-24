@@ -200,7 +200,7 @@ int main (int argc, char *argv[]) {
                                                                Geometry::Rectangle({0,0},{100,100}),
                                                                512,
                                                                //[](real u,real v) { return -4 + 5*sin(u) * sin(v); }
-                                                               Nature::Et1::compile("-1+--2+2+3+sqrt(-1,2,3,foo())")
+                                                               Nature::Et1::compile("let foo(int x,typeof(x) y) = x+y in foo(1,2)")
                                                            )),
                              std::shared_ptr<Material::Material>(new Material::Lambertian(
                                   shared_ptr<SpectrumTexture>(new ColorImageTexture(Photometry::Texture::XZPlanarMapping(0.4,0.4,0,0),

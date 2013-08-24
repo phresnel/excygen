@@ -113,7 +113,12 @@ namespace excyrender { namespace Nature { namespace Et1 { namespace ASTPrinters 
                         os << ", ";
                     }
                     first = false;
-                    os << a.name;
+                    if (a.type != "auto") {
+                        os << a.type << ' ' << a.name;
+                    } else {
+                        os << a.name; // I consider omitting "auto" good practice for readability.
+                                      // (e.g. 'f(auto x, auto y)' vs. 'f(x,y)')
+                    }
                 }
                 os << ")";
             }
