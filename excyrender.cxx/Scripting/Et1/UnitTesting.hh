@@ -33,7 +33,11 @@ bool equal (std::string const &in, std::string const &expected,
         pass(prog);
         prog->accept(dumper);
     }
-    return tokenize(ss.str()) == tokenize(expected);
+    if (tokenize(ss.str()) != tokenize(expected)) {
+        std::clog << ss.str() << std::endl;
+        return false;
+    }
+    return true;
 }
 
 } } } }

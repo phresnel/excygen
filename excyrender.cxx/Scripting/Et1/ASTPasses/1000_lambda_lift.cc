@@ -241,7 +241,7 @@ void lambda_lift(shared_ptr<AST::ASTNode> ast) {
         if (!ll.transformed())
             break;
     }
-    //std::clog << "pass: lambda-lifting (" << i << "x)\n";
+    std::clog << "pass: lambda-lifting (" << i << "x)\n";
 }
 
 

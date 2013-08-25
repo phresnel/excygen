@@ -122,11 +122,15 @@ namespace excyrender { namespace Nature { namespace Et1 { namespace AST {
 
         virtual void accept(Visitor &v) const = 0;
         virtual void accept(Transform &v) = 0;
+
+        string type() const { return type_; }
+        void reset_type(string const &t) { type_ = t; }
     protected:
         ASTNode(token_iter from, token_iter to) : from_(from), to_(to) {}
 
     private:
         token_iter from_, to_;
+        string type_ = "<unknown>";
     };
 
     struct Expression : ASTNode {
