@@ -95,6 +95,8 @@
 ../excyrender.cxx/Scripting/Et1/ASTPasses/0500_lift_identifiers_to_calls.cc
 ../excyrender.cxx/Scripting/Et1/ASTPasses/1000_lambda_lift.hh
 ../excyrender.cxx/Scripting/Et1/ASTPasses/1000_lambda_lift.cc
+../excyrender.cxx/Scripting/Et1/ASTPasses/1100_resolve_types.hh
+../excyrender.cxx/Scripting/Et1/ASTPasses/1100_resolve_types.cc
 
 ../excyrender.cxx/Scripting/Et1/ASTQueries/find_references.hh
 ../excyrender.cxx/Scripting/Et1/ASTQueries/find_references.cc
