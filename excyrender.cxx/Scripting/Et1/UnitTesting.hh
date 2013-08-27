@@ -11,19 +11,25 @@
 
 namespace excyrender { namespace Nature { namespace Et1 { namespace detail {
 
+inline std::shared_ptr<AST::Program> to_ast(std::string const &code) {
+    auto toks = tokenize (code);
+    if (toks.empty())
+        throw std::runtime_error("no tokens");
+
+    std::shared_ptr<AST::Program> prog = excyrender::Nature::Et1::AST::program(toks.begin(), toks.end());
+    if (!prog) {
+        throw std::logic_error("not compilable: " + code);
+    }
+    return prog;
+}
 
 inline
 bool equal (std::string const &in, std::string const &expected,
             std::function<void (std::shared_ptr<excyrender::Nature::Et1::AST::Program>)> pass)
 {
     using namespace excyrender::Nature::Et1;
-    using namespace excyrender::Nature::Et1::AST;
 
-    auto toks = tokenize (in);
-    if (toks.empty())
-        throw std::runtime_error("no tokens");
-
-    std::shared_ptr<AST::Program> prog = program(toks.begin(), toks.end());
+    std::shared_ptr<AST::Program> prog = to_ast(in);
     if (!prog) {
         throw std::logic_error("not compilable: " + in);
     }

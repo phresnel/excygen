@@ -107,6 +107,9 @@ namespace {
         void begin(IntegerLiteral &) {}
         void end(IntegerLiteral &) {}
 
+        void begin(RealLiteral &) {}
+        void end(RealLiteral &) {}
+
         void begin(Call &call) {
             if (!cross_bindings && binding_depth>0)
                 return;

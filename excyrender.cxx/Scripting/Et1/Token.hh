@@ -16,7 +16,7 @@ namespace excyrender { namespace Nature { namespace Et1 {
     using std::vector;
 
     enum TokenKind {
-        Integer,
+        Integer, Real,
         Identifier,
         LParen, RParen,
         Plus, Minus,

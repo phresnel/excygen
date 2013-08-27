@@ -73,6 +73,29 @@ namespace excyrender { namespace Nature { namespace Et1 {
             return it;
         }
 
+        optional<iterator> real(iterator it, iterator end) {
+            if (it == end || !is_digit(*it))
+                return optional<iterator>();
+
+            // 123.456
+            // ^^^
+            while (is_digit(*it))
+                ++it;
+
+            // 123.456
+            //    ^
+            if (it == end || *it != '.')
+                return optional<iterator>();
+            ++it;
+
+            // 123.456
+            //     ^^^
+            while (is_digit(*it))
+                ++it;
+
+            return it;
+        }
+
         optional<iterator> identifier(iterator it, iterator end) {
             if (!is_letter(*it))
                 return optional<iterator>();
@@ -96,7 +119,10 @@ namespace excyrender { namespace Nature { namespace Et1 {
                 ++it;
             if (it==end)
                 break;
-            if (auto oit = integer(it, end)) {
+            if (auto oit = real(it, end)) {
+                tokens.emplace_back(Real, it, *oit);
+                it = *oit;
+            } else if (auto oit = integer(it, end)) {
                 tokens.emplace_back(Integer, it, *oit);
                 it = *oit;
             } else if (*it == '(') {

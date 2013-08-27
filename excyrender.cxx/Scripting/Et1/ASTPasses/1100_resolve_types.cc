@@ -3,6 +3,7 @@
 // See COPYING in the root-folder of the excygen project folder.
 
 #include "1100_resolve_types.hh"
+#include "../ASTQueries/resolve_type.hh"
 
 #include <stack>
 #include <iostream>
@@ -16,6 +17,7 @@
 #include "../ASTPrinters/PrettyPrinter.hh"
 
 TEST_CASE( "Et1/ASTPasses/1100_resolve_types.hh", "Type resolution" ) {
+    return;
     using namespace excyrender::Nature::Et1;
     using detail::equal;
 
@@ -82,83 +84,6 @@ namespace {
     using std::stack;
     using std::string;
 
-    class TryResolve final : public Visitor {
-
-        stack<string> scope;
-
-        void reduce_binary(string op) {
-            if (scope.empty()) throw std::logic_error("reduce_binary: empty stack (1)");
-            const string rhs = scope.top();
-            scope.pop();
-            if (scope.empty()) throw std::logic_error("reduce_binary: empty stack (2)");
-            const string lhs = scope.top();
-            scope.pop();
-
-            if (lhs == rhs) {
-                scope.push(lhs);
-            } else {
-                scope.push("<" + lhs + op + rhs + ">");
-            }
-        }
-
-    public:
-        void begin(Addition const &) {}
-        void end(Addition const &) { reduce_binary("+"); }
-
-        void begin(Subtraction const &) {}
-        void end(Subtraction const &) { reduce_binary("-"); }
-
-        void begin(Multiplication const &) {}
-        void end(Multiplication const &) { reduce_binary("*"); }
-
-        void begin(Division const &) {}
-        void end(Division const &) { reduce_binary("/"); }
-
-        void infix() {}
-
-        void begin(IntegerLiteral const &) { scope.push("int"); }
-        void end(IntegerLiteral const &) {}
-
-        void begin(Call const &) { scope.push("<call>"); }
-        void end(Call const &) {}
-
-        void begin(Negation const &) {}
-        void end(Negation const &) {}
-
-        void begin(ParenExpression const &) { scope.push("<paren-expr>"); }
-        void end(ParenExpression const &) {}
-
-        void begin(Binding const &) {}
-        void end(Binding const &) {}
-
-        void begin(AST::Identifier const &) { scope.push("<id>"); }
-        void end(AST::Identifier const &) {}
-
-        void begin(LetIn const &) {}
-        void before_body(LetIn const &) {}
-        void end(LetIn const &) {}
-
-        void begin(Program const &) {}
-        void end(Program const &) {}
-
-        std::string type() const {
-            if (scope.empty()) {
-                throw std::logic_error("TryResolve type stack empty when type() is called");
-            }
-            if (scope.size()>1) {
-                throw std::logic_error("TryResolve type stack not fully reduced when type() is called");
-            }
-            return scope.top();
-        }
-
-    };
-
-    std::string try_resolve (ASTNode const &ast) {
-        TryResolve tr;
-        ast.accept (tr);
-        return tr.type();
-    }
-
     struct ResolveTypes final : Transform {
         bool transformed() const { return transformed_; }
         bool has_unresolved() const { return has_unresolved_; }
@@ -178,6 +103,9 @@ namespace {
         void begin(IntegerLiteral &) {}
         void end(IntegerLiteral &) {}
 
+        void begin(RealLiteral &) {}
+        void end(RealLiteral &) {}
+
         void begin(Call &) {}
         void end(Call &) {}
 
@@ -189,7 +117,7 @@ namespace {
 
         void begin(Binding &binding)
         {
-            std::cout << "???" << binding.id() << " <-- " << try_resolve(binding.body()) << std::endl;
+            std::cout << "???" << binding.id() << " <-- " << ASTQueries::resolve_type(binding.body()) << std::endl;
         }
         void end(Binding &)
         {

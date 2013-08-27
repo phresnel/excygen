@@ -71,10 +71,17 @@ namespace excyrender { namespace Nature { namespace Et1 { namespace ASTPrinters 
 
         void begin(AST::IntegerLiteral const &lit)
         {
-            //if (scope.top().argCount++) os << scope.top().Operator;
             os << lit.value();
         }
         void end(AST::IntegerLiteral const &)
+        {
+        }
+
+        void begin(AST::RealLiteral const &lit)
+        {
+            os << lit.value();
+        }
+        void end(AST::RealLiteral const &)
         {
         }
 

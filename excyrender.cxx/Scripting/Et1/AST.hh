@@ -24,6 +24,7 @@ namespace excyrender { namespace Nature { namespace Et1 { namespace AST {
     class Multiplication;
     class Division;
     class IntegerLiteral;
+    class RealLiteral;
     class Call;
     class Negation;
     class ParenExpression;
@@ -49,6 +50,9 @@ namespace excyrender { namespace Nature { namespace Et1 { namespace AST {
 
         virtual void begin(IntegerLiteral const &) = 0;
         virtual void end(IntegerLiteral const &) = 0;
+
+        virtual void begin(RealLiteral const &) = 0;
+        virtual void end(RealLiteral const &) = 0;
 
         virtual void begin(Call const &) = 0;
         virtual void end(Call const &) = 0;
@@ -88,6 +92,9 @@ namespace excyrender { namespace Nature { namespace Et1 { namespace AST {
 
         virtual void begin(IntegerLiteral &) = 0;
         virtual void end(IntegerLiteral &) = 0;
+
+        virtual void begin(RealLiteral &) = 0;
+        virtual void end(RealLiteral &) = 0;
 
         virtual void begin(Call &) = 0;
         virtual void end(Call &) = 0;
@@ -258,6 +265,26 @@ namespace excyrender { namespace Nature { namespace Et1 { namespace AST {
 
     struct IntegerLiteral final : Literal {
         IntegerLiteral (token_iter from, token_iter to, string value) :
+            Literal(from, to), value_(value) {}
+
+        void accept(Visitor &v) const {
+            v.begin(*this);
+            v.end(*this);
+        }
+        void accept(Transform &v) {
+            v.begin(*this);
+            v.end(*this);
+        }
+
+        string value() const {
+            return value_;
+        }
+    private:
+        string value_; // Using string as C++ int is not necessarily the same as Et1 int.
+    };
+
+    struct RealLiteral final : Literal {
+        RealLiteral (token_iter from, token_iter to, string value) :
             Literal(from, to), value_(value) {}
 
         void accept(Visitor &v) const {

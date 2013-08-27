@@ -87,6 +87,9 @@ namespace {
         void begin(IntegerLiteral &) {}
         void end(IntegerLiteral &) {}
 
+        void begin(RealLiteral &) {}
+        void end(RealLiteral &) {}
+
         void begin(Call &call)
         {
             if (binding_depth != 1)
@@ -154,6 +157,9 @@ namespace {
 
         void begin(IntegerLiteral &) {}
         void end(IntegerLiteral &) {}
+
+        void begin(RealLiteral &) {}
+        void end(RealLiteral &) {}
 
         void begin(Call &) {}
         void end(Call &) {}

@@ -82,6 +82,9 @@ namespace {
         void begin(AST::IntegerLiteral const &) {}
         void end(AST::IntegerLiteral const &) {}
 
+        void begin(AST::RealLiteral const &) {}
+        void end(AST::RealLiteral const &) {}
+
         void begin(AST::Call const &) {}
         void end(AST::Call const &) {}
 

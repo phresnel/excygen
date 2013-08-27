@@ -253,6 +253,15 @@ namespace excyrender { namespace Nature { namespace Et1 { namespace {
         return shared_ptr<IntegerLiteral>(new IntegerLiteral(it, it+1, *it));
     }
 
+    shared_ptr<AST::RealLiteral> real_literal(token_iter it, token_iter end)
+    {
+        using namespace AST;
+
+        if (it == end || it->kind != Real)
+            return shared_ptr<RealLiteral>();
+        return shared_ptr<RealLiteral>(new RealLiteral(it, it+1, *it));
+    }
+
 
 
     shared_ptr<AST::Identifier> identifier(token_iter it, token_iter end)
@@ -295,6 +304,8 @@ namespace excyrender { namespace Nature { namespace Et1 { namespace {
         if (auto e = identifier(it, end))
             return e;
         if (auto e = integer_literal(it, end))
+            return e;
+        if (auto e = real_literal(it, end))
             return e;
         if (auto e = unary(it, end))
             return e;
