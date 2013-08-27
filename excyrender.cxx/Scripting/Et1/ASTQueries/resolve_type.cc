@@ -20,6 +20,7 @@ TEST_CASE( "Et1/ASTQueries/resolve_type.hh", "Type resolution" ) {
     using detail::to_ast;
     using namespace ASTQueries;
 
+    // Tests without symbol table.
     REQUIRE(resolve_type(to_ast("1")) == "int");
     REQUIRE(resolve_type(to_ast("1 + 2")) == "int");
     REQUIRE(resolve_type(to_ast("1 + 2 + 3")) == "int");
@@ -32,6 +33,10 @@ TEST_CASE( "Et1/ASTQueries/resolve_type.hh", "Type resolution" ) {
     REQUIRE(resolve_type(to_ast("(1.0 + 2.0) + 3.0")) == "float");
     REQUIRE(resolve_type(to_ast("(1.0 + 2.0) * 3.0")) == "float");
 
+    REQUIRE(resolve_type(to_ast("(1.0 + (2.0-x)) * 3.0")) == "<<float+<float-<id>>>*float>");
+
+    REQUIRE(resolve_type(to_ast("(2*x)+(2*x)")) == "<<int*<id>>+<int*<id>>>");
+
     REQUIRE(resolve_type(to_ast("1 + 2.0")) == "<int+float>");
     REQUIRE(resolve_type(to_ast("1.0 + 2 + 3.0")) == "<<float+int>+float>");
     REQUIRE(resolve_type(to_ast("(1.0 + 2.0) / 3")) == "<float/int>");
@@ -42,12 +47,17 @@ TEST_CASE( "Et1/ASTQueries/resolve_type.hh", "Type resolution" ) {
     REQUIRE(resolve_type(to_ast("let x = 1+1 in 1+1")) == "int");
     REQUIRE(resolve_type(to_ast("let x = 1+1.0 in 1+1.0")) == "<int+float>");
 
-    // resolve_type does not do symbol lookup, therefore:
     REQUIRE(resolve_type(to_ast("let x = 1 in x")) == "<id>");
     REQUIRE(resolve_type(to_ast("let x = 1.0 in x")) == "<id>");
     REQUIRE(resolve_type(to_ast("let x = 1+1 in x")) == "<id>");
     REQUIRE(resolve_type(to_ast("let x = 1+1.0 in x+y*z")) == "<<id>+<<id>*<id>>>");
     REQUIRE(resolve_type(to_ast("let x = 1+1.0 in x/y-z")) == "<<<id>/<id>>-<id>>");
+
+    // Tests with symbol table.
+    REQUIRE(resolve_type(to_ast("x"), {{"x","int"}}) == "int");
+    REQUIRE(resolve_type(to_ast("x+y"), {{"x","int"}}) == "<int+<id>>");
+    REQUIRE(resolve_type(to_ast("x+y"), {{"x","int"}, {"y","int"}}) == "int");
+    REQUIRE(resolve_type(to_ast("x/y"), {{"x","float"}, {"y","int"}}) == "<float/int>");
 }
 //--------------------------------------------------------------------------------------------------
 
@@ -63,26 +73,10 @@ namespace {
 
     // TODO: extract TryResolve to its own unit and test it extensively.
     class TryResolve final : public Visitor {
-
-        stack<string> scope;
-
-        void reduce_binary(string op) {
-            if (scope.empty()) throw std::logic_error("reduce_binary: empty stack (1)");
-            const string rhs = scope.top();
-            scope.pop();
-            if (scope.empty()) throw std::logic_error("reduce_binary: empty stack (2)");
-            const string lhs = scope.top();
-            scope.pop();
-
-            // <id> as a special case. Symbol Lookup is not resolve_type()-responsibility.
-            if ((lhs != "<id>") && (lhs == rhs)) {
-                scope.push(lhs);
-            } else {
-                scope.push("<" + lhs + op + rhs + ">"); // << possibly use this derived name for operator overloading in the future
-            }
-        }
-
     public:
+        TryResolve() = default;
+        TryResolve(std::map<string,string> const & symbols) : symbols(symbols) {}
+
         void begin(Addition const &) {}
         void end(Addition const &) { reduce_binary("+"); }
 
@@ -115,7 +109,15 @@ namespace {
         void begin(Binding const &) {}
         void end(Binding const &) {}
 
-        void begin(AST::Identifier const &) { scope.push("<id>"); }
+        void begin(AST::Identifier const &id)
+        {
+            auto e = symbols.find(id.id());
+            if (e!=symbols.end()) {
+                scope.push(e->second);
+            } else {
+                scope.push("<id>");
+            }
+        }
         void end(AST::Identifier const &) {}
 
         void begin(LetIn const &) {}
@@ -125,7 +127,6 @@ namespace {
             const string rhs = scope.top();
             scope.pop();
             if (scope.empty()) throw std::logic_error("reduce_binary: empty stack (2)");
-            const string lhs = scope.top();
             scope.pop();
             scope.push(rhs);
         }
@@ -150,80 +151,63 @@ namespace {
             return scope.top();
         }
 
-    };
-
-    std::string try_resolve (ASTNode const &ast) {
-        TryResolve tr;
-        ast.accept (tr);
-        return tr.type();
-    }
-
-    struct ResolveTypes final : Transform {
-        bool transformed() const { return transformed_; }
-        bool has_unresolved() const { return has_unresolved_; }
-
-        void begin(Addition &) {}
-        void end(Addition &) {}
-
-        void begin(Subtraction &) {}
-        void end(Subtraction &) {}
-
-        void begin(Multiplication &) {}
-        void end(Multiplication &) {}
-
-        void begin(Division &) {}
-        void end(Division &) {}
-
-        void begin(IntegerLiteral &) {}
-        void end(IntegerLiteral &) {}
-
-        void begin(Call &) {}
-        void end(Call &) {}
-
-        void begin(Negation &) {}
-        void end(Negation &) {}
-
-        void begin(ParenExpression &) {}
-        void end(ParenExpression &) {}
-
-        void begin(Binding &binding)
-        {
-            std::cout << "???" << binding.id() << " <-- " << try_resolve(binding.body()) << std::endl;
-        }
-        void end(Binding &)
-        {
-        }
-
-        void begin(AST::Identifier &) {}
-        void end(AST::Identifier &) {}
-
-        void begin(LetIn &) {}
-        void end(LetIn &) {}
-
-        void begin(Program &) {}
-        void end(Program &) {}
 
     private:
-         bool transformed_ = false;
-         bool has_unresolved_ = false;
+        void reduce_binary(string op) {
+            if (scope.empty()) throw std::logic_error("reduce_binary: empty stack (1)");
+            const string rhs = scope.top();
+            scope.pop();
+            if (scope.empty()) throw std::logic_error("reduce_binary: empty stack (2)");
+            const string lhs = scope.top();
+            scope.pop();
+
+            if (lhs.empty() || rhs.empty()) {
+                throw std::logic_error("empty type pushed");
+            }
+
+            // Forbid reduction of non-reduced types by checking against '<'.
+            if ((lhs[0] != '<') && (rhs[0] != '<') && (lhs == rhs)) {
+                scope.push(lhs);
+            } else {
+                scope.push("<" + lhs + op + rhs + ">"); // << possibly use this derived name for operator overloading in the future
+            }
+        }
+
+    private:
+        stack<string> scope;
+        std::map<string,string> symbols;
+
     };
 }
 
+
+
 std::string resolve_type(shared_ptr<AST::ASTNode> ast)
+{
+    std::map<string,string> none;
+    return resolve_type(ast, none);
+}
+
+std::string resolve_type(AST::ASTNode const &ast)
+{
+    std::map<string,string> none;
+    return resolve_type(ast, none);
+}
+
+std::string resolve_type(shared_ptr<AST::ASTNode> ast, std::map<string,string> const &symbols)
 {
     if (!ast) {
         //std::clog << "pass: lambda-lifting skipped, AST is empty\n";
         return "<void>";
     }
-    return resolve_type(*ast);
+    return resolve_type(*ast, symbols);
 }
 
-std::string resolve_type(AST::ASTNode const &ast)
+std::string resolve_type(AST::ASTNode const &ast, std::map<string,string> const &symbols)
 {
-    TryResolve tr;
+    TryResolve tr(symbols);
     ast.accept(tr);
     return tr.type();
 }
-
 
 } } } }
