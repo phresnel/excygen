@@ -1,5 +1,5 @@
-#!/bin/sh
-cd $(dirname `realpath $0`)
+#!/bin/bash
+cd $(dirname $(type -p "$0"))
 
 if [ ! -d bootstrapped/Catch ]; then
     url=https://github.com/philsquared/Catch.git
