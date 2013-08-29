@@ -134,9 +134,7 @@ namespace excyrender { namespace Nature { namespace Et1 { namespace AST {
         string type() const { return type_; }
         void reset_type(string const &t) { type_ = t; }
 
-        virtual ASTNode* deep_copy() const {
-            throw std::logic_error("not implemented");
-        }
+        virtual ASTNode* deep_copy() const = 0;
     protected:
         ASTNode(token_iter from, token_iter to) : from_(from), to_(to) {}
         ASTNode(token_iter from, token_iter to, string type) : from_(from), to_(to), type_(type) {}
@@ -149,6 +147,7 @@ namespace excyrender { namespace Nature { namespace Et1 { namespace AST {
     struct Expression : ASTNode {
         Expression (token_iter from, token_iter to) : ASTNode(from, to) {}
         Expression (token_iter from, token_iter to, string type) : ASTNode(from, to, type) {}
+        virtual Expression* deep_copy() const = 0;
         virtual ~Expression() {}
     };
 
@@ -163,7 +162,6 @@ namespace excyrender { namespace Nature { namespace Et1 { namespace AST {
 
         void reset_lhs(Expression *e) { lhs_.reset(e); }
         void reset_rhs(Expression *e) { rhs_.reset(e); }
-
     protected:
         Binary (token_iter from, token_iter to,
                 shared_ptr<Expression> lhs, shared_ptr<Expression> rhs
@@ -193,6 +191,12 @@ namespace excyrender { namespace Nature { namespace Et1 { namespace AST {
             rhs().accept(v);
             v.end(*this);
         }
+
+        Addition* deep_copy() const {
+            return new Addition(from(), to(),
+                                shared_ptr<Expression>(lhs().deep_copy()),
+                                shared_ptr<Expression>(rhs().deep_copy()));
+        }
     };
 
     struct Subtraction final : Binary {
@@ -213,6 +217,12 @@ namespace excyrender { namespace Nature { namespace Et1 { namespace AST {
             lhs().accept(v);
             rhs().accept(v);
             v.end(*this);
+        }
+
+        Subtraction* deep_copy() const {
+            return new Subtraction(from(), to(),
+                                shared_ptr<Expression>(lhs().deep_copy()),
+                                shared_ptr<Expression>(rhs().deep_copy()));
         }
     };
 
@@ -235,6 +245,12 @@ namespace excyrender { namespace Nature { namespace Et1 { namespace AST {
             rhs().accept(v);
             v.end(*this);
         }
+
+        Multiplication* deep_copy() const {
+            return new Multiplication(from(), to(),
+                                shared_ptr<Expression>(lhs().deep_copy()),
+                                shared_ptr<Expression>(rhs().deep_copy()));
+        }
     };
 
     struct Division final : Binary {
@@ -255,6 +271,12 @@ namespace excyrender { namespace Nature { namespace Et1 { namespace AST {
             lhs().accept(v);
             rhs().accept(v);
             v.end(*this);
+        }
+
+        Division* deep_copy() const {
+            return new Division(from(), to(),
+                                shared_ptr<Expression>(lhs().deep_copy()),
+                                shared_ptr<Expression>(rhs().deep_copy()));
         }
     };
 
@@ -287,6 +309,10 @@ namespace excyrender { namespace Nature { namespace Et1 { namespace AST {
         string value() const {
             return value_;
         }
+
+        IntegerLiteral *deep_copy() const {
+            return new IntegerLiteral(from(), to(), value());
+        }
     private:
         string value_; // Using string as C++ int is not necessarily the same as Et1 int.
     };
@@ -307,6 +333,10 @@ namespace excyrender { namespace Nature { namespace Et1 { namespace AST {
         string value() const {
             return value_;
         }
+
+        RealLiteral *deep_copy() const {
+            return new RealLiteral(from(), to(), value());
+        }
     private:
         string value_; // Using string as C++ int is not necessarily the same as Et1 int.
     };
@@ -326,13 +356,17 @@ namespace excyrender { namespace Nature { namespace Et1 { namespace AST {
             v.end(*this);
         }
 
+        Identifier *deep_copy() const {
+            return new Identifier(from(), to(), id());
+        }
+
     private:
         string name;
     };
 
     struct Call final : Terminal {
         Call (token_iter from, token_iter to,
-              std::string const &id, vector<shared_ptr<Expression>> args)
+              std::string const &id, vector<shared_ptr<Expression>> const &args)
         : Terminal(from, to), id_(id), arguments_(args)
         {}
 
@@ -356,6 +390,13 @@ namespace excyrender { namespace Nature { namespace Et1 { namespace AST {
             for (auto arg : arguments_)
                 arg->accept(v);
             v.end(*this);
+        }
+
+        Call *deep_copy() const {
+            vector<shared_ptr<Expression>> args;
+            for (auto e : arguments_)
+                args.emplace_back(e->deep_copy());
+            return new Call(from(), to(), id(), args);
         }
 
     private:
@@ -392,8 +433,9 @@ namespace excyrender { namespace Nature { namespace Et1 { namespace AST {
 
         void reset_body(Expression *e) { body_.reset(e); }
 
-        virtual Binding* deep_copy() const {
-            throw std::logic_error("not implemented");
+        Binding* deep_copy() const {
+            return new Binding(from(), to(), id(), type(), arguments(),
+                               shared_ptr<Expression>(body_->deep_copy()));
         }
 
     private:
@@ -436,6 +478,12 @@ namespace excyrender { namespace Nature { namespace Et1 { namespace AST {
         vector<shared_ptr<Binding>> &bindings() { return bindings_; }
         vector<shared_ptr<Binding>> const &bindings() const { return bindings_; }
 
+        LetIn *deep_copy() const {
+            vector<shared_ptr<Binding>> bindings;
+            for (auto b : bindings_)
+                bindings.emplace_back(b->deep_copy());
+            return new LetIn(from(), to(), bindings, shared_ptr<Expression>(value_->deep_copy()));
+        }
     private:
         vector<shared_ptr<Binding>> bindings_;
         shared_ptr<Expression> value_;
@@ -465,6 +513,11 @@ namespace excyrender { namespace Nature { namespace Et1 { namespace AST {
             v.end(*this);
         }
 
+        ParenExpression *deep_copy() const {
+            return new ParenExpression(from(), to(),
+                                       shared_ptr<Expression>(expression_->deep_copy()));
+        }
+
     private:
         shared_ptr<Expression> expression_;
     };
@@ -477,7 +530,6 @@ namespace excyrender { namespace Nature { namespace Et1 { namespace AST {
         Expression &rhs() { return *rhs_; }
 
         void reset_rhs(Expression *e) { rhs_.reset(e); }
-
     protected:
         Unary (token_iter from, token_iter to, shared_ptr<Expression> rhs) :
             Terminal(from, to), rhs_(rhs) {}
@@ -501,6 +553,10 @@ namespace excyrender { namespace Nature { namespace Et1 { namespace AST {
             v.begin(*this);
             rhs().accept(v);
             v.end(*this);
+        }
+
+        Negation* deep_copy() const {
+            return new Negation(from(), to(), shared_ptr<Expression>(rhs().deep_copy()));
         }
     };
 
@@ -539,6 +595,13 @@ namespace excyrender { namespace Nature { namespace Et1 { namespace AST {
         vector<shared_ptr<Binding>> &bindings() { return static_bindings_; }
         vector<shared_ptr<Binding>> const &bindings() const { return static_bindings_; }
 
+        Program* deep_copy() const {
+            vector<shared_ptr<Binding>> static_bindings;
+            for (auto b : static_bindings_)
+                static_bindings.emplace_back(b->deep_copy());
+            return new Program(from(), to(), static_bindings,
+                               shared_ptr<Expression>(value().deep_copy()));
+        }
     private:
         vector<shared_ptr<Binding>> static_bindings_;
         shared_ptr<Expression> value_;
