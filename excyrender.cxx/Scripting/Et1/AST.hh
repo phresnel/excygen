@@ -7,6 +7,7 @@
 #include "Token.hh"
 #include "Nature/HeightFunction.hh"
 #include "memory.hh"
+#include <stdexcept>
 
 
 // -- Compilation ----------------------------------------------------------------------------------
@@ -132,6 +133,10 @@ namespace excyrender { namespace Nature { namespace Et1 { namespace AST {
 
         string type() const { return type_; }
         void reset_type(string const &t) { type_ = t; }
+
+        virtual ASTNode* deep_copy() const {
+            throw std::logic_error("not implemented");
+        }
     protected:
         ASTNode(token_iter from, token_iter to) : from_(from), to_(to) {}
         ASTNode(token_iter from, token_iter to, string type) : from_(from), to_(to), type_(type) {}
@@ -387,6 +392,10 @@ namespace excyrender { namespace Nature { namespace Et1 { namespace AST {
 
         void reset_body(Expression *e) { body_.reset(e); }
 
+        virtual Binding* deep_copy() const {
+            throw std::logic_error("not implemented");
+        }
+
     private:
         string id_;
         vector<Argument> arguments_;
@@ -526,6 +535,9 @@ namespace excyrender { namespace Nature { namespace Et1 { namespace AST {
         Expression &value() { return *value_; }
 
         void reset_value(Expression *e) { value_.reset(e); }
+
+        vector<shared_ptr<Binding>> &bindings() { return static_bindings_; }
+        vector<shared_ptr<Binding>> const &bindings() const { return static_bindings_; }
 
     private:
         vector<shared_ptr<Binding>> static_bindings_;

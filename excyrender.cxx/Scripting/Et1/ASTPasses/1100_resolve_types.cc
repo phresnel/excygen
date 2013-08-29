@@ -119,7 +119,9 @@ namespace {
         void begin(RealLiteral &) {}
         void end(RealLiteral &) {}
 
-        void begin(Call &) {}
+        void begin(Call &call) {
+
+        }
         void end(Call &) {}
 
         void begin(Negation &) {}
@@ -130,14 +132,11 @@ namespace {
 
         void begin(Binding &binding)
         {
-            scope.push(symtab());
-            for (auto a : binding.arguments()) {
-                scope.top()[a.name] = a.type;
-            }
+            scope.push(scope.top().enter_binding(binding));
         }
         void end(Binding &binding)
         {
-            auto type = ASTQueries::resolve_type(binding.body(), scope.top());
+            auto type = ASTQueries::resolve_type(binding.body(), scope.top().symbols);
             if (!type.empty() && type[0] != '<') {
                 if (type != binding.type() && binding.type() != "auto")
                     throw std::runtime_error(binding.id() + " declared " + binding.type() +
@@ -150,18 +149,74 @@ namespace {
         void begin(AST::Identifier &) {}
         void end(AST::Identifier &) {}
 
-        void begin(LetIn &) {}
-        void end(LetIn &) {}
+        void begin(LetIn &letin) {
+            scope.push(scope.top().enter_declarative_region(letin.bindings()));
+        }
+        void end(LetIn &) {
+            scope.pop();
+        }
 
-        void begin(Program &) {}
-        void end(Program &) {}
+        void begin(Program &p) {
+            scope.push(Scope::EnterProgram(p.bindings()));
+        }
+        void end(Program &) {
+            scope.pop();
+        }
 
     private:
          bool transformed_ = false;
          bool has_unresolved_ = false;
 
-         using symtab = std::map<string, string>;
-         std::stack<symtab> scope;
+         struct Scope {
+             std::map<string, string> symbols;
+             vector<shared_ptr<Binding>> *bindings_declarative_region;
+             //vector<Binding*> visible_bindings;
+
+             Scope enter_binding(Binding &binding) const {
+                Scope ret;
+                //ret.visible_bindings = visible_bindings;
+                //ret.visible_bindings.push_back(&binding);
+                ret.bindings_declarative_region = bindings_declarative_region;
+
+                for (auto a : binding.arguments()) {
+                    ret.symbols[a.name] = a.type;
+                }
+                return ret;
+             }
+
+             Scope enter_declarative_region(vector<shared_ptr<Binding>> &bindings_declarative_region) const {
+                Scope ret;
+                ret = *this;
+                ret.bindings_declarative_region = &bindings_declarative_region;
+                return ret;
+             }
+
+             static Scope EnterProgram (vector<shared_ptr<Binding>> &bindings_declarative_region) {
+                Scope ret;
+                ret.bindings_declarative_region = &bindings_declarative_region;
+                return ret;
+             }
+
+             void instantiate(shared_ptr<Binding> generic, std::vector<string> types) {
+                if (types.size() != generic->arguments().size())
+                    throw std::runtime_error("wrong number of arguments in call to " + generic->id());
+
+                shared_ptr<Binding> insta (generic->deep_copy());
+
+                for (size_t a=0, num_args=insta->arguments().size(); a!=num_args; ++a) {
+                    const auto &desired = types[a];
+                    Argument &arg = insta->arguments()[a];
+                    if (arg.type != "auto" && desired != arg.type)
+                        throw std::runtime_error("cannot instantiate");
+                    arg.type = desired;
+                }
+
+                bindings_declarative_region->push_back(insta);
+                //visible_bindings.push_back(&*insta);
+             }
+         };
+
+         std::stack<Scope> scope;
     };
 }
 
