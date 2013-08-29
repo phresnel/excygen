@@ -37,8 +37,34 @@ TEST_CASE( "Et1/ASTPasses/1100_resolve_types.hh", "Type resolution" ) {
 
     REQUIRE(equal("let f(x) = x in f(2)",
 
-                  "let int f(x) = x, "
+                  "let f(x) = x, "
                   "    int f(int x) = x "
+                  "in f(2)",
+                  passes));
+
+    REQUIRE(equal("let f(x) = x in f(2.0)",
+
+                  "let f(x) = x, "
+                  "    float f(float x) = x "
+                  "in f(2.0)",
+                  passes));
+
+
+    REQUIRE(equal("let f(x) = 1 in f(2.0)",
+
+                  "let f(x) = 1, "
+                  "    int f(float x) = 1 "
+                  "in f(2.0)",
+                  passes));
+return;
+    REQUIRE(equal("let f(x) = x, "
+                  "    y = f(2.0) "
+                  "in f(2)",
+
+                  "let f(x) = x, "
+                  "    float y = f(2.0), "
+                  "    int f(int x) = x, "
+                  "    float f(float x) = x "
                   "in f(2)",
                   passes));
 
@@ -120,7 +146,29 @@ namespace {
         void end(RealLiteral &) {}
 
         void begin(Call &call) {
+            // TODO: use end(Call&) when asts have their type resolved already
+            std::vector<string> types;
+            for (auto &arg : call.arguments()) {
+                string type = ASTQueries::resolve_type(arg, scope.top().symbols);
+                if (type.empty() || type[0] == '<' || type=="auto") {
+                    has_unresolved_ = true;
+                    return;
+                }
+                types.push_back(type);
+            }
 
+            // lookup the binding to be called
+            Binding* binding = nullptr;
+            for (auto b : scope.top().visible_bindings) {
+                if (b->id() == call.id()) {
+                    binding = b; // TODO: build list of candidates
+                }
+            }
+            if (binding) {
+                if (scope.top().instantiate(*binding, types)) {
+                    transformed_ = true;
+                }
+            }
         }
         void end(Call &) {}
 
@@ -132,16 +180,37 @@ namespace {
 
         void begin(Binding &binding)
         {
+            scope.top().visible_bindings.push_back(&binding);
             scope.push(scope.top().enter_binding(binding));
         }
         void end(Binding &binding)
         {
-            auto type = ASTQueries::resolve_type(binding.body(), scope.top().symbols);
-            if (!type.empty() && type[0] != '<') {
-                if (type != binding.type() && binding.type() != "auto")
-                    throw std::runtime_error(binding.id() + " declared " + binding.type() +
-                                             ", but function body is " + type);
-                binding.reset_type(type);
+            // Resolve the return type only if the function is not generic.
+            bool is_generic = false;
+            for (auto arg : binding.arguments()) {
+                if (arg.type == "auto") {
+                    is_generic = true;
+                    break;
+                }
+            }
+            if (!is_generic) {
+                auto type = ASTQueries::resolve_type(binding.body(), scope.top().symbols);
+                if (!type.empty() && type[0] != '<') {
+                    if (type != binding.type()) {
+                        std::cerr << "ALPHA" << std::endl;
+                        if (binding.type() != "auto") {
+                            std::cerr << "BRAVO" << std::endl;
+                            throw std::runtime_error("meh");
+                        }
+                            /*throw std::runtime_error(binding.id() + " declared " + binding.type() +
+                                                     ", but function body is " + type);*/
+                        std::cerr << "CHARLIE" << std::endl;
+                        binding.reset_type(type);
+                        std::cerr << "DELTA" << std::endl;
+                        transformed_ = true;
+                        std::cerr << "GAMMA" << std::endl;
+                    }
+                }
             }
             scope.pop();
         }
@@ -170,12 +239,12 @@ namespace {
          struct Scope {
              std::map<string, string> symbols;
              vector<shared_ptr<Binding>> *bindings_declarative_region;
-             //vector<Binding*> visible_bindings;
+             vector<Binding*> visible_bindings;
 
              Scope enter_binding(Binding &binding) const {
                 Scope ret;
-                //ret.visible_bindings = visible_bindings;
-                //ret.visible_bindings.push_back(&binding);
+                ret.visible_bindings = visible_bindings;
+                ret.visible_bindings.push_back(&binding);
                 ret.bindings_declarative_region = bindings_declarative_region;
 
                 for (auto a : binding.arguments()) {
@@ -197,11 +266,25 @@ namespace {
                 return ret;
              }
 
-             void instantiate(shared_ptr<Binding> generic, std::vector<string> types) {
-                if (types.size() != generic->arguments().size())
-                    throw std::runtime_error("wrong number of arguments in call to " + generic->id());
+             // Returns true if instantiation happened.
+             //         false if nothing happened.
+             bool instantiate(Binding& binding, std::vector<string> types) {
+                if (types.size() != binding.arguments().size())
+                    throw std::runtime_error("wrong number of arguments in call to " + binding.id());
 
-                shared_ptr<Binding> insta (generic->deep_copy());
+                // Check if this is the optimal candidate already.
+                // If so, do not re-instantiate.
+                bool is_optimal = true;
+                for (size_t a=0, num_args=types.size(); a!=num_args; ++a) {
+                    if (binding.arguments()[a].type != types[a]) {
+                        is_optimal = false;
+                        break;
+                    }
+                }
+                if (is_optimal)
+                    return false;
+
+                shared_ptr<Binding> insta (binding.deep_copy());
 
                 for (size_t a=0, num_args=insta->arguments().size(); a!=num_args; ++a) {
                     const auto &desired = types[a];
@@ -212,7 +295,8 @@ namespace {
                 }
 
                 bindings_declarative_region->push_back(insta);
-                //visible_bindings.push_back(&*insta);
+                visible_bindings.push_back(&*insta);
+                return true;
              }
          };
 
