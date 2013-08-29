@@ -30,10 +30,19 @@ TEST_CASE( "Et1/ASTPasses/1100_resolve_types.hh", "Type resolution" ) {
     REQUIRE(equal("let f(int x) = 1 in f(2)",
                   "let int f(int x) = 1 in f(2)",
                   passes));
-return;
-    REQUIRE(equal("let f(x) = x in f(2)",
-                  "let int f(int x) = 1 in f(2)",
+
+    REQUIRE(equal("let f(int x) = x in f(2)",
+                  "let int f(int x) = x in f(2)",
                   passes));
+
+    REQUIRE(equal("let f(x) = x in f(2)",
+
+                  "let int f(x) = x, "
+                  "    int f(int x) = x "
+                  "in f(2)",
+                  passes));
+
+return;
 
     REQUIRE(equal("let f(x) = 1.0 in f(2)",
                   "let float f(int x) = 1.0 in f(2)",
@@ -119,13 +128,23 @@ namespace {
         void begin(ParenExpression &) {}
         void end(ParenExpression &) {}
 
-        void begin(Binding &)
+        void begin(Binding &binding)
         {
-            //std::cout << "???" << binding.id() << " <-- " << ASTQueries::resolve_type(binding.body()) << std::endl;
+            scope.push(symtab());
+            for (auto a : binding.arguments()) {
+                scope.top()[a.name] = a.type;
+            }
         }
         void end(Binding &binding)
         {
-            binding.reset_type(ASTQueries::resolve_type(binding.body()));
+            auto type = ASTQueries::resolve_type(binding.body(), scope.top());
+            if (!type.empty() && type[0] != '<') {
+                if (type != binding.type() && binding.type() != "auto")
+                    throw std::runtime_error(binding.id() + " declared " + binding.type() +
+                                             ", but function body is " + type);
+                binding.reset_type(type);
+            }
+            scope.pop();
         }
 
         void begin(AST::Identifier &) {}
@@ -140,6 +159,9 @@ namespace {
     private:
          bool transformed_ = false;
          bool has_unresolved_ = false;
+
+         using symtab = std::map<string, string>;
+         std::stack<symtab> scope;
     };
 }
 
