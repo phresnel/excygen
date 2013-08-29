@@ -111,7 +111,13 @@ namespace excyrender { namespace Nature { namespace Et1 { namespace ASTPrinters 
         {
             //if (scope.top().argCount++) os << scope.top().Operator;
             scope.push({""});
-            indent(); os << binding.id();
+            indent();
+            if (binding.type() != "auto")
+                os << binding.type() << ' ' << binding.id();
+            else
+                os << binding.id();
+
+
             if (!binding.arguments().empty()) {
                 os << "(";
                 bool first = true;

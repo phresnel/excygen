@@ -17,7 +17,7 @@
 #include "../ASTPrinters/PrettyPrinter.hh"
 
 TEST_CASE( "Et1/ASTPasses/1100_resolve_types.hh", "Type resolution" ) {
-    return;
+
     using namespace excyrender::Nature::Et1;
     using detail::equal;
 
@@ -27,7 +27,11 @@ TEST_CASE( "Et1/ASTPasses/1100_resolve_types.hh", "Type resolution" ) {
                   "let int f(int x) = 1 in f(2)",
                   passes));*/
 
-    REQUIRE(equal("let f(x) = 1 in f(2)",
+    REQUIRE(equal("let f(int x) = 1 in f(2)",
+                  "let int f(int x) = 1 in f(2)",
+                  passes));
+return;
+    REQUIRE(equal("let f(x) = x in f(2)",
                   "let int f(int x) = 1 in f(2)",
                   passes));
 
@@ -115,12 +119,13 @@ namespace {
         void begin(ParenExpression &) {}
         void end(ParenExpression &) {}
 
-        void begin(Binding &binding)
+        void begin(Binding &)
         {
-            std::cout << "???" << binding.id() << " <-- " << ASTQueries::resolve_type(binding.body()) << std::endl;
+            //std::cout << "???" << binding.id() << " <-- " << ASTQueries::resolve_type(binding.body()) << std::endl;
         }
-        void end(Binding &)
+        void end(Binding &binding)
         {
+            binding.reset_type(ASTQueries::resolve_type(binding.body()));
         }
 
         void begin(AST::Identifier &) {}

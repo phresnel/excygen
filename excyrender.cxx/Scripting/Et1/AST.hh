@@ -134,14 +134,16 @@ namespace excyrender { namespace Nature { namespace Et1 { namespace AST {
         void reset_type(string const &t) { type_ = t; }
     protected:
         ASTNode(token_iter from, token_iter to) : from_(from), to_(to) {}
+        ASTNode(token_iter from, token_iter to, string type) : from_(from), to_(to), type_(type) {}
 
     private:
         token_iter from_, to_;
-        string type_ = "<unknown>";
+        string type_ = "auto";
     };
 
     struct Expression : ASTNode {
         Expression (token_iter from, token_iter to) : ASTNode(from, to) {}
+        Expression (token_iter from, token_iter to, string type) : ASTNode(from, to, type) {}
         virtual ~Expression() {}
     };
 
@@ -255,6 +257,7 @@ namespace excyrender { namespace Nature { namespace Et1 { namespace AST {
     // -- "End points" -----------------------------------------------------------------------------
     struct Terminal : Expression {
         Terminal (token_iter from, token_iter to) : Expression(from, to) {}
+        Terminal (token_iter from, token_iter to, string type) : Expression(from, to, type) {}
         virtual ~Terminal() {}
     };
 
@@ -358,9 +361,10 @@ namespace excyrender { namespace Nature { namespace Et1 { namespace AST {
     struct Binding final : Terminal {
         Binding(token_iter from, token_iter to,
                 string id,
+                string type,
                 vector<Argument> arguments,
                 shared_ptr<Expression> body)
-            : Terminal (from, to), id_(id), arguments_(arguments), body_(body)
+            : Terminal (from, to, type), id_(id), arguments_(arguments), body_(body)
         {}
 
         void accept(Visitor &v) const {

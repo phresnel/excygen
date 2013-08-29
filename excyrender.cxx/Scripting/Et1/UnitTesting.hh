@@ -40,7 +40,8 @@ bool equal (std::string const &in, std::string const &expected,
         prog->accept(dumper);
     }
     if (tokenize(ss.str()) != tokenize(expected)) {
-        std::clog << ss.str() << std::endl;
+        std::clog << "expected: " << tokenize(expected) << '\n'
+                  << "got.....: " << tokenize(ss.str()) << std::endl;
         return false;
     }
     return true;
