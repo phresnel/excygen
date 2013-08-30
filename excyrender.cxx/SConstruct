@@ -1,7 +1,8 @@
 Execute('../bootstrap')
 
 env = Environment(CPPPATH = ['.', '../bootstrapped/Catch/include/'],
-                  CXXFLAGS="-std=c++0x -Wall -g -O3 -ffast-math -march=native -msse2 -fopenmp",
+                  #CXXFLAGS="-std=c++0x -Wall -O3 -ffast-math -march=native -msse2 -fopenmp",
+                  CXXFLAGS="-std=c++0x -Wall -g -O0 -fopenmp",
                   )
 
 excygen = env.Program(target='excygen',

@@ -197,18 +197,12 @@ namespace {
                 auto type = ASTQueries::resolve_type(binding.body(), scope.top().symbols);
                 if (!type.empty() && type[0] != '<') {
                     if (type != binding.type()) {
-                        std::cerr << "ALPHA" << std::endl;
                         if (binding.type() != "auto") {
-                            std::cerr << "BRAVO" << std::endl;
-                            throw std::runtime_error("meh");
+                            throw std::runtime_error(binding.id() + " declared " + binding.type() +
+                                                     ", but function body is " + type);
                         }
-                            /*throw std::runtime_error(binding.id() + " declared " + binding.type() +
-                                                     ", but function body is " + type);*/
-                        std::cerr << "CHARLIE" << std::endl;
                         binding.reset_type(type);
-                        std::cerr << "DELTA" << std::endl;
                         transformed_ = true;
-                        std::cerr << "GAMMA" << std::endl;
                     }
                 }
             }

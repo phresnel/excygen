@@ -72,7 +72,7 @@ namespace excyrender { namespace Nature { namespace Et1 { namespace {
         // ^^^^^^^^^
         if (it == end || it->kind != TokenKind::Identifier)
             return shared_ptr<Call>();
-        const string callee = *it;
+        const string callee = string(*it);
         ++it;
 
         // some-call ( foo , bar )
@@ -84,6 +84,8 @@ namespace excyrender { namespace Nature { namespace Et1 { namespace {
         // Arguments.
         std::vector<shared_ptr<Expression>> arguments;
 
+        if (it == end)
+            throw std::runtime_error("missing ')'");
         if (it->kind!=RParen) {
             // some-call ( foo , bar )
             //             ^^^  OR   ^
@@ -121,16 +123,16 @@ namespace excyrender { namespace Nature { namespace Et1 { namespace {
         auto const num_toks = distance(from, to);
 
         if (num_toks == 1) {
-            return AST::Argument{"auto", *from};
+            return AST::Argument{"auto", string(*from)};
         } else if (num_toks == 2) {
-            return AST::Argument{*from, *(from+1)};
+            return AST::Argument{string(*from), string(*(from+1))};
         } else if (num_toks == 5
                    && *from == "typeof"
                    && (from+1)->kind == LParen
                    && (from+3)->kind == RParen)
         {
             return AST::Argument{"typeof(" + string(*(from+2)) + ")",
-                                 *(from+4)};
+                                 string(*(from+4))};
         }
         return optional<AST::Argument>();
     }
@@ -143,42 +145,58 @@ namespace excyrender { namespace Nature { namespace Et1 { namespace {
         {}
     };
 
-    optional<ParsedSig> typeof_expression (token_iter it, token_iter end)
+    optional<ParsedSig> typeof_sig (token_iter it, token_iter end)
     {
         const auto from = it;
-        if (it == end)
+        if (it == end || *it != "typeof")
             return optional<ParsedSig>();
-        if (*it == "typeof") {
-            ++it;
-            if (it==end || it->kind != LParen)
-                throw std::runtime_error("expected '(' after 'typeof'");
-            ++it;
-            if (it==end || it->kind != Identifier)
-                throw std::runtime_error("expected identifier inside 'typeof()'");
-            const string of = *it;
-            ++it;
-            if (it==end || it->kind != RParen)
-                throw std::runtime_error("expected ')' after 'typeof(...'");
-            const string id = *it;
-            ++it;
-            return ParsedSig{from, it, "typeof(" + of + ")", id};
-        }
-        return optional<ParsedSig>();
+
+        ++it;
+        if (it==end || it->kind != LParen)
+            throw std::runtime_error("expected '(' after 'typeof'");
+
+        ++it;
+        if (it==end || it->kind != Identifier)
+            throw std::runtime_error("expected identifier inside 'typeof()'");
+        const string of = string(*it);
+
+        ++it;
+        if (it==end || it->kind != RParen)
+            throw std::runtime_error("expected ')' after 'typeof(...'");
+
+        ++it;
+        if (it==end || it->kind != Identifier)
+            throw std::runtime_error("expected identifier after 'typeof()'");
+        const string id = string(*it);
+
+        ++it;
+        return ParsedSig{from, it, "typeof(" + of + ")", id};
     }
 
-    optional<ParsedSig> parse_type (token_iter it, token_iter end)
+    optional<ParsedSig> parse_sig (token_iter it, token_iter end)
     {
         if (it == end)
             return optional<ParsedSig>();
-        if (auto t = typeof_expression(it, end))
+
+        /*
+        if (distance(it, end) == 2 && string(*it) == "1" && string(*(1+it)) == ")") {
+            std::cerr << "<<<<left:" << std::flush;
+            for (auto a = it; a != end; ++a) {
+                std::cerr << *a << std::flush;
+            }
+            std::cerr << ">>>>" << std::endl;
+        }
+        */
+
+        if (auto t = typeof_sig(it, end))
             return t;
+
         if (it->kind == Identifier) {
             const auto from = it;
             ++it;
             if (it==end || it->kind != Identifier)
-                return ParsedSig{from, it, "auto", *from};
-            if (it->kind == Identifier)
-                return ParsedSig{from, it+1, *from, *it};
+                return ParsedSig{from, it, "auto", string(*from)};
+            return ParsedSig{from, it+1, string(*from), string(*it)};
         }
         return optional<ParsedSig>();
     }
@@ -188,13 +206,16 @@ namespace excyrender { namespace Nature { namespace Et1 { namespace {
     // argument: type? name
     shared_ptr<AST::Binding> binding(token_iter it, token_iter end)
     {
+        if (it == end)
+            return shared_ptr<AST::Binding>();
+
         using std::vector;
 
         const auto start = it;
         // type? name ( '(' argument (',' argument)* ')' )? = expression
         // ^
         string type, name;
-        if (auto t = parse_type(it,end)) {
+        if (auto t = parse_sig(it,end)) {
             type = t->type;
             name = t->name;
             it = t->to;
@@ -203,6 +224,9 @@ namespace excyrender { namespace Nature { namespace Et1 { namespace {
         }
 
         vector<AST::Argument> arguments;
+
+        if (it == end)
+            return shared_ptr<AST::Binding>();
 
         if (it->kind == LParen) {
             ++it;
@@ -270,7 +294,7 @@ namespace excyrender { namespace Nature { namespace Et1 { namespace {
 
         if (it == end || it->kind != Integer)
             return shared_ptr<IntegerLiteral>();
-        return shared_ptr<IntegerLiteral>(new IntegerLiteral(it, it+1, *it));
+        return shared_ptr<IntegerLiteral>(new IntegerLiteral(it, it+1, string(*it)));
     }
 
     shared_ptr<AST::RealLiteral> real_literal(token_iter it, token_iter end)
@@ -279,7 +303,7 @@ namespace excyrender { namespace Nature { namespace Et1 { namespace {
 
         if (it == end || it->kind != Real)
             return shared_ptr<RealLiteral>();
-        return shared_ptr<RealLiteral>(new RealLiteral(it, it+1, *it));
+        return shared_ptr<RealLiteral>(new RealLiteral(it, it+1, string(*it)));
     }
 
 
@@ -290,7 +314,7 @@ namespace excyrender { namespace Nature { namespace Et1 { namespace {
 
         if (it == end || it->kind != TokenKind::Identifier)
             return shared_ptr<AST::Identifier>();
-        return shared_ptr<AST::Identifier>(new AST::Identifier(it, it+1, *it));
+        return shared_ptr<AST::Identifier>(new AST::Identifier(it, it+1, string(*it)));
     }
 
 

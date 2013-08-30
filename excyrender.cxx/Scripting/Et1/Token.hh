@@ -6,6 +6,7 @@
 
 #include <string>
 #include <vector>
+#include <stdexcept>
 
 
 // -- Tokenization ---------------------------------------------------------------------------------
@@ -32,7 +33,7 @@ namespace excyrender { namespace Nature { namespace Et1 {
         iterator from, to;
 
         bool operator== (const char *c_str) const {
-            return string(from,to) == c_str;
+            return this->operator string() == string(c_str);
         }
 
         bool operator!= (const char *c_str) const {
@@ -40,18 +41,23 @@ namespace excyrender { namespace Nature { namespace Et1 {
         }
 
         bool operator== (Token const &tok) const {
-            return string(from,to) == string(tok);
+            return this->operator string() == string(tok);
         }
 
         bool operator != (Token const &tok) const {
             return !(*this == tok);
         }
 
-        operator string() const {
+        explicit operator string() const {
+            if (distance(from,to) == 0)
+                throw std::logic_error("empty token");
             return string(from,to);
         }
 
-        Token (TokenKind kind, iterator from, iterator to) : kind(kind), from(from), to(to) {}
+        Token (TokenKind kind, iterator from, iterator to) : kind(kind), from(from), to(to) {
+            if (distance(from,to) == 0)
+                throw std::logic_error("empty token");
+        }
     };
 
     using token_iter = vector<Token>::const_iterator;

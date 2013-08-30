@@ -16,9 +16,15 @@ std::shared_ptr<AST::Program> to_ast(std::string const &code)
     auto toks = tokenize (code);
     if (toks.empty())
         throw std::runtime_error("no tokens");
-    std::shared_ptr<AST::Program> prog = excyrender::Nature::Et1::AST::program(toks.begin(), toks.end());
-    if (!prog) {
-        throw std::logic_error("not compilable: " + code);
+
+    std::shared_ptr<AST::Program> prog;
+    try {
+        prog = excyrender::Nature::Et1::AST::program(toks.begin(), toks.end());
+        if (!prog) {
+            throw std::logic_error("not compilable: " + code);
+        }
+    } catch (std::exception &e) {
+        throw std::logic_error(std::string("in to_ast(), upon building ast: ") + e.what());
     }
     return prog;
 }
@@ -29,21 +35,33 @@ bool equal (std::string const &in, std::string const &expected,
 
     using namespace excyrender::Nature::Et1;
 
-    std::shared_ptr<AST::Program> prog = to_ast(in);
-    if (!prog) {
-        throw std::logic_error("not compilable: " + in);
+    std::shared_ptr<AST::Program> prog;
+
+    try {
+        prog = to_ast(in);
+        if (!prog) {
+            throw std::logic_error("not compilable: " + in);
+        }
+    } catch (std::exception &e) {
+        throw std::logic_error(std::string("in equal(), upon building ast: ") + e.what());
     }
 
     std::stringstream ss;
-    {
+    try {
         ASTPrinters::PrettyPrinter dumper(ss);
         pass(prog);
         prog->accept(dumper);
+    } catch (std::exception &e) {
+        throw std::logic_error(std::string("in equal(), upon transform and pretty printing: ") + e.what());
     }
-    if (tokenize(ss.str()) != tokenize(expected)) {
-        std::clog << "expected: " << tokenize(expected) << '\n'
-                  << "got.....: " << tokenize(ss.str()) << std::endl;
-        return false;
+    try {
+        if (tokenize(ss.str()) != tokenize(expected)) {
+            std::clog << "expected: " << tokenize(expected) << '\n'
+                      << "got.....: " << tokenize(ss.str()) << std::endl;
+            return false;
+        }
+    } catch (std::exception &e) {
+        throw std::logic_error(std::string("in equal(), upon tokenization: ") + e.what());
     }
     return true;
 }
