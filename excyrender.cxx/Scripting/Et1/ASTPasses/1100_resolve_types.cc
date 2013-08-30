@@ -56,7 +56,7 @@ TEST_CASE( "Et1/ASTPasses/1100_resolve_types.hh", "Type resolution" ) {
                   "    int f(float x) = 1 "
                   "in f(2.0)",
                   passes));
-return;
+
     REQUIRE(equal("let f(x) = x, "
                   "    y = f(2.0) "
                   "in f(2)",
@@ -188,6 +188,7 @@ namespace {
             bool ambiguous = false;
             for (auto b : scope.top().visible_bindings) {
                 int f = fitness(*b);
+                std::cerr << "[[" << b->id() << " f: " << f << "]]" << std::endl;
 
                 if (f > best_fitness) {
                     binding = b; // TODO: build list of candidates
@@ -197,12 +198,31 @@ namespace {
                     ambiguous = true;
                 }
             }
+
+            /*
+            std::cerr << "best fitness: " << best_fitness << std::endl;
+            std::cerr << "id: " << binding->id() << std::endl;
+            for (auto a : binding->arguments()) {
+                std::cerr << a.type << std::endl;
+            }
+            std::cerr << std::endl;
+            */
+
             if (ambiguous) {
                 throw std::runtime_error("multiple instantiations of " + call.id() + " are ambiguous");
             }
             if (binding) {
-                if (scope.top().instantiate(*binding, types)) {
-                    transformed_ = true;
+                bool is_generic = false;
+                for (auto arg : binding->arguments()) {
+                    if (arg.type == "auto") {
+                        is_generic = true;
+                        break;
+                    }
+                }
+                if (is_generic) {
+                    if (scope.top().instantiate(*binding, types)) {
+                        transformed_ = true;
+                    }
                 }
             }
         }
@@ -215,7 +235,7 @@ namespace {
 
         void begin(Binding &binding)
         {
-            scope.top().visible_bindings.push_back(&binding);
+            //scope.top().visible_bindings.push_back(&binding);
             scope.push(scope.top().enter_binding(binding));
         }
         void end(Binding &binding)
@@ -285,12 +305,16 @@ namespace {
              Scope enter_declarative_region(vector<shared_ptr<Binding>> &bindings_declarative_region) const {
                 Scope ret;
                 ret = *this;
+                for (auto b : bindings_declarative_region)
+                    ret.visible_bindings.push_back(&*b);
                 ret.bindings_declarative_region = &bindings_declarative_region;
                 return ret;
              }
 
              static Scope EnterProgram (vector<shared_ptr<Binding>> &bindings_declarative_region) {
                 Scope ret;
+                for (auto b : bindings_declarative_region)
+                    ret.visible_bindings.push_back(&*b);
                 ret.bindings_declarative_region = &bindings_declarative_region;
                 return ret;
              }
@@ -318,6 +342,7 @@ namespace {
                 for (size_t a=0, num_args=insta->arguments().size(); a!=num_args; ++a) {
                     const auto &desired = types[a];
                     Argument &arg = insta->arguments()[a];
+
                     if (arg.type != "auto" && desired != arg.type)
                         throw std::runtime_error("cannot instantiate");
                     arg.type = desired;

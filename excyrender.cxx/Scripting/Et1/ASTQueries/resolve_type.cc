@@ -53,6 +53,11 @@ TEST_CASE( "Et1/ASTQueries/resolve_type.hh", "Type resolution" ) {
     REQUIRE(resolve_type(to_ast("let x = 1+1.0 in x+y*z")) == "<<id>+<<id>*<id>>>");
     REQUIRE(resolve_type(to_ast("let x = 1+1.0 in x/y-z")) == "<<<id>/<id>>-<id>>");
 
+    REQUIRE(resolve_type(to_ast("f()")) == "<call>");
+    REQUIRE(resolve_type(to_ast("f(x)")) == "<call>");
+    REQUIRE(resolve_type(to_ast("f(x)+1")) == "<<call>+int>");
+    REQUIRE(resolve_type(to_ast("let int f(x) = 0.0 in f(1)")) == "<call>");
+
     // Tests with symbol table.
     REQUIRE(resolve_type(to_ast("x"), {{"x","int"}}) == "int");
     REQUIRE(resolve_type(to_ast("x+y"), {{"x","int"}}) == "<int+<id>>");
@@ -97,8 +102,21 @@ namespace {
         void begin(RealLiteral const &) { scope.push("float"); }
         void end(RealLiteral const &) {}
 
-        void begin(Call const &) { scope.push("<call>"); }
-        void end(Call const &) {}
+        void begin(Call const &call) {
+            if (call.type() == "auto") {
+                scope.push("<call>");
+            } else {
+                scope.push(call.type());
+            }
+        }
+        void end(Call const &call) {
+            // pop the arguments away.
+            for (size_t i=0; i!=call.arguments().size(); ++i) {
+                if (scope.empty())
+                    throw std::logic_error("empty stack upon popping arguments");
+                scope.pop();
+            }
+        }
 
         void begin(Negation const &) {}
         void end(Negation const &) {}
@@ -121,7 +139,8 @@ namespace {
         void end(AST::Identifier const &) {}
 
         void begin(LetIn const &) {}
-        void before_body(LetIn const &) {}
+        void before_body(LetIn const &) {
+        }
         void end(LetIn const &) {
             if (scope.empty()) throw std::logic_error("reduce_binary: empty stack (1)");
             const string rhs = scope.top();
