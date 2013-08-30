@@ -167,8 +167,14 @@ namespace excyrender { namespace Nature { namespace Et1 { namespace AST {
         Expression &lhs() { return *lhs_; }
         Expression &rhs() { return *rhs_; }
 
-        void reset_lhs(Expression *e) { lhs_.reset(e); }
-        void reset_rhs(Expression *e) { rhs_.reset(e); }
+        void reset_lhs(Expression *e) {
+            if (!e) throw std::logic_error("Binary::reset_lhs with nullptr");
+            lhs_.reset(e);
+        }
+        void reset_rhs(Expression *e) {
+            if (!e) throw std::logic_error("Binary::reset_rhs with nullptr");
+            rhs_.reset(e);
+        }
     protected:
         Binary (token_iter from, token_iter to,
                 shared_ptr<Expression> lhs, shared_ptr<Expression> rhs
@@ -385,7 +391,8 @@ namespace excyrender { namespace Nature { namespace Et1 { namespace AST {
         void accept(Visitor &v) const {
             v.begin(*this);
             bool first = true;
-            for (auto arg : arguments_) {
+            auto const cp = arguments_; // only work on the current snapshot
+            for (auto arg : cp) {
                 if (!first) v.infix();
                 first = false;
                 arg->accept(v);
@@ -394,7 +401,8 @@ namespace excyrender { namespace Nature { namespace Et1 { namespace AST {
         }
         void accept(Transform &v) {
             v.begin(*this);
-            for (auto arg : arguments_)
+            auto const cp = arguments_; // only work on the current snapshot
+            for (auto arg : cp)
                 arg->accept(v);
             v.end(*this);
         }
@@ -438,7 +446,10 @@ namespace excyrender { namespace Nature { namespace Et1 { namespace AST {
         vector<Argument> const &arguments() const { return arguments_; }
         vector<Argument> &arguments() { return arguments_; }
 
-        void reset_body(Expression *e) { body_.reset(e); }
+        void reset_body(Expression *e) {
+            if (!e) throw std::logic_error("Binding::reset_body with nullptr");
+            body_.reset(e);
+        }
 
         Binding* deep_copy() const {
             return new Binding(from(), to(), id(), type(), arguments(),
@@ -461,7 +472,8 @@ namespace excyrender { namespace Nature { namespace Et1 { namespace AST {
         void accept(Visitor &v) const {
             v.begin(*this);
             bool first = true;
-            for (auto b : bindings_) {
+            auto const cp = bindings_; // only work on the current snapshot
+            for (auto b : cp) {
                 if (!first) v.infix();
                 first = false;
                 b->accept(v);
@@ -472,7 +484,9 @@ namespace excyrender { namespace Nature { namespace Et1 { namespace AST {
         }
         void accept(Transform &v) {
             v.begin(*this);
-            for (auto b : bindings_)
+
+            auto const cp = bindings_; // only work on the current snapshot
+            for (auto b : cp)
                 b->accept(v);
             value().accept(v);
             v.end(*this);
@@ -480,7 +494,10 @@ namespace excyrender { namespace Nature { namespace Et1 { namespace AST {
 
         Expression const &value() const { return *value_; }
         Expression &value() { return *value_; }
-        void reset_value(Expression *e) { value_.reset(e); }
+        void reset_value(Expression *e) {
+            if (!e) throw std::logic_error("LetIn::reset_value with nullptr");
+            value_.reset(e);
+        }
 
         vector<shared_ptr<Binding>> &bindings() { return bindings_; }
         vector<shared_ptr<Binding>> const &bindings() const { return bindings_; }
@@ -536,7 +553,10 @@ namespace excyrender { namespace Nature { namespace Et1 { namespace AST {
         Expression const &rhs() const { return *rhs_; }
         Expression &rhs() { return *rhs_; }
 
-        void reset_rhs(Expression *e) { rhs_.reset(e); }
+        void reset_rhs(Expression *e) {
+            if (!e) throw std::logic_error("Unary::reset_rhs with nullptr");
+            rhs_.reset(e);
+        }
     protected:
         Unary (token_iter from, token_iter to, shared_ptr<Expression> rhs) :
             Terminal(from, to), rhs_(rhs) {}
@@ -578,7 +598,8 @@ namespace excyrender { namespace Nature { namespace Et1 { namespace AST {
         void accept(Visitor &v) const {
             v.begin(*this);
             bool first = true;
-            for (auto b : static_bindings_) {
+            auto const cp = static_bindings_; // only work on the current snapshot
+            for (auto b : cp) {
                 if (!first) v.infix();
                 first = false;
                 b->accept(v);
@@ -588,7 +609,8 @@ namespace excyrender { namespace Nature { namespace Et1 { namespace AST {
         }
         void accept(Transform &v) {
             v.begin(*this);
-            for (auto b : static_bindings_)
+            auto const cp = static_bindings_; // only work on the current snapshot
+            for (auto b : cp)
                 b->accept(v);
             value().accept(v);
             v.end(*this);
@@ -597,7 +619,10 @@ namespace excyrender { namespace Nature { namespace Et1 { namespace AST {
         Expression const &value() const { return *value_; }
         Expression &value() { return *value_; }
 
-        void reset_value(Expression *e) { value_.reset(e); }
+        void reset_value(Expression *e) {
+            if (!e) throw std::logic_error("LetProgram::reset_value with nullptr");
+            value_.reset(e);
+        }
 
         vector<shared_ptr<Binding>> &bindings() { return static_bindings_; }
         vector<shared_ptr<Binding>> const &bindings() const { return static_bindings_; }
