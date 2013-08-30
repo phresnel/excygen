@@ -134,6 +134,7 @@ namespace excyrender { namespace Nature { namespace Et1 { namespace AST {
         string type() const { return type_; }
         void reset_type(string const &t) {
             if (t.empty()) throw std::logic_error("ASTNode::reset_type(t): t must not be empty");
+            if (type_ != "auto") throw std::logic_error("ASTNode::reset_type(t): cannot reset_type() of non-auto expressions");
             type_ = t;
         }
 
@@ -295,13 +296,13 @@ namespace excyrender { namespace Nature { namespace Et1 { namespace AST {
     };
 
     struct Literal : Terminal {
-        Literal (token_iter from, token_iter to) : Terminal(from, to) {}
+        Literal (token_iter from, token_iter to, string const &type) : Terminal(from, to, type) {}
         virtual ~Literal() {}
     };
 
     struct IntegerLiteral final : Literal {
         IntegerLiteral (token_iter from, token_iter to, string value) :
-            Literal(from, to), value_(value) {}
+            Literal(from, to, "int"), value_(value) {}
 
         void accept(Visitor &v) const {
             v.begin(*this);
@@ -325,7 +326,7 @@ namespace excyrender { namespace Nature { namespace Et1 { namespace AST {
 
     struct RealLiteral final : Literal {
         RealLiteral (token_iter from, token_iter to, string value) :
-            Literal(from, to), value_(value) {}
+            Literal(from, to, "float"), value_(value) {}
 
         void accept(Visitor &v) const {
             v.begin(*this);

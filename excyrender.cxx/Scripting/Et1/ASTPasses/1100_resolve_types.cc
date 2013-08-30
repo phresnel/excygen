@@ -61,10 +61,13 @@ return;
                   "    y = f(2.0) "
                   "in f(2)",
 
-                  "let f(x) = x, "
+                  /*"let f(x) = x, "
                   "    float y = f(2.0), "
                   "    int f(int x) = x, "
                   "    float f(float x) = x "
+                  "in f(2)",*/
+                  "let f(x) = x, "
+                  "    y = f(2.0) "
                   "in f(2)",
                   passes));
 
@@ -145,11 +148,14 @@ namespace {
         void begin(RealLiteral &) {}
         void end(RealLiteral &) {}
 
-        void begin(Call &call) {
+        void begin(Call &) {}
+
+        void end(Call &call)
+        {
             // TODO: use end(Call&) when asts have their type resolved already
             std::vector<string> types;
             for (auto &arg : call.arguments()) {
-                string type = ASTQueries::resolve_type(arg, scope.top().symbols);
+                string type = arg->type();
                 if (type.empty() || type[0] == '<' || type=="auto") {
                     has_unresolved_ = true;
                     return;
@@ -157,12 +163,42 @@ namespace {
                 types.push_back(type);
             }
 
+            auto fitness = [&](Binding &b) -> int {
+                if (b.id() != call.id())
+                    return -1;
+                if (b.arguments().size() != call.arguments().size())
+                    return -1;
+                // count the number of matchin arguments.
+                int f = 0;
+                for (size_t i=0; i<b.arguments().size(); ++i) {
+                    if (b.arguments()[i].type == "auto") {
+                        f += 1;
+                    } else if (b.arguments()[i].type == call.arguments()[i]->type()) {
+                        f += 1+b.arguments().size();
+                    } else {
+                        return -1;
+                    }
+                }
+                return f;
+            };
+
             // lookup the binding to be called
             Binding* binding = nullptr;
+            int best_fitness = 0;
+            bool ambiguous = false;
             for (auto b : scope.top().visible_bindings) {
-                if (b->id() == call.id()) {
+                int f = fitness(*b);
+
+                if (f > best_fitness) {
                     binding = b; // TODO: build list of candidates
+                    best_fitness = f;
+                    ambiguous = false;
+                } else if (f == best_fitness) {
+                    ambiguous = true;
                 }
+            }
+            if (ambiguous) {
+                throw std::runtime_error("multiple instantiations of " + call.id() + " are ambiguous");
             }
             if (binding) {
                 if (scope.top().instantiate(*binding, types)) {
@@ -170,7 +206,6 @@ namespace {
                 }
             }
         }
-        void end(Call &) {}
 
         void begin(Negation &) {}
         void end(Negation &) {}
@@ -315,6 +350,10 @@ void resolve_types(shared_ptr<AST::ASTNode> ast) {
             }
             break;
         }
+
+        ASTPrinters::PrettyPrinter pp(std::cerr);
+        ast->accept(pp);
+        std::cerr << "\n";
     }
     std::clog << "pass: resolve-types (" << i << "x)\n";
 }
