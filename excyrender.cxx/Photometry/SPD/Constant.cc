@@ -12,7 +12,7 @@ namespace excyrender { namespace Photometry { namespace SPD {
     std::tuple<real,real,real> Constant::toXYZ() const
     {
         using namespace CIEMatchingCurves;
-        return Regular(cie_start, cie_end, std::array<real,1>{c_}).toXYZ();
+        return Regular(cie_start, cie_end, std::array<real,1>{{c_}}).toXYZ();
     }
 
 } } }
