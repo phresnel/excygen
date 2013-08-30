@@ -132,12 +132,18 @@ namespace excyrender { namespace Nature { namespace Et1 { namespace AST {
         virtual void accept(Transform &v) = 0;
 
         string type() const { return type_; }
-        void reset_type(string const &t) { type_ = t; }
+        void reset_type(string const &t) {
+            if (t.empty()) throw std::logic_error("ASTNode::reset_type(t): t must not be empty");
+            type_ = t;
+        }
 
         virtual ASTNode* deep_copy() const = 0;
     protected:
         ASTNode(token_iter from, token_iter to) : from_(from), to_(to) {}
-        ASTNode(token_iter from, token_iter to, string type) : from_(from), to_(to), type_(type) {}
+        ASTNode(token_iter from, token_iter to, string type) : from_(from), to_(to)
+        {
+            reset_type(type);
+        }
 
     private:
         token_iter from_, to_;
