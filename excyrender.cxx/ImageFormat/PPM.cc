@@ -9,7 +9,9 @@
 namespace excyrender { namespace ImageFormat {
 
     void ppm (std::ostream &os, int width, int height, std::vector<Photometry::RGB> const &pixels) {
-        if (width * height != pixels.size())
+        if (width <= 0 || height <= 0)
+            throw std::runtime_error("ImageFormat::ppm: width or height are equal or less than 0");
+        if (static_cast<size_t>(width) * static_cast<size_t>(height) != pixels.size())
             throw std::runtime_error ("ImageFormat::ppm: width*height is inequal to number of pixels passed");
         os << "P3\n"
            << width << ' ' << height << '\n'
@@ -20,7 +22,7 @@ namespace excyrender { namespace ImageFormat {
                 os << static_cast<int>(rgb.r) << ' '
                    << static_cast<int>(rgb.g) << ' '
                    << static_cast<int>(rgb.b) << ' ';
-                
+
                 //auto rgb = pixels[y*width+x]*255;//saturate (pixels[y*width+x]*255, 0, 255);
                 //os << (((rgb.r+rgb.g+rgb.b)/3)>0.5) << ' ';
             }
