@@ -109,6 +109,44 @@ TEST_CASE( "Et1/ASTPasses/1100_resolve_types.hh", "Type resolution" ) {
                   "    float f(float x, float y) = x "
                   "in 1",
                   passes));
+
+    REQUIRE(equal("let f(x) = x,    "
+                  "    g(x) = f(x), "
+                  "    h(x) = g(x)  "
+                  " in h(1.0)       ",
+
+                  "let f(x) = x,     "
+                  "    g(x) = f(x),  "
+                  "    h(x) = g(x),  "
+                  "    float h(float x) = g(x), "
+                  "    float g(float x) = f(x), "
+                  "    float f(float x) = x "
+                  " in h(1.0)       ",
+                  passes));
+
+    REQUIRE(equal("let f(x) = "
+                  "   let g(x) = "
+                  "      let h(x) = x "
+                  "      in h(x) "
+                  "   in g(x) "
+                  "in f(2.0) ",
+
+                  "let f(x) = "
+                  "   let g(x) = "
+                  "      let h(x) = x "
+                  "      in h(x) "
+                  "   in g(x), "
+                  "  float f(float x) = "
+                  "   let g(x) = "
+                  "        let h(x) = x "
+                  "        in h(x), "
+                  "    float g(float x) = "
+                  "        let h(x) = x, "
+                  "            float h(float x) = x "
+                  "        in h(x) "
+                  "   in g(x) "
+                  "in f(2.0) ",
+                  passes));
 }
 //--------------------------------------------------------------------------------------------------
 
@@ -256,7 +294,7 @@ namespace {
                 } else if (body_type != binding.type()) {
                     throw std::runtime_error("declared function type does not equal body type");
                 }
-            } else {
+            } else if (body_type != "auto") {
                 has_unresolved_ = true;
             }
 
@@ -271,6 +309,19 @@ namespace {
         }
         void end(LetIn &letin) {
             resolve(letin.value());
+
+            string value_type = letin.value().type();
+            if (value_type != "auto" && value_type[0] != '<') {
+                if (letin.type() == "auto") {
+                    letin.reset_type(value_type);
+                    transformed_ = true;
+                } else if (value_type != letin.type()) {
+                    throw std::runtime_error("declared function type does not equal body type");
+                }
+            } else if (value_type != "auto") {
+                has_unresolved_ = true;
+            }
+
             scope.pop();
         }
 
@@ -279,6 +330,19 @@ namespace {
         }
         void end(Program &p) {
             resolve(p.value());
+
+            string value_type = p.value().type();
+            if (value_type != "auto" && value_type[0] != '<') {
+                if (p.type() == "auto") {
+                    p.reset_type(value_type);
+                    transformed_ = true;
+                } else if (value_type != p.type()) {
+                    throw std::runtime_error("declared function type does not equal body type");
+                }
+            } else if (value_type != "auto") {
+                has_unresolved_ = true;
+            }
+
             scope.pop();
         }
 
