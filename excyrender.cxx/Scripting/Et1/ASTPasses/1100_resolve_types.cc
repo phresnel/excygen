@@ -60,7 +60,7 @@ TEST_CASE( "Et1/ASTPasses/1100_resolve_types.hh", "Type resolution" ) {
 
     REQUIRE(equal("let f(x) = 1 in f(2.0)",
 
-                  "let f(x) = 1, "
+                  "let int f(x) = 1, "
                   "    int f(float x) = 1 "
                   "in f(2.0)",
                   passes));
@@ -244,27 +244,21 @@ namespace {
         }
         void end(Binding &binding)
         {
-            // Resolve the return type only if the function is not generic.
-            bool is_generic = false;
-            for (auto arg : binding.arguments()) {
-                if (arg.type == "auto") {
-                    is_generic = true;
-                    break;
+            // Only transform the return type if function is not generic.
+            //auto body_type = binding.body().type();
+            auto body_type = ASTQueries::resolve_type(binding.body(), scope.top().symbols); // TODO: we should do this on every node (?)
+
+            if (body_type != "auto" && body_type[0] != '<') {
+                if (binding.type() == "auto") {
+                    binding.reset_type(body_type);
+                    transformed_ = true;
+                } else if (body_type != binding.type()) {
+                    throw std::runtime_error("declared function type does not equal body type");
                 }
+            } else {
+                has_unresolved_ = true;
             }
-            if (!is_generic) {
-                auto type = ASTQueries::resolve_type(binding.body(), scope.top().symbols);
-                if (!type.empty() && type[0] != '<') {
-                    if (type != binding.type()) {
-                        if (binding.type() != "auto") {
-                            throw std::runtime_error(binding.id() + " declared " + binding.type() +
-                                                     ", but function body is " + type);
-                        }
-                        binding.reset_type(type);
-                        transformed_ = true;
-                    }
-                }
-            }
+
             scope.pop();
         }
 
@@ -374,17 +368,20 @@ void resolve_types(shared_ptr<AST::ASTNode> ast) {
         ResolveTypes ll;
         ast->accept(ll);
         if (!ll.transformed()) {
-            if (ll.has_unresolved()) {
+            /*if (ll.has_unresolved()) {
                 throw std::runtime_error("program is not fully resolvable");
-            }
+            }*/
             break;
         }
 
-        ASTPrinters::PrettyPrinter pp(std::cerr);
+        /*ASTPrinters::PrettyPrinter pp(std::cerr);
         ast->accept(pp);
-        std::cerr << "\n";
+        std::cerr << "\n";*/
     }
     std::clog << "pass: resolve-types (" << i << "x)\n";
+    // TODO: we need another pass for resolving, were we cancel out unused functions,
+    //       because it might be that there are still unresoved bindings, which are only
+    //       unresolved because they are generic.
 }
 
 
