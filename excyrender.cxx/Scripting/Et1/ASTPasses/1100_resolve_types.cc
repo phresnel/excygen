@@ -27,6 +27,14 @@ TEST_CASE( "Et1/ASTPasses/1100_resolve_types.hh", "Type resolution" ) {
                   "let int f(int x) = 1 in f(2)",
                   passes));*/
 
+    REQUIRE(equal("let y = 1 in y",
+                  "let int y = 1 in y",
+                  passes));
+
+    REQUIRE(equal("let auto y = 1 in y",
+                  "let int y = 1 in y",
+                  passes));
+
     REQUIRE(equal("let f(int x) = 1 in f(2)",
                   "let int f(int x) = 1 in f(2)",
                   passes));
@@ -61,13 +69,10 @@ TEST_CASE( "Et1/ASTPasses/1100_resolve_types.hh", "Type resolution" ) {
                   "    y = f(2.0) "
                   "in f(2)",
 
-                  /*"let f(x) = x, "
+                  "let f(x) = x, "
                   "    float y = f(2.0), "
                   "    int f(int x) = x, "
                   "    float f(float x) = x "
-                  "in f(2)",*/
-                  "let f(x) = x, "
-                  "    y = f(2.0) "
                   "in f(2)",
                   passes));
 
@@ -188,7 +193,6 @@ namespace {
             bool ambiguous = false;
             for (auto b : scope.top().visible_bindings) {
                 int f = fitness(*b);
-                std::cerr << "[[" << b->id() << " f: " << f << "]]" << std::endl;
 
                 if (f > best_fitness) {
                     binding = b; // TODO: build list of candidates

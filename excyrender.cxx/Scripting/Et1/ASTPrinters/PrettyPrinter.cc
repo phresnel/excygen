@@ -34,3 +34,16 @@ TEST_CASE( "Et1/ASTPrinters/PrettyPrinter", "Pretty printing" ) {
     REQUIRE(compare_token_sequence("let int f(x) = x*2 in f(1)"));
 }
 //--------------------------------------------------------------------------------------------------
+
+namespace excyrender { namespace Nature { namespace Et1 { namespace ASTPrinters {
+
+std::string pretty_print(std::string in) {
+    auto ast = detail::to_ast(in);
+    if (!ast) return "";
+    std::stringstream ss;
+    PrettyPrinter pp(ss);
+    ast->accept(pp);
+    return ss.str();
+}
+
+} } } }

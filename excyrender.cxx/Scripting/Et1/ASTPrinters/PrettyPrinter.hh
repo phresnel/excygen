@@ -194,6 +194,8 @@ namespace excyrender { namespace Nature { namespace Et1 { namespace ASTPrinters 
         std::stack<Operation> scope;
     };
 
+    std::string pretty_print(std::string in);
+
 } } } }
 
 #endif // PRETTYPRINTER_HH_INCLUDED_20130821

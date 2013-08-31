@@ -46,18 +46,27 @@ bool equal (std::string const &in, std::string const &expected,
         throw std::logic_error(std::string("in equal(), upon building ast: ") + e.what());
     }
 
-    std::stringstream ss;
+    std::string got;
     try {
+        std::stringstream ss;
         ASTPrinters::PrettyPrinter dumper(ss);
         pass(prog);
         prog->accept(dumper);
+        got = ss.str();
     } catch (std::exception &e) {
         throw std::logic_error(std::string("in equal(), upon transform and pretty printing: ") + e.what());
     }
     try {
-        if (tokenize(ss.str()) != tokenize(expected)) {
-            std::clog << "expected: " << tokenize(expected) << '\n'
-                      << "got.....: " << tokenize(ss.str()) << std::endl;
+        const auto got_toks = tokenize(got),
+                   expected_toks = tokenize(expected);
+        if (got_toks != expected_toks) {
+            std::clog << "--tokens-------------------------------------------\n"
+                      << "got.....: " << got_toks << '\n'
+                      << "expected: " << expected_toks << '\n'
+                      << "--pretty-------------------------------------------\n"
+                      << "got{\n" << got << "\n}\n"
+                      << "expected{\n" << ASTPrinters::pretty_print(expected) << "\n}\n"
+                      << "---------------------------------------------------\n";
             return false;
         }
     } catch (std::exception &e) {
