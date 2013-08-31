@@ -276,26 +276,11 @@ namespace {
 
         void begin(Binding &binding)
         {
-            //scope.top().visible_bindings.push_back(&binding);
             scope.push(scope.top().enter_binding(binding));
         }
         void end(Binding &binding)
         {
-            // Only transform the return type if function is not generic.
-            auto body_type = binding.body().type();
-            //auto body_type = ASTQueries::resolve_type(binding.body(), scope.top().symbols); // TODO: we should do this on every node (?)
-            //std::cerr << binding.id() << ":  " << body_type << " <--> " << binding.type() << std::endl;
-            if (body_type != "auto" && body_type[0] != '<') {
-                if (binding.type() == "auto") {
-                    binding.reset_type(body_type);
-                    transformed_ = true;
-                } else if (body_type != binding.type()) {
-                    throw std::runtime_error("declared function type does not equal body type");
-                }
-            } else if (body_type != "auto") {
-                has_unresolved_ = true;
-            }
-
+            resolve(binding.body(), binding);
             scope.pop();
         }
 
@@ -303,20 +288,7 @@ namespace {
             scope.push(scope.top().enter_declarative_region(letin.bindings()));
         }
         void end(LetIn &letin) {
-            resolve(letin.value());
-
-            string value_type = letin.value().type();
-            if (value_type != "auto" && value_type[0] != '<') {
-                if (letin.type() == "auto") {
-                    letin.reset_type(value_type);
-                    transformed_ = true;
-                } else if (value_type != letin.type()) {
-                    throw std::runtime_error("declared function type does not equal body type");
-                }
-            } else if (value_type != "auto") {
-                has_unresolved_ = true;
-            }
-
+            resolve(letin.value(), letin);
             scope.pop();
         }
 
@@ -324,20 +296,7 @@ namespace {
             scope.push(Scope::EnterProgram(p.bindings()));
         }
         void end(Program &p) {
-            resolve(p.value());
-
-            string value_type = p.value().type();
-            if (value_type != "auto" && value_type[0] != '<') {
-                if (p.type() == "auto") {
-                    p.reset_type(value_type);
-                    transformed_ = true;
-                } else if (value_type != p.type()) {
-                    throw std::runtime_error("declared function type does not equal body type");
-                }
-            } else if (value_type != "auto") {
-                has_unresolved_ = true;
-            }
-
+            resolve(p.value(), p);
             scope.pop();
         }
 
@@ -358,6 +317,22 @@ namespace {
                  }
              } else if (binary.type() != type) {
                  throw std::logic_error("type clash in resolve_binary");
+             }
+         }
+
+         void resolve (ASTNode &ast, ASTNode &update_to) {
+             resolve(ast);
+
+             string value_type = ast.type();
+             if (value_type != "auto" && value_type[0] != '<') {
+                 if (update_to.type() == "auto") {
+                     update_to.reset_type(value_type);
+                     transformed_ = true;
+                 } else if (value_type != update_to.type()) {
+                     throw std::runtime_error("declared function type does not equal body type");
+                 }
+             } else if (value_type != "auto") {
+                 has_unresolved_ = true;
              }
          }
 
