@@ -23,10 +23,6 @@ TEST_CASE( "Et1/ASTPasses/1100_resolve_types.hh", "Type resolution" ) {
 
     auto passes = [](std::shared_ptr<AST::Program> ast) { ASTPasses::resolve_types(ast); };
 
-    /*REQUIRE(equal("let f(x) = y in f(2)",  // TODO: make this fail
-                  "let int f(int x) = 1 in f(2)",
-                  passes));*/
-
     REQUIRE(equal("let y = 1 in y",
                   "let int y = 1 in y",
                   passes));
@@ -71,53 +67,48 @@ TEST_CASE( "Et1/ASTPasses/1100_resolve_types.hh", "Type resolution" ) {
 
                   "let f(x) = x, "
                   "    float y = f(2.0), "
-                  "    int f(int x) = x, "
-                  "    float f(float x) = x "
+                  "    float f(float x) = x, "
+                  "    int f(int x) = x "
                   "in f(2)",
                   passes));
 
-return;
 
     REQUIRE(equal("let f(x) = 1.0 in f(2)",
-                  "let float f(int x) = 1.0 in f(2)",
+                  "let float f(x) = 1.0, float f(int x) = 1.0 in f(2)",
                   passes));
 
-    REQUIRE(equal("let f(x) = 1.0 in f(2)",
-                  "let float f(float x) = 1.0 in f(2.0)",
-                  passes));
-
-    // This tests auto-emitted overloads.
     REQUIRE(equal("let f(x) = 1, "
                   "    a = f(1), "
                   "    b = f(1.0) "
                   "in 1",
 
-                  "let int f(int x) = 1, "
-                  "    int f(float x) = 1, "
+                  "let int f(x) = 1, "
                   "    int a = f(1), "
-                  "    int b = f(1.0) "
+                  "    int b = f(1.0), "
+                  "    int f(int x) = 1, "
+                  "    int f(float x) = 1 "
                   "in 1",
                   passes));
 
-    REQUIRE(equal("let f(x,y) = 1, "
+    REQUIRE(equal("let f(x,y) = x, "
                   "    a = f(1, 1),  "
                   "    b = f(1.0, 1), "
                   "    c = f(1, 1.0), "
                   "    d = f(1.0, 1.0) "
                   "in 1",
 
-                  "let int   f(int x, int y) = x, "
-                  "    float f(float x, int y) = x, "
-                  "    int   f(int x, float y) = x, "
-                  "    float f(float x, float y) = x, "
+                  "let f(x,y) = x, "
                   "    int   a = f(1, 1),  "
                   "    float b = f(1.0, 1), "
                   "    int   c = f(1, 1.0), "
-                  "    float d = f(1.0, 1.0) "
+                  "    float d = f(1.0, 1.0), "
+
+                  "    int   f(int x, int y) = x, "
+                  "    float f(float x, int y) = x, "
+                  "    int   f(int x, float y) = x, "
+                  "    float f(float x, float y) = x "
                   "in 1",
                   passes));
-
-    // TODO: check for thrown exceptions upon type mismatches
 }
 //--------------------------------------------------------------------------------------------------
 
@@ -136,27 +127,28 @@ namespace {
         bool has_unresolved() const { return has_unresolved_; }
 
         void begin(Addition &) {}
-        void end(Addition &) {}
+        void end(Addition &bin) { resolve(bin); }
 
         void begin(Subtraction &) {}
-        void end(Subtraction &) {}
+        void end(Subtraction &bin) { resolve(bin); }
 
         void begin(Multiplication &) {}
-        void end(Multiplication &) {}
+        void end(Multiplication &bin) { resolve(bin); }
 
         void begin(Division &) {}
-        void end(Division &) {}
+        void end(Division &bin) { resolve(bin); }
 
-        void begin(IntegerLiteral &) {}
+        void begin(IntegerLiteral &term) { resolve(term); }
         void end(IntegerLiteral &) {}
 
-        void begin(RealLiteral &) {}
+        void begin(RealLiteral &term) { resolve(term); }
         void end(RealLiteral &) {}
 
         void begin(Call &) {}
 
         void end(Call &call)
         {
+            // TODO: reset type of call
             // TODO: use end(Call&) when asts have their type resolved already
             std::vector<string> types;
             for (auto &arg : call.arguments()) {
@@ -216,6 +208,11 @@ namespace {
                 throw std::runtime_error("multiple instantiations of " + call.id() + " are ambiguous");
             }
             if (binding) {
+                if (call.type() == "auto" && binding->type()!="auto" && binding->type()[0]!='<') {
+                    call.reset_type(binding->type()); // TODO: execute this every time, but need to remember bound binding
+                    transformed_ = true;
+                }
+                // TODO: remember the binding in the call
                 bool is_generic = false;
                 for (auto arg : binding->arguments()) {
                     if (arg.type == "auto") {
@@ -224,18 +221,22 @@ namespace {
                     }
                 }
                 if (is_generic) {
-                    if (scope.top().instantiate(*binding, types)) {
-                        transformed_ = true;
+                    if (Binding *insta = scope.top().instantiate(*binding, types)) {
+                        insta->accept(*this);
+                        if (call.type() == "auto" && binding->type()!="auto" && binding->type()[0]!='<') {
+                            call.reset_type(insta->type());
+                            transformed_ = true;
+                        }
                     }
                 }
             }
         }
 
         void begin(Negation &) {}
-        void end(Negation &) {}
+        void end(Negation &neg) { resolve(neg); }
 
         void begin(ParenExpression &) {}
-        void end(ParenExpression &) {}
+        void end(ParenExpression &p) { resolve(p); }
 
         void begin(Binding &binding)
         {
@@ -245,9 +246,9 @@ namespace {
         void end(Binding &binding)
         {
             // Only transform the return type if function is not generic.
-            //auto body_type = binding.body().type();
-            auto body_type = ASTQueries::resolve_type(binding.body(), scope.top().symbols); // TODO: we should do this on every node (?)
-
+            auto body_type = binding.body().type();
+            //auto body_type = ASTQueries::resolve_type(binding.body(), scope.top().symbols); // TODO: we should do this on every node (?)
+            //std::cerr << binding.id() << ":  " << body_type << " <--> " << binding.type() << std::endl;
             if (body_type != "auto" && body_type[0] != '<') {
                 if (binding.type() == "auto") {
                     binding.reset_type(body_type);
@@ -262,26 +263,44 @@ namespace {
             scope.pop();
         }
 
-        void begin(AST::Identifier &) {}
+        void begin(AST::Identifier &id) { resolve(id); }
         void end(AST::Identifier &) {}
 
         void begin(LetIn &letin) {
             scope.push(scope.top().enter_declarative_region(letin.bindings()));
         }
-        void end(LetIn &) {
+        void end(LetIn &letin) {
+            resolve(letin.value());
             scope.pop();
         }
 
         void begin(Program &p) {
             scope.push(Scope::EnterProgram(p.bindings()));
         }
-        void end(Program &) {
+        void end(Program &p) {
+            resolve(p.value());
             scope.pop();
         }
 
     private:
          bool transformed_ = false;
          bool has_unresolved_ = false;
+
+
+         void resolve (ASTNode &binary) {
+             auto type = ASTQueries::resolve_type(binary, scope.top().symbols);
+             auto btype = binary.type();
+             if (binary.type() == "auto") {
+                 if (type[0] == '<' || type=="auto") {
+                     has_unresolved_ = true;
+                 } else {
+                     binary.reset_type(type);
+                     transformed_ = true;
+                 }
+             } else if (binary.type() != type) {
+                 throw std::logic_error("type clash in resolve_binary");
+             }
+         }
 
          struct Scope {
              std::map<string, string> symbols;
@@ -317,9 +336,9 @@ namespace {
                 return ret;
              }
 
-             // Returns true if instantiation happened.
-             //         false if nothing happened.
-             bool instantiate(Binding& binding, std::vector<string> types) {
+             // Returns: new     <- instantiation happened.
+             //          nullptr <- nothing happened.
+             Binding* instantiate(Binding& binding, std::vector<string> types) {
                 if (types.size() != binding.arguments().size())
                     throw std::runtime_error("wrong number of arguments in call to " + binding.id());
 
@@ -333,7 +352,7 @@ namespace {
                     }
                 }
                 if (is_optimal)
-                    return false;
+                    return nullptr;
 
                 shared_ptr<Binding> insta (binding.deep_copy());
 
@@ -348,7 +367,8 @@ namespace {
 
                 bindings_declarative_region->push_back(insta);
                 visible_bindings.push_back(&*insta);
-                return true;
+
+                return &*insta;
              }
          };
 

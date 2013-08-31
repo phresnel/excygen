@@ -58,6 +58,8 @@ TEST_CASE( "Et1/ASTQueries/resolve_type.hh", "Type resolution" ) {
     REQUIRE(resolve_type(to_ast("f(x)+1")) == "<<call>+int>");
     REQUIRE(resolve_type(to_ast("let int f(x) = 0.0 in f(1)")) == "<call>");
 
+    REQUIRE(resolve_type(to_ast("let f(x) = x in f(2)")) == "<call>");
+
     // Tests with symbol table.
     REQUIRE(resolve_type(to_ast("x"), {{"x","int"}}) == "int");
     REQUIRE(resolve_type(to_ast("x+y"), {{"x","int"}}) == "<int+<id>>");
@@ -139,15 +141,20 @@ namespace {
         void end(AST::Identifier const &) {}
 
         void begin(LetIn const &) {}
-        void before_body(LetIn const &) {
+        void before_body(LetIn const &letin) {
+            for (size_t i=0; i!=letin.bindings().size(); ++i) {
+                if (scope.empty())
+                    throw std::logic_error("empty stack upon popping bindings");
+                scope.pop();
+            }
         }
         void end(LetIn const &) {
-            if (scope.empty()) throw std::logic_error("reduce_binary: empty stack (1)");
+            /*if (scope.empty()) throw std::logic_error("reduce_binary: empty stack (1)");
             const string rhs = scope.top();
             scope.pop();
             if (scope.empty()) throw std::logic_error("reduce_binary: empty stack (2)");
             scope.pop();
-            scope.push(rhs);
+            scope.push(rhs);*/
         }
 
         void begin(Program const &) {}
