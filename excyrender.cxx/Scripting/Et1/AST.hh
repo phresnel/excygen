@@ -142,10 +142,11 @@ namespace excyrender { namespace Nature { namespace Et1 { namespace AST {
     };
 
     struct Expression : ASTNode {
-        Expression (token_iter from, token_iter to) : ASTNode(from, to) {}
-        Expression (token_iter from, token_iter to, string type) : ASTNode(from, to, type) {}
         virtual Expression* deep_copy() const = 0;
         virtual ~Expression() {}
+    protected:
+        Expression (token_iter from, token_iter to) : ASTNode(from, to) {}
+        Expression (token_iter from, token_iter to, string type) : ASTNode(from, to, type) {}
     };
 
 
@@ -286,41 +287,41 @@ namespace excyrender { namespace Nature { namespace Et1 { namespace AST {
 
     // -- "End points" -----------------------------------------------------------------------------
     struct Terminal : Expression {
+        virtual ~Terminal() {}
+    protected:
         Terminal (token_iter from, token_iter to) : Expression(from, to) {}
         Terminal (token_iter from, token_iter to, string type) : Expression(from, to, type) {}
-        virtual ~Terminal() {}
     };
 
-    struct Atom : Terminal {
-        Atom (token_iter from, token_iter to) : Terminal(from, to) {}
-        virtual ~Atom() {}
+    struct Literal : Terminal {
+        virtual ~Literal() {}
+        string value() const { return value_; }
+    protected:
+        Literal (token_iter from, token_iter to, string value) :
+            Terminal(from, to), value_(value) {}
+    private:
+        string value_;
     };
 
-    struct IntegerLiteral final : Atom {
+    struct IntegerLiteral final : Literal {
         IntegerLiteral (token_iter from, token_iter to, string value) :
-            Atom(from, to), value_(value) {}
+            Literal(from, to, value) {}
 
         void accept(Visitor &v) const {
             v.visit(*this);
         }
         void accept(Transform &v) {
             v.transform(*this);
-        }
-
-        string value() const {
-            return value_;
         }
 
         IntegerLiteral *deep_copy() const {
             return new IntegerLiteral(from(), to(), value());
         }
-    private:
-        string value_; // Using string as C++ int is not necessarily the same as Et1 int.
     };
 
-    struct RealLiteral final : Atom {
+    struct RealLiteral final : Literal {
         RealLiteral (token_iter from, token_iter to, string value) :
-            Atom(from, to), value_(value) {}
+            Literal(from, to, value) {}
 
         void accept(Visitor &v) const {
             v.visit(*this);
@@ -329,22 +330,24 @@ namespace excyrender { namespace Nature { namespace Et1 { namespace AST {
             v.transform(*this);
         }
 
-        string value() const {
-            return value_;
-        }
-
         RealLiteral *deep_copy() const {
             return new RealLiteral(from(), to(), value());
         }
-    private:
-        string value_; // Using string as C++ int is not necessarily the same as Et1 int.
     };
 
-    struct Identifier final : Atom {
-        Identifier (token_iter from, token_iter to, string name) : Atom(from, to), name(name) {}
-        virtual ~Identifier() {}
 
+    struct Reference : Terminal {
+        virtual ~Reference() {}
         string id() const { return name; }
+    protected:
+        Reference (token_iter from, token_iter to, string name) : Terminal(from, to), name(name) {}
+    private:
+        string name;
+    };
+
+    struct Identifier final : Reference {
+        Identifier (token_iter from, token_iter to, string name) :
+            Reference(from, to, name) {}
 
         void accept(Visitor &v) const {
             v.visit(*this);
@@ -356,18 +359,13 @@ namespace excyrender { namespace Nature { namespace Et1 { namespace AST {
         Identifier *deep_copy() const {
             return new Identifier(from(), to(), id());
         }
-
-    private:
-        string name;
     };
 
-    struct Call final : Terminal {
+    struct Call final : Reference {
         Call (token_iter from, token_iter to,
               std::string const &id, vector<shared_ptr<Expression>> const &args)
-        : Terminal(from, to), id_(id), arguments_(args)
+        : Reference(from, to, id), arguments_(args)
         {}
-
-        std::string id() const { return id_; }
 
         vector<shared_ptr<Expression>> const &arguments() const { return arguments_; }
         vector<shared_ptr<Expression>> &arguments() { return arguments_; }
@@ -399,7 +397,6 @@ namespace excyrender { namespace Nature { namespace Et1 { namespace AST {
         }
 
     private:
-        std::string id_;
         vector<shared_ptr<Expression>> arguments_;
     };
 

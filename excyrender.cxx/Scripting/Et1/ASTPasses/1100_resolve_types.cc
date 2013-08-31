@@ -182,20 +182,9 @@ namespace {
 
         void begin(Call &) {}
 
-        void end(Call &call)
-        {
-            // TODO: reset type of call
-            // TODO: use end(Call&) when asts have their type resolved already
-            std::vector<string> types;
-            for (auto &arg : call.arguments()) {
-                string type = arg->type();
-                if (type.empty() || type[0] == '<' || type=="auto") {
-                    has_unresolved_ = true;
-                    return;
-                }
-                types.push_back(type);
-            }
 
+        static Binding* lookup (Call &call, vector<Binding*> visible_bindings)
+        {
             auto fitness = [&](Binding &b) -> int {
                 if (b.id() != call.id())
                     return -1;
@@ -215,11 +204,10 @@ namespace {
                 return f;
             };
 
-            // lookup the binding to be called
             Binding* binding = nullptr;
             int best_fitness = 0;
             bool ambiguous = false;
-            for (auto b : scope.top().visible_bindings) {
+            for (auto b : visible_bindings) {
                 int f = fitness(*b);
 
                 if (f > best_fitness) {
@@ -231,18 +219,24 @@ namespace {
                 }
             }
 
-            /*
-            std::cerr << "best fitness: " << best_fitness << std::endl;
-            std::cerr << "id: " << binding->id() << std::endl;
-            for (auto a : binding->arguments()) {
-                std::cerr << a.type << std::endl;
-            }
-            std::cerr << std::endl;
-            */
-
             if (ambiguous) {
                 throw std::runtime_error("multiple instantiations of " + call.id() + " are ambiguous");
             }
+
+            return binding;
+        }
+
+        void end(Call &call)
+        {
+            for (auto &arg : call.arguments()) {
+                string type = arg->type();
+                if (type.empty() || type[0] == '<' || type=="auto") {
+                    has_unresolved_ = true;
+                    return;
+                }
+            }
+
+            Binding* binding = lookup(call, scope.top().visible_bindings);
             if (binding) {
                 if (call.type() == "auto" && binding->type()!="auto" && binding->type()[0]!='<') {
                     call.reset_type(binding->type()); // TODO: execute this every time, but need to remember bound binding
@@ -257,7 +251,7 @@ namespace {
                     }
                 }
                 if (is_generic) {
-                    if (Binding *insta = scope.top().instantiate(*binding, types)) {
+                    if (Binding *insta = scope.top().instantiate(*binding, call.arguments())) {
                         insta->accept(*this);
                         if (call.type() == "auto" && binding->type()!="auto" && binding->type()[0]!='<') {
                             call.reset_type(insta->type());
@@ -372,15 +366,15 @@ namespace {
 
              // Returns: new     <- instantiation happened.
              //          nullptr <- nothing happened.
-             Binding* instantiate(Binding& binding, std::vector<string> types) {
-                if (types.size() != binding.arguments().size())
+             Binding* instantiate(Binding& binding, vector<shared_ptr<Expression>> const &args) {
+                if (args.size() != binding.arguments().size())
                     throw std::runtime_error("wrong number of arguments in call to " + binding.id());
 
                 // Check if this is the optimal candidate already.
                 // If so, do not re-instantiate.
                 bool is_optimal = true;
-                for (size_t a=0, num_args=types.size(); a!=num_args; ++a) {
-                    if (binding.arguments()[a].type != types[a]) {
+                for (size_t a=0, num_args=args.size(); a!=num_args; ++a) {
+                    if (binding.arguments()[a].type != args[a]->type()) {
                         is_optimal = false;
                         break;
                     }
@@ -391,7 +385,7 @@ namespace {
                 shared_ptr<Binding> insta (binding.deep_copy());
 
                 for (size_t a=0, num_args=insta->arguments().size(); a!=num_args; ++a) {
-                    const auto &desired = types[a];
+                    const auto &desired = args[a]->type();
                     Argument &arg = insta->arguments()[a];
 
                     if (arg.type != "auto" && desired != arg.type)
