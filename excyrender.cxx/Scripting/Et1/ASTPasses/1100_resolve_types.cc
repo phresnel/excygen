@@ -176,11 +176,9 @@ namespace {
         void begin(Division &) {}
         void end(Division &bin) { resolve(bin); }
 
-        void begin(IntegerLiteral &term) { resolve(term); }
-        void end(IntegerLiteral &) {}
-
-        void begin(RealLiteral &term) { resolve(term); }
-        void end(RealLiteral &) {}
+        void transform(IntegerLiteral &term) { resolve(term); }
+        void transform(RealLiteral &term) { resolve(term); }
+        void transform(AST::Identifier &id) { resolve(id); }
 
         void begin(Call &) {}
 
@@ -300,9 +298,6 @@ namespace {
 
             scope.pop();
         }
-
-        void begin(AST::Identifier &id) { resolve(id); }
-        void end(AST::Identifier &) {}
 
         void begin(LetIn &letin) {
             scope.push(scope.top().enter_declarative_region(letin.bindings()));

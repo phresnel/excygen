@@ -98,11 +98,18 @@ namespace {
 
         void infix() {}
 
-        void begin(IntegerLiteral const &) { scope.push("int"); }
-        void end(IntegerLiteral const &) {}
+        void visit(IntegerLiteral const &) { scope.push("int"); }
+        void visit(RealLiteral const &) { scope.push("float"); }
 
-        void begin(RealLiteral const &) { scope.push("float"); }
-        void end(RealLiteral const &) {}
+        void visit(AST::Identifier const &id)
+        {
+            auto e = symbols.find(id.id());
+            if (e!=symbols.end()) {
+                scope.push(e->second);
+            } else {
+                scope.push("<id>");
+            }
+        }
 
         void begin(Call const &call) {
             if (call.type() == "auto") {
@@ -128,17 +135,6 @@ namespace {
 
         void begin(Binding const &) {}
         void end(Binding const &) {}
-
-        void begin(AST::Identifier const &id)
-        {
-            auto e = symbols.find(id.id());
-            if (e!=symbols.end()) {
-                scope.push(e->second);
-            } else {
-                scope.push("<id>");
-            }
-        }
-        void end(AST::Identifier const &) {}
 
         void begin(LetIn const &) {}
         void before_body(LetIn const &letin) {

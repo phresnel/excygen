@@ -104,11 +104,9 @@ namespace {
         void begin(Division &op) { binary(op); }
         void end(Division &) {}
 
-        void begin(IntegerLiteral &) {}
-        void end(IntegerLiteral &) {}
-
-        void begin(RealLiteral &) {}
-        void end(RealLiteral &) {}
+        void transform(IntegerLiteral &) {}
+        void transform(RealLiteral &) {}
+        void transform(AST::Identifier &) {}
 
         void begin(Call &call) {
             if (!cross_bindings && binding_depth>0)
@@ -141,9 +139,6 @@ namespace {
         void end(Binding &) {
             --binding_depth;
         }
-
-        void begin(AST::Identifier &) {}
-        void end(AST::Identifier &) {}
 
         void begin(LetIn &letin) {
             if (!cross_bindings && binding_depth>0)

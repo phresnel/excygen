@@ -69,20 +69,20 @@ namespace excyrender { namespace Nature { namespace Et1 { namespace ASTPrinters 
         {
         }
 
-        void begin(AST::IntegerLiteral const &lit)
+        void visit(AST::IntegerLiteral const &lit)
         {
             os << lit.value();
-        }
-        void end(AST::IntegerLiteral const &)
-        {
         }
 
-        void begin(AST::RealLiteral const &lit)
+        void visit(AST::RealLiteral const &lit)
         {
             os << lit.value();
         }
-        void end(AST::RealLiteral const &)
+
+        void visit(AST::Identifier const &id)
         {
+            //if (scope.top().argCount++) os << scope.top().Operator;
+            os << id.id();
         }
 
         void begin(AST::Call const &call)
@@ -140,15 +140,6 @@ namespace excyrender { namespace Nature { namespace Et1 { namespace ASTPrinters 
         void end(AST::Binding const &)
         {
             scope.pop();
-        }
-
-        void begin(AST::Identifier const &id)
-        {
-            //if (scope.top().argCount++) os << scope.top().Operator;
-            os << id.id();
-        }
-        void end(AST::Identifier const &)
-        {
         }
 
         void begin(AST::LetIn const &letin)

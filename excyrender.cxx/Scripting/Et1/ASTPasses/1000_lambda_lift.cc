@@ -84,11 +84,16 @@ namespace {
         void begin(Division &) {}
         void end(Division &) {}
 
-        void begin(IntegerLiteral &) {}
-        void end(IntegerLiteral &) {}
-
-        void begin(RealLiteral &) {}
-        void end(RealLiteral &) {}
+        void transform(IntegerLiteral &) {}
+        void transform(RealLiteral &) {}
+        void transform(AST::Identifier &id)
+        {
+            if (binding_depth != 1)
+                return;
+            if (id.id() != call_name)
+                return;
+            throw std::logic_error("AppendLifted::begin(Identifier): reached point deemed unreachable");
+        }
 
         void begin(Call &call)
         {
@@ -118,15 +123,6 @@ namespace {
             --binding_depth;
         }
 
-        void begin(AST::Identifier &id)
-        {
-            if (binding_depth != 1)
-                return;
-            if (id.id() != call_name)
-                return;
-            throw std::logic_error("AppendLifted::begin(Identifier): reached point deemed unreachable");
-        }
-        void end(AST::Identifier &) {}
 
         void begin(LetIn &) {}
         void end(LetIn &) {}
@@ -155,11 +151,9 @@ namespace {
         void begin(Division &) {}
         void end(Division &) {}
 
-        void begin(IntegerLiteral &) {}
-        void end(IntegerLiteral &) {}
-
-        void begin(RealLiteral &) {}
-        void end(RealLiteral &) {}
+        void transform(IntegerLiteral &) {}
+        void transform(RealLiteral &) {}
+        void transform(AST::Identifier &id) {}
 
         void begin(Call &) {}
         void end(Call &) {}
@@ -218,9 +212,6 @@ namespace {
         {
             scope.pop();
         }
-
-        void begin(AST::Identifier &) {}
-        void end(AST::Identifier &) {}
 
         void begin(LetIn &) {}
         void end(LetIn &) {}

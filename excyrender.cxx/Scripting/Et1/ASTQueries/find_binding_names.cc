@@ -70,11 +70,9 @@ namespace {
         void begin(AST::Division const &) {}
         void end(AST::Division const &) {}
 
-        void begin(AST::IntegerLiteral const &) {}
-        void end(AST::IntegerLiteral const &) {}
-
-        void begin(AST::RealLiteral const &) {}
-        void end(AST::RealLiteral const &) {}
+        void visit(AST::IntegerLiteral const &) {}
+        void visit(AST::RealLiteral const &) {}
+        void visit(AST::Identifier const &id) {}
 
         void begin(AST::Call const &) {}
         void end(AST::Call const &) {}
@@ -93,9 +91,6 @@ namespace {
         {
             --binding_depth;
         }
-
-        void begin(AST::Identifier const &id) {}
-        void end(AST::Identifier const &) {}
 
         void begin(AST::LetIn const &letin)
         {

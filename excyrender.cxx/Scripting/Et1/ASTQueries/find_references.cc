@@ -79,11 +79,15 @@ namespace {
         void begin(AST::Division const &) {}
         void end(AST::Division const &) {}
 
-        void begin(AST::IntegerLiteral const &) {}
-        void end(AST::IntegerLiteral const &) {}
+        void visit(AST::IntegerLiteral const &) {}
+        void visit(AST::RealLiteral const &) {}
 
-        void begin(AST::RealLiteral const &) {}
-        void end(AST::RealLiteral const &) {}
+        void visit(AST::Identifier const &id)
+        {
+            if (!cross_bindings && binding_depth>0)
+                return;
+            refs->insert(id.id());
+        }
 
         void begin(AST::Call const &) {}
         void end(AST::Call const &) {}
@@ -102,14 +106,6 @@ namespace {
         {
             --binding_depth;
         }
-
-        void begin(AST::Identifier const &id)
-        {
-            if (!cross_bindings && binding_depth>0)
-                return;
-            refs->insert(id.id());
-        }
-        void end(AST::Identifier const &) {}
 
         void begin(AST::LetIn const &) {}
         void end(AST::LetIn const &) {}

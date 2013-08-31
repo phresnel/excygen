@@ -49,11 +49,9 @@ namespace excyrender { namespace Nature { namespace Et1 { namespace AST {
 
         virtual void infix() {}
 
-        virtual void begin(IntegerLiteral const &) = 0;
-        virtual void end(IntegerLiteral const &) = 0;
-
-        virtual void begin(RealLiteral const &) = 0;
-        virtual void end(RealLiteral const &) = 0;
+        virtual void visit(IntegerLiteral const &) = 0;
+        virtual void visit(RealLiteral const &) = 0;
+        virtual void visit(Identifier const &) = 0;
 
         virtual void begin(Call const &) = 0;
         virtual void end(Call const &) = 0;
@@ -66,9 +64,6 @@ namespace excyrender { namespace Nature { namespace Et1 { namespace AST {
 
         virtual void begin(Binding const &) = 0;
         virtual void end(Binding const &) = 0;
-
-        virtual void begin(Identifier const &) = 0;
-        virtual void end(Identifier const &) = 0;
 
         virtual void begin(LetIn const &) = 0;
         virtual void before_body(LetIn const &) {}
@@ -91,11 +86,9 @@ namespace excyrender { namespace Nature { namespace Et1 { namespace AST {
         virtual void begin(Division &) = 0;
         virtual void end(Division &) = 0;
 
-        virtual void begin(IntegerLiteral &) = 0;
-        virtual void end(IntegerLiteral &) = 0;
-
-        virtual void begin(RealLiteral &) = 0;
-        virtual void end(RealLiteral &) = 0;
+        virtual void transform(IntegerLiteral &) = 0;
+        virtual void transform(RealLiteral &) = 0;
+        virtual void transform(Identifier &) = 0;
 
         virtual void begin(Call &) = 0;
         virtual void end(Call &) = 0;
@@ -108,9 +101,6 @@ namespace excyrender { namespace Nature { namespace Et1 { namespace AST {
 
         virtual void begin(Binding &) = 0;
         virtual void end(Binding &) = 0;
-
-        virtual void begin(Identifier &) = 0;
-        virtual void end(Identifier &) = 0;
 
         virtual void begin(LetIn &) = 0;
         virtual void end(LetIn &) = 0;
@@ -301,22 +291,20 @@ namespace excyrender { namespace Nature { namespace Et1 { namespace AST {
         virtual ~Terminal() {}
     };
 
-    struct Literal : Terminal {
-        Literal (token_iter from, token_iter to, string const &type) : Terminal(from, to, type) {}
-        virtual ~Literal() {}
+    struct Atom : Terminal {
+        Atom (token_iter from, token_iter to) : Terminal(from, to) {}
+        virtual ~Atom() {}
     };
 
-    struct IntegerLiteral final : Literal {
+    struct IntegerLiteral final : Atom {
         IntegerLiteral (token_iter from, token_iter to, string value) :
-            Literal(from, to, "int"), value_(value) {}
+            Atom(from, to), value_(value) {}
 
         void accept(Visitor &v) const {
-            v.begin(*this);
-            v.end(*this);
+            v.visit(*this);
         }
         void accept(Transform &v) {
-            v.begin(*this);
-            v.end(*this);
+            v.transform(*this);
         }
 
         string value() const {
@@ -330,17 +318,15 @@ namespace excyrender { namespace Nature { namespace Et1 { namespace AST {
         string value_; // Using string as C++ int is not necessarily the same as Et1 int.
     };
 
-    struct RealLiteral final : Literal {
+    struct RealLiteral final : Atom {
         RealLiteral (token_iter from, token_iter to, string value) :
-            Literal(from, to, "float"), value_(value) {}
+            Atom(from, to), value_(value) {}
 
         void accept(Visitor &v) const {
-            v.begin(*this);
-            v.end(*this);
+            v.visit(*this);
         }
         void accept(Transform &v) {
-            v.begin(*this);
-            v.end(*this);
+            v.transform(*this);
         }
 
         string value() const {
@@ -354,19 +340,17 @@ namespace excyrender { namespace Nature { namespace Et1 { namespace AST {
         string value_; // Using string as C++ int is not necessarily the same as Et1 int.
     };
 
-    struct Identifier final : Terminal {
-        Identifier (token_iter from, token_iter to, string name) : Terminal(from, to), name(name) {}
+    struct Identifier final : Atom {
+        Identifier (token_iter from, token_iter to, string name) : Atom(from, to), name(name) {}
         virtual ~Identifier() {}
 
         string id() const { return name; }
 
         void accept(Visitor &v) const {
-            v.begin(*this);
-            v.end(*this);
+            v.visit(*this);
         }
         void accept(Transform &v) {
-            v.begin(*this);
-            v.end(*this);
+            v.transform(*this);
         }
 
         Identifier *deep_copy() const {
