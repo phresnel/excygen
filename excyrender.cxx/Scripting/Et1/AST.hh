@@ -465,6 +465,12 @@ namespace excyrender { namespace Nature { namespace Et1 { namespace AST {
 
         string id() const { return id_; }
 
+        bool is_generic() const {
+            return std::any_of(arguments().begin(),
+                               arguments().end(),
+                               [](Argument const &arg) -> bool { return !arg.type; });
+        }
+
         Expression const &body() const { return *body_; }
         Expression &body() { return *body_; }
         vector<Argument> const &arguments() const { return arguments_; }

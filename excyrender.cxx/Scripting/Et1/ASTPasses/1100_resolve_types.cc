@@ -4,6 +4,7 @@
 
 #include "1100_resolve_types.hh"
 #include "../ASTQueries/resolve_type.hh"
+#include "../ASTQueries/has_unresolved.hh"
 
 #include <stack>
 #include <iostream>
@@ -147,6 +148,12 @@ TEST_CASE( "Et1/ASTPasses/1100_resolve_types.hh", "Type resolution" ) {
                   "   in g(x) "
                   "in f(2.0) ",
                   passes));
+
+    return; // TODO: include below test in later function. it's a test for lambda-lifting and type-res.
+    REQUIRE(equal("let y=2, f(x) = y in f(y)",
+                  "let int y=2, f(x,y) = y, int f(int x, int y) = y in f(y,y)",
+                  passes));
+
 }
 //--------------------------------------------------------------------------------------------------
 
@@ -161,8 +168,6 @@ namespace {
     using std::string;
 
     struct ResolveTypes final : Transform {
-        bool transformed() const { return transformed_; }
-        bool has_unresolved() const { return has_unresolved_; }
 
         void begin(Addition &) {}
         void end(Addition &bin) { resolve(bin); }
@@ -178,7 +183,18 @@ namespace {
 
         void transform(IntegerLiteral &term) { resolve(term); }
         void transform(RealLiteral &term) { resolve(term); }
-        void transform(AST::Identifier &id) { resolve(id); }
+
+        void transform(AST::Identifier &id) {
+            resolve(id);
+            if (!id.type()) {
+                // Try to look up bindings, which are not in the symbol table.
+                Call call(id.from(), id.to(), id.id(), {});
+                begin(call);
+                end(call);
+                if (call.type())
+                    id.reset_type(call.type());
+            }
+        }
 
         void begin(Call &) {}
 
@@ -187,9 +203,9 @@ namespace {
         {
             auto fitness = [&](Binding &b) -> int {
                 if (b.id() != call.id())
-                    return -1;
+                    return -2;
                 if (b.arguments().size() != call.arguments().size())
-                    return -1;
+                    return -2;
                 // count the number of matching arguments.
                 int f = 0;
                 for (size_t i=0; i<b.arguments().size(); ++i) {
@@ -205,7 +221,7 @@ namespace {
             };
 
             Binding* binding = nullptr;
-            int best_fitness = 0;
+            int best_fitness = -1;
             bool ambiguous = false;
 
             for (auto b : visible_bindings) {
@@ -231,46 +247,34 @@ namespace {
         {
             for (auto &arg : call.arguments()) {
                 if (!arg->type()) {
-                    has_unresolved_ = true;
                     return;
                 }
             }
 
             Binding* binding = lookup(call, scope.top().visible_bindings);
             if (binding) {
-                if (!call.type()) {
-                    if (binding->type()) {
-                        call.reset_type(binding->type()); // TODO: execute this every time, but need to remember bound binding
-                        transformed_ = true;
-                    } else {
-                        has_unresolved_ = true;
-                    }
-                }
                 // If the looked up function is generic, we need to instantiate a fitting version.
-                bool is_generic = std::any_of(binding->arguments().begin(),
-                                              binding->arguments().end(),
-                                              [](Argument const &arg) -> bool { return !arg.type; });
-                if (is_generic) {
+                if (!binding->is_generic()) {
+                    // NON-GENERIC
+                    if (!call.type() && binding->type()) {
+                        call.reset_type(binding->type()); // TODO: execute this every time, but need to remember bound binding
+                    }
+                } else {
+                    // GENERIC
                     if (Binding *insta = scope.top().instantiate(*binding, call.arguments())) {
-                        transformed_ = true;
                         insta->accept(*this);
-                        if (!call.type()) {
-                            if (binding->type()) {
-                                call.reset_type(insta->type());
-                                transformed_ = true;
-                            } else {
-                                has_unresolved_ = true;
-                            }
+                        if (!call.type() && insta->type()) {
+                            call.reset_type(insta->type());
                         } else if (call.type() != binding->type()) {
                             throw std::logic_error ("impossible (2)");
                         }
                     } else {
-                        has_unresolved_ = true;
+                        // this would indicate a bug in lookup
                         throw std::logic_error("impossible");
                     }
                 }
             } else {
-                throw std::runtime_error("unresolved call to '" + call.id() + "'");
+                //throw std::runtime_error("unresolved call to '" + call.id() + "'");
             }
         }
 
@@ -307,19 +311,14 @@ namespace {
         }
 
     private:
-         bool transformed_ = false;
-         bool has_unresolved_ = false;
 
 
          void update_into(ASTNode &ast, Typeinfo type, std::string const &clash_err_msg){
              if (!ast.type()) {
                  if (type) {
                      ast.reset_type(type);
-                     transformed_ = true;
-                 } else {
-                     has_unresolved_ = true;
                  }
-             } else if (ast.type() != type) {
+             } else if (type && ast.type() != type) {
                  throw std::runtime_error(clash_err_msg);
              }
          }
@@ -354,8 +353,9 @@ namespace {
              Scope enter_declarative_region(vector<shared_ptr<Binding>> &bindings_declarative_region) const {
                 Scope ret;
                 ret = *this;
-                for (auto b : bindings_declarative_region)
+                for (auto b : bindings_declarative_region) {
                     ret.visible_bindings.push_back(&*b);
+                }
                 ret.bindings_declarative_region = &bindings_declarative_region;
                 return ret;
              }
@@ -412,9 +412,9 @@ namespace {
     };
 }
 
+
 void resolve_types(shared_ptr<AST::ASTNode> ast) {
     if (!ast) {
-        //std::clog << "pass: lambda-lifting skipped, AST is empty\n";
         return;
     }
 
@@ -423,21 +423,22 @@ void resolve_types(shared_ptr<AST::ASTNode> ast) {
         ++i;
         ResolveTypes ll;
         ast->accept(ll);
-        if (!ll.transformed()) {
-            /*if (ll.has_unresolved()) {
-                throw std::runtime_error("program is not fully resolvable");
-            }*/
+        if (!ASTQueries::has_unresolved(ast)) {
             break;
         }
 
-        /*ASTPrinters::PrettyPrinter pp(std::cerr);
-        ast->accept(pp);
-        std::cerr << "\n";*/
+        if (i>4096) {
+            ASTPrinters::PrettyPrinter pp(std::cerr);
+            ast->accept(pp);
+            std::cerr << "\n";
+            throw std::logic_error("Et1::resolve_types is running for a long while now, "
+                                   "probably it is stuck. May I please beg for a few "
+                                   "seconds of your time and kindly ask you to mail all "
+                                   "generated output to \"mach.seb@gmail.com\". Thank you.");
+
+        }
     }
     std::clog << "pass: resolve-types (" << i << "x)\n";
-    // TODO: we need another pass for resolving, were we cancel out unused functions,
-    //       because it might be that there are still unresoved bindings, which are only
-    //       unresolved because they are generic.
 }
 
 

@@ -104,6 +104,8 @@
 ../excyrender.cxx/Scripting/Et1/ASTQueries/find_binding_names.cc
 ../excyrender.cxx/Scripting/Et1/ASTQueries/resolve_type.hh
 ../excyrender.cxx/Scripting/Et1/ASTQueries/resolve_type.cc
+../excyrender.cxx/Scripting/Et1/ASTQueries/has_unresolved.hh
+../excyrender.cxx/Scripting/Et1/ASTQueries/has_unresolved.cc
 
 ../excyrender.cxx/Scripting/Et1/ASTPrinters/PrettyPrinter.hh
 ../excyrender.cxx/Scripting/Et1/ASTPrinters/PrettyPrinter.cc
