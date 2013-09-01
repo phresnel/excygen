@@ -9,11 +9,17 @@
 
 namespace excyrender { namespace Nature { namespace Et1 { namespace ASTQueries {
 
-    std::string resolve_type(shared_ptr<AST::ASTNode> ast);
-    std::string resolve_type(AST::ASTNode const &ast);
+    AST::Typeinfo resolve_type(shared_ptr<AST::ASTNode> ast);
+    AST::Typeinfo resolve_type(AST::ASTNode const &ast);
 
-    std::string resolve_type(shared_ptr<AST::ASTNode> ast, std::map<string,string> const &symbols);
-    std::string resolve_type(AST::ASTNode const &ast, std::map<string,string> const &symbols);
+    AST::Typeinfo resolve_type(shared_ptr<AST::ASTNode> ast, std::map<string,AST::Typeinfo> const &symbols);
+    AST::Typeinfo resolve_type(AST::ASTNode const &ast, std::map<string,AST::Typeinfo> const &symbols);
+
+
+    string resolve_type_raw(shared_ptr<AST::ASTNode> ast);
+    string resolve_type_raw(AST::ASTNode const &ast);
+    string resolve_type_raw(shared_ptr<AST::ASTNode> ast, std::map<string,AST::Typeinfo> const &symbols);
+    string resolve_type_raw(AST::ASTNode const &ast, std::map<string,AST::Typeinfo> const &symbols);
 } } } }
 
 #endif // RESOLVE_TYPE_HH_INCLUDED_20130820

@@ -19,52 +19,59 @@ TEST_CASE( "Et1/ASTQueries/resolve_type.hh", "Type resolution" ) {
     using namespace excyrender::Nature::Et1;
     using detail::to_ast;
     using namespace ASTQueries;
+    using AST::Typeinfo;
 
     // Tests without symbol table.
-    REQUIRE(resolve_type(to_ast("1")) == "int");
-    REQUIRE(resolve_type(to_ast("1 + 2")) == "int");
-    REQUIRE(resolve_type(to_ast("1 + 2 + 3")) == "int");
-    REQUIRE(resolve_type(to_ast("(1 + 2) + 3")) == "int");
-    REQUIRE(resolve_type(to_ast("(1 + 2) * 3")) == "int");
+    REQUIRE(resolve_type(to_ast("1")) == Typeinfo("int"));
+    REQUIRE(resolve_type(to_ast("1 + 2")) == Typeinfo("int"));
+    REQUIRE(resolve_type(to_ast("1 + 2 + 3")) == Typeinfo("int"));
+    REQUIRE(resolve_type(to_ast("(1 + 2) + 3")) == Typeinfo("int"));
+    REQUIRE(resolve_type(to_ast("(1 + 2) * 3")) == Typeinfo("int"));
 
-    REQUIRE(resolve_type(to_ast("1.0")) == "float");
-    REQUIRE(resolve_type(to_ast("1.0 + 2.0")) == "float");
-    REQUIRE(resolve_type(to_ast("1.0 + 2.0 + 3.0")) == "float");
-    REQUIRE(resolve_type(to_ast("(1.0 + 2.0) + 3.0")) == "float");
-    REQUIRE(resolve_type(to_ast("(1.0 + 2.0) * 3.0")) == "float");
+    REQUIRE(resolve_type(to_ast("1.0")) == Typeinfo("float"));
+    REQUIRE(resolve_type(to_ast("1.0 + 2.0")) == Typeinfo("float"));
+    REQUIRE(resolve_type(to_ast("1.0 + 2.0 + 3.0")) == Typeinfo("float"));
+    REQUIRE(resolve_type(to_ast("(1.0 + 2.0) + 3.0")) == Typeinfo("float"));
+    REQUIRE(resolve_type(to_ast("(1.0 + 2.0) * 3.0")) == Typeinfo("float"));
 
-    REQUIRE(resolve_type(to_ast("(1.0 + (2.0-x)) * 3.0")) == "<<float+<float-<id>>>*float>");
+    REQUIRE(resolve_type_raw(to_ast("(1.0 + (2.0-x)) * 3.0")) == "<<float+<float-<id>>>*float>");
 
-    REQUIRE(resolve_type(to_ast("(2*x)+(2*x)")) == "<<int*<id>>+<int*<id>>>");
+    REQUIRE(resolve_type_raw(to_ast("(2*x)+(2*x)")) == "<<int*<id>>+<int*<id>>>");
 
-    REQUIRE(resolve_type(to_ast("1 + 2.0")) == "<int+float>");
-    REQUIRE(resolve_type(to_ast("1.0 + 2 + 3.0")) == "<<float+int>+float>");
-    REQUIRE(resolve_type(to_ast("(1.0 + 2.0) / 3")) == "<float/int>");
-    REQUIRE(resolve_type(to_ast("(1.0 + 2) * 3.0")) == "<<float+int>*float>");
+    REQUIRE(resolve_type_raw(to_ast("1 + 2.0")) == "<int+float>");
+    REQUIRE(resolve_type_raw(to_ast("1.0 + 2 + 3.0")) == "<<float+int>+float>");
+    REQUIRE(resolve_type_raw(to_ast("(1.0 + 2.0) / 3")) == "<float/int>");
+    REQUIRE(resolve_type_raw(to_ast("(1.0 + 2) * 3.0")) == "<<float+int>*float>");
 
-    REQUIRE(resolve_type(to_ast("let x = 1 in 1")) == "int");
-    REQUIRE(resolve_type(to_ast("let x = 1.0 in 1.0")) == "float");
-    REQUIRE(resolve_type(to_ast("let x = 1+1 in 1+1")) == "int");
-    REQUIRE(resolve_type(to_ast("let x = 1+1.0 in 1+1.0")) == "<int+float>");
+    REQUIRE(resolve_type(to_ast("let x = 1 in 1")) == Typeinfo("int"));
+    REQUIRE(resolve_type(to_ast("let x = 1.0 in 1.0")) == Typeinfo("float"));
+    REQUIRE(resolve_type(to_ast("let x = 1+1 in 1+1")) == Typeinfo("int"));
+    REQUIRE(resolve_type_raw(to_ast("let x = 1+1.0 in 1+1.0")) == "<int+float>");
 
-    REQUIRE(resolve_type(to_ast("let x = 1 in x")) == "<id>");
-    REQUIRE(resolve_type(to_ast("let x = 1.0 in x")) == "<id>");
-    REQUIRE(resolve_type(to_ast("let x = 1+1 in x")) == "<id>");
-    REQUIRE(resolve_type(to_ast("let x = 1+1.0 in x+y*z")) == "<<id>+<<id>*<id>>>");
-    REQUIRE(resolve_type(to_ast("let x = 1+1.0 in x/y-z")) == "<<<id>/<id>>-<id>>");
+    REQUIRE(resolve_type_raw(to_ast("let x = 1 in x")) == "<id>");
+    REQUIRE(resolve_type_raw(to_ast("let x = 1.0 in x")) == "<id>");
+    REQUIRE(resolve_type_raw(to_ast("let x = 1+1 in x")) == "<id>");
+    REQUIRE(resolve_type_raw(to_ast("let x = 1+1.0 in x+y*z")) == "<<id>+<<id>*<id>>>");
+    REQUIRE(resolve_type_raw(to_ast("let x = 1+1.0 in x/y-z")) == "<<<id>/<id>>-<id>>");
 
-    REQUIRE(resolve_type(to_ast("f()")) == "<call>");
-    REQUIRE(resolve_type(to_ast("f(x)")) == "<call>");
-    REQUIRE(resolve_type(to_ast("f(x)+1")) == "<<call>+int>");
-    REQUIRE(resolve_type(to_ast("let int f(x) = 0.0 in f(1)")) == "<call>");
+    REQUIRE(resolve_type_raw(to_ast("f()")) == "<call>");
+    REQUIRE(resolve_type_raw(to_ast("f(x)")) == "<call>");
+    REQUIRE(resolve_type_raw(to_ast("f(x)+1")) == "<<call>+int>");
+    REQUIRE(resolve_type_raw(to_ast("let int f(x) = 0.0 in f(1)")) == "<call>");
 
-    REQUIRE(resolve_type(to_ast("let f(x) = x in f(2)")) == "<call>");
+    REQUIRE(resolve_type_raw(to_ast("let f(x) = x in f(2)")) == "<call>");
 
     // Tests with symbol table.
-    REQUIRE(resolve_type(to_ast("x"), {{"x","int"}}) == "int");
-    REQUIRE(resolve_type(to_ast("x+y"), {{"x","int"}}) == "<int+<id>>");
-    REQUIRE(resolve_type(to_ast("x+y"), {{"x","int"}, {"y","int"}}) == "int");
-    REQUIRE(resolve_type(to_ast("x/y"), {{"x","float"}, {"y","int"}}) == "<float/int>");
+    REQUIRE(resolve_type(to_ast("x"), {{"x",Typeinfo("int")}}) == Typeinfo("int"));
+    REQUIRE(resolve_type_raw(to_ast("x+y"), {{"x",Typeinfo("int")}}) == "<int+<id>>");
+    REQUIRE(resolve_type(to_ast("x+y"),
+                         {{"x",Typeinfo("int")},
+                          {"y",Typeinfo("int")}})
+                  == Typeinfo("int"));
+    REQUIRE(resolve_type_raw(to_ast("x/y"),
+                             {{"x",Typeinfo("float")},
+                              {"y",Typeinfo("int")}})
+                  == "<float/int>");
 }
 //--------------------------------------------------------------------------------------------------
 
@@ -82,7 +89,7 @@ namespace {
     class TryResolve final : public Visitor {
     public:
         TryResolve() = default;
-        TryResolve(std::map<string,string> const & symbols) : symbols(symbols) {}
+        TryResolve(std::map<string,Typeinfo> const & symbols) : symbols(symbols) {}
 
         void begin(Addition const &) {}
         void end(Addition const &) { reduce_binary("+"); }
@@ -104,18 +111,18 @@ namespace {
         void visit(AST::Identifier const &id)
         {
             auto e = symbols.find(id.id());
-            if (e!=symbols.end()) {
-                scope.push(e->second);
+            if (e!=symbols.end() && e->second) {
+                scope.push(e->second.name());
             } else {
                 scope.push("<id>");
             }
         }
 
         void begin(Call const &call) {
-            if (call.type() == "auto") {
+            if (!call.type()) {
                 scope.push("<call>");
             } else {
-                scope.push(call.type());
+                scope.push(call.type().name());
             }
         }
         void end(Call const &call) {
@@ -197,39 +204,63 @@ namespace {
 
     private:
         stack<string> scope;
-        std::map<string,string> symbols;
+        std::map<string,Typeinfo> symbols;
 
     };
 }
 
 
 
-std::string resolve_type(shared_ptr<AST::ASTNode> ast)
+string resolve_type_raw(shared_ptr<AST::ASTNode> ast)
 {
-    std::map<string,string> none;
-    return resolve_type(ast, none);
+    if (!ast) return "<void>";
+    return resolve_type_raw(*ast);
 }
 
-std::string resolve_type(AST::ASTNode const &ast)
+string resolve_type_raw(AST::ASTNode const &ast)
 {
-    std::map<string,string> none;
-    return resolve_type(ast, none);
+    std::map<string,Typeinfo> none;
+    return resolve_type_raw(ast, none);
 }
 
-std::string resolve_type(shared_ptr<AST::ASTNode> ast, std::map<string,string> const &symbols)
+string resolve_type_raw(shared_ptr<AST::ASTNode> ast, std::map<string,Typeinfo> const &symbols)
 {
-    if (!ast) {
-        //std::clog << "pass: lambda-lifting skipped, AST is empty\n";
-        return "<void>";
-    }
-    return resolve_type(*ast, symbols);
+    if (!ast) return "<void>";
+    return resolve_type_raw(*ast, symbols);
 }
 
-std::string resolve_type(AST::ASTNode const &ast, std::map<string,string> const &symbols)
+string resolve_type_raw(AST::ASTNode const &ast, std::map<string,Typeinfo> const &symbols)
 {
     TryResolve tr(symbols);
     ast.accept(tr);
     return tr.type();
+}
+
+
+Typeinfo resolve_type(shared_ptr<AST::ASTNode> ast)
+{
+    if (!ast) return Typeinfo();
+    return resolve_type(*ast);
+}
+
+Typeinfo resolve_type(AST::ASTNode const &ast)
+{
+    auto t = resolve_type_raw(ast);
+    if (!t.empty() && t[0] != '<') return Typeinfo(t);
+    return Typeinfo();
+}
+
+Typeinfo resolve_type(shared_ptr<AST::ASTNode> ast, std::map<string,Typeinfo> const &symbols)
+{
+    if (!ast) return Typeinfo();
+    return resolve_type(*ast, symbols);
+}
+
+Typeinfo resolve_type(AST::ASTNode const &ast, std::map<string,Typeinfo> const &symbols)
+{
+    auto t = resolve_type_raw(ast, symbols);
+    if (!t.empty() && t[0] != '<') return Typeinfo(t);
+    return Typeinfo();
 }
 
 } } } }

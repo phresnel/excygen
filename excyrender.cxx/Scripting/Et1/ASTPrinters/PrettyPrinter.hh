@@ -112,8 +112,8 @@ namespace excyrender { namespace Nature { namespace Et1 { namespace ASTPrinters 
             //if (scope.top().argCount++) os << scope.top().Operator;
             scope.push({""});
             indent();
-            if (binding.type() != "auto")
-                os << binding.type() << ' ' << binding.id();
+            if (binding.type())
+                os << binding.type().name() << ' ' << binding.id();
             else
                 os << binding.id();
 
@@ -126,8 +126,8 @@ namespace excyrender { namespace Nature { namespace Et1 { namespace ASTPrinters 
                         os << ", ";
                     }
                     first = false;
-                    if (a.type != "auto") {
-                        os << a.type << ' ' << a.name;
+                    if (a.type) {
+                        os << a.type.name() << ' ' << a.name;
                     } else {
                         os << a.name; // I consider omitting "auto" good practice for readability.
                                       // (e.g. 'f(auto x, auto y)' vs. 'f(x,y)')

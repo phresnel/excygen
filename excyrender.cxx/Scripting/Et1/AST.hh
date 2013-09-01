@@ -7,17 +7,62 @@
 #include "Token.hh"
 #include "Nature/HeightFunction.hh"
 #include "memory.hh"
+#include "optional.hh"
 #include <stdexcept>
 
 
 // -- Compilation ----------------------------------------------------------------------------------
 namespace excyrender { namespace Nature { namespace Et1 { namespace AST {
 
+    struct Typeinfo {
+        Typeinfo() = default;
+        Typeinfo (Typeinfo const &) = default;
+
+        Typeinfo (Typeinfo &&ti) = default;
+        Typeinfo& operator= (Typeinfo &&ti) = default;
+
+        explicit Typeinfo(string const &name) : name_(name)
+        {
+            if (name.empty()) throw std::logic_error("empty typename");
+            if (name[0] == '<') throw std::logic_error("passed raw type");
+            if (name == "auto") name_.reset(); //throw std::logic_error("Typeinfo(string) used for 'auto'. Use Typeinfo() instead.");
+        }
+
+        Typeinfo& operator= (Typeinfo const &ti) {
+            //if (!ti) throw std::logic_error("Typeinfo::operator: rhs is unresolved");
+            if (*this) throw std::logic_error("Typeinfo::operator=: type was set already");
+            name_ = ti.name_;
+            return *this;
+        }
+
+        explicit operator bool () const { return name_; }
+
+        // false <- any operand is unresolved
+        // true  <- both operands resolved and equal
+        bool operator== (Typeinfo const &ti) const {
+            if (*this && ti) {
+                return *name_ == *ti.name_;
+            }
+            return false;
+        }
+
+        bool operator!= (Typeinfo const &ti) const {
+            return !(*this == ti);
+        }
+
+        string name() const {
+            return name_ ? *name_ : "auto";
+        }
+
+    private:
+        optional<string> name_;
+    };
+
     struct Argument {
-        string type;
+        Typeinfo type;
         string name;
 
-        Argument(string type, string name) : type(type), name(name) {}
+        Argument(Typeinfo type, string name) : type(type), name(name) {}
     };
 
     class Addition;
@@ -121,24 +166,22 @@ namespace excyrender { namespace Nature { namespace Et1 { namespace AST {
         virtual void accept(Visitor &v) const = 0;
         virtual void accept(Transform &v) = 0;
 
-        string type() const { return type_; }
-        void reset_type(string const &t) {
-            if (t.empty()) throw std::logic_error("ASTNode::reset_type(t): t must not be empty");
-            if (type_ != "auto") throw std::logic_error("ASTNode::reset_type(t): cannot reset_type() of non-auto expressions");
+        Typeinfo type() const { return type_; }
+        void reset_type(Typeinfo const &t) {
             type_ = t;
         }
 
         virtual ASTNode* deep_copy() const = 0;
     protected:
         ASTNode(token_iter from, token_iter to) : from_(from), to_(to) {}
-        ASTNode(token_iter from, token_iter to, string type) : from_(from), to_(to)
+        ASTNode(token_iter from, token_iter to, Typeinfo type) : from_(from), to_(to)
         {
             reset_type(type);
         }
 
     private:
         token_iter from_, to_;
-        string type_ = "auto";
+        Typeinfo type_;
     };
 
     struct Expression : ASTNode {
@@ -146,7 +189,7 @@ namespace excyrender { namespace Nature { namespace Et1 { namespace AST {
         virtual ~Expression() {}
     protected:
         Expression (token_iter from, token_iter to) : ASTNode(from, to) {}
-        Expression (token_iter from, token_iter to, string type) : ASTNode(from, to, type) {}
+        Expression (token_iter from, token_iter to, Typeinfo type) : ASTNode(from, to, type) {}
     };
 
 
@@ -290,7 +333,7 @@ namespace excyrender { namespace Nature { namespace Et1 { namespace AST {
         virtual ~Terminal() {}
     protected:
         Terminal (token_iter from, token_iter to) : Expression(from, to) {}
-        Terminal (token_iter from, token_iter to, string type) : Expression(from, to, type) {}
+        Terminal (token_iter from, token_iter to, Typeinfo type) : Expression(from, to, type) {}
     };
 
     struct Literal : Terminal {
@@ -403,7 +446,7 @@ namespace excyrender { namespace Nature { namespace Et1 { namespace AST {
     struct Binding final : Terminal {
         Binding(token_iter from, token_iter to,
                 string id,
-                string type,
+                Typeinfo type,
                 vector<Argument> arguments,
                 shared_ptr<Expression> body)
             : Terminal (from, to, type), id_(id), arguments_(arguments), body_(body)

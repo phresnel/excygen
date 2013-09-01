@@ -189,7 +189,7 @@ namespace {
 
             // Append all non-local references onto the argument list.
             for (auto a : non_locals) {
-                binding.arguments().push_back(Argument("auto", a));
+                binding.arguments().push_back(Argument(AST::Typeinfo(), a));
             }
 
 

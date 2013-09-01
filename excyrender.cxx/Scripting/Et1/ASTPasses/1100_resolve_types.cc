@@ -39,18 +39,18 @@ TEST_CASE( "Et1/ASTPasses/1100_resolve_types.hh", "Type resolution" ) {
                   "let int f(int x) = x in f(2)",
                   passes));
 
-    REQUIRE(equal("let f(x) = x in f(2)",
+    REQUIRE(equal("let q(x) = x in q(2)",
 
-                  "let f(x) = x, "
-                  "    int f(int x) = x "
-                  "in f(2)",
+                  "let q(x) = x, "
+                  "    int q(int x) = x "
+                  "in q(2)",
                   passes));
 
-    REQUIRE(equal("let f(x) = x in f(2.0)",
+    REQUIRE(equal("let q(x) = x in q(2.0)",
 
-                  "let f(x) = x, "
-                  "    float f(float x) = x "
-                  "in f(2.0)",
+                  "let q(x) = x, "
+                  "    float q(float x) = x "
+                  "in q(2.0)",
                   passes));
 
 
@@ -190,10 +190,10 @@ namespace {
                     return -1;
                 if (b.arguments().size() != call.arguments().size())
                     return -1;
-                // count the number of matchin arguments.
+                // count the number of matching arguments.
                 int f = 0;
                 for (size_t i=0; i<b.arguments().size(); ++i) {
-                    if (b.arguments()[i].type == "auto") {
+                    if (!b.arguments()[i].type) {
                         f += 1;
                     } else if (b.arguments()[i].type == call.arguments()[i]->type()) {
                         f += 1+b.arguments().size();
@@ -207,6 +207,7 @@ namespace {
             Binding* binding = nullptr;
             int best_fitness = 0;
             bool ambiguous = false;
+
             for (auto b : visible_bindings) {
                 int f = fitness(*b);
 
@@ -229,8 +230,7 @@ namespace {
         void end(Call &call)
         {
             for (auto &arg : call.arguments()) {
-                string type = arg->type();
-                if (type.empty() || type[0] == '<' || type=="auto") {
+                if (!arg->type()) {
                     has_unresolved_ = true;
                     return;
                 }
@@ -238,27 +238,39 @@ namespace {
 
             Binding* binding = lookup(call, scope.top().visible_bindings);
             if (binding) {
-                if (call.type() == "auto" && binding->type()!="auto" && binding->type()[0]!='<') {
-                    call.reset_type(binding->type()); // TODO: execute this every time, but need to remember bound binding
-                    transformed_ = true;
-                }
-                // TODO: remember the binding in the call
-                bool is_generic = false;
-                for (auto arg : binding->arguments()) {
-                    if (arg.type == "auto") {
-                        is_generic = true;
-                        break;
+                if (!call.type()) {
+                    if (binding->type()) {
+                        call.reset_type(binding->type()); // TODO: execute this every time, but need to remember bound binding
+                        transformed_ = true;
+                    } else {
+                        has_unresolved_ = true;
                     }
                 }
+                // If the looked up function is generic, we need to instantiate a fitting version.
+                bool is_generic = std::any_of(binding->arguments().begin(),
+                                              binding->arguments().end(),
+                                              [](Argument const &arg) -> bool { return !arg.type; });
                 if (is_generic) {
                     if (Binding *insta = scope.top().instantiate(*binding, call.arguments())) {
+                        transformed_ = true;
                         insta->accept(*this);
-                        if (call.type() == "auto" && binding->type()!="auto" && binding->type()[0]!='<') {
-                            call.reset_type(insta->type());
-                            transformed_ = true;
+                        if (!call.type()) {
+                            if (binding->type()) {
+                                call.reset_type(insta->type());
+                                transformed_ = true;
+                            } else {
+                                has_unresolved_ = true;
+                            }
+                        } else if (call.type() != binding->type()) {
+                            throw std::logic_error ("impossible (2)");
                         }
+                    } else {
+                        has_unresolved_ = true;
+                        throw std::logic_error("impossible");
                     }
                 }
+            } else {
+                throw std::runtime_error("unresolved call to '" + call.id() + "'");
             }
         }
 
@@ -299,39 +311,31 @@ namespace {
          bool has_unresolved_ = false;
 
 
-         void resolve (ASTNode &binary) {
-             auto type = ASTQueries::resolve_type(binary, scope.top().symbols);
-             auto btype = binary.type();
-             if (binary.type() == "auto") {
-                 if (type[0] == '<' || type=="auto") {
-                     has_unresolved_ = true;
-                 } else {
-                     binary.reset_type(type);
+         void update_into(ASTNode &ast, Typeinfo type, std::string const &clash_err_msg){
+             if (!ast.type()) {
+                 if (type) {
+                     ast.reset_type(type);
                      transformed_ = true;
+                 } else {
+                     has_unresolved_ = true;
                  }
-             } else if (binary.type() != type) {
-                 throw std::logic_error("type clash in resolve_binary");
+             } else if (ast.type() != type) {
+                 throw std::runtime_error(clash_err_msg);
              }
+         }
+
+         void resolve (ASTNode &ast) {
+             auto type = ASTQueries::resolve_type(ast, scope.top().symbols);
+             update_into(ast, type, "type clash in resolve(AST&)");
          }
 
          void resolve (ASTNode &ast, ASTNode &update_to) {
              resolve(ast);
-
-             string value_type = ast.type();
-             if (value_type != "auto" && value_type[0] != '<') {
-                 if (update_to.type() == "auto") {
-                     update_to.reset_type(value_type);
-                     transformed_ = true;
-                 } else if (value_type != update_to.type()) {
-                     throw std::runtime_error("declared function type does not equal body type");
-                 }
-             } else if (value_type != "auto") {
-                 has_unresolved_ = true;
-             }
+             update_into(update_to, ast.type(), "declared function type does not equal body type");
          }
 
          struct Scope {
-             std::map<string, string> symbols;
+             std::map<string, Typeinfo> symbols;
              vector<shared_ptr<Binding>> *bindings_declarative_region;
              vector<Binding*> visible_bindings;
 
@@ -370,6 +374,8 @@ namespace {
                 if (args.size() != binding.arguments().size())
                     throw std::runtime_error("wrong number of arguments in call to " + binding.id());
 
+                // TODO: check if all arguments were resolved. Return nullptr if not.
+
                 // Check if this is the optimal candidate already.
                 // If so, do not re-instantiate.
                 bool is_optimal = true;
@@ -379,8 +385,10 @@ namespace {
                         break;
                     }
                 }
-                if (is_optimal)
+
+                if (is_optimal) {
                     return nullptr;
+                }
 
                 shared_ptr<Binding> insta (binding.deep_copy());
 
@@ -388,7 +396,7 @@ namespace {
                     const auto &desired = args[a]->type();
                     Argument &arg = insta->arguments()[a];
 
-                    if (arg.type != "auto" && desired != arg.type)
+                    if (arg.type && desired != arg.type)
                         throw std::runtime_error("cannot instantiate");
                     arg.type = desired;
                 }

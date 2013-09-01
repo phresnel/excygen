@@ -123,15 +123,15 @@ namespace excyrender { namespace Nature { namespace Et1 { namespace {
         auto const num_toks = distance(from, to);
 
         if (num_toks == 1) {
-            return AST::Argument{"auto", string(*from)};
+            return AST::Argument{AST::Typeinfo(), string(*from)};
         } else if (num_toks == 2) {
-            return AST::Argument{string(*from), string(*(from+1))};
+            return AST::Argument{AST::Typeinfo(string(*from)), string(*(from+1))};
         } else if (num_toks == 5
                    && *from == "typeof"
                    && (from+1)->kind == LParen
                    && (from+3)->kind == RParen)
         {
-            return AST::Argument{"typeof(" + string(*(from+2)) + ")",
+            return AST::Argument{AST::Typeinfo("typeof(" + string(*(from+2)) + ")"),
                                  string(*(from+4))};
         }
         return optional<AST::Argument>();
@@ -139,9 +139,10 @@ namespace excyrender { namespace Nature { namespace Et1 { namespace {
 
     struct ParsedSig {
         token_iter from, to;
-        string type, name;
+        AST::Typeinfo type;
+        string name;
         ParsedSig(token_iter from, token_iter to,
-                  string type, string name) : from(from), to(to), type(type), name(name)
+                  AST::Typeinfo type, string name) : from(from), to(to), type(type), name(name)
         {}
     };
 
@@ -170,7 +171,7 @@ namespace excyrender { namespace Nature { namespace Et1 { namespace {
         const string id = string(*it);
 
         ++it;
-        return ParsedSig{from, it, "typeof(" + of + ")", id};
+        return ParsedSig{from, it, AST::Typeinfo("typeof(" + of + ")"), id};
     }
 
     optional<ParsedSig> parse_sig (token_iter it, token_iter end)
@@ -195,8 +196,8 @@ namespace excyrender { namespace Nature { namespace Et1 { namespace {
             const auto from = it;
             ++it;
             if (it==end || it->kind != Identifier)
-                return ParsedSig{from, it, "auto", string(*from)};
-            return ParsedSig{from, it+1, string(*from), string(*it)};
+                return ParsedSig{from, it, AST::Typeinfo(), string(*from)};
+            return ParsedSig{from, it+1, AST::Typeinfo(string(*from)), string(*it)};
         }
         return optional<ParsedSig>();
     }
@@ -214,7 +215,8 @@ namespace excyrender { namespace Nature { namespace Et1 { namespace {
         const auto start = it;
         // type? name ( '(' argument (',' argument)* ')' )? = expression
         // ^
-        string type, name;
+        AST::Typeinfo type;
+        string name;
         if (auto t = parse_sig(it,end)) {
             type = t->type;
             name = t->name;
