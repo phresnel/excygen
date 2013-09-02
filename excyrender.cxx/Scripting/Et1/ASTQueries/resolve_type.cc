@@ -22,11 +22,53 @@ TEST_CASE( "Et1/ASTQueries/resolve_type.hh", "Type resolution" ) {
     using AST::Typeinfo;
 
     // Tests without symbol table.
+    REQUIRE(resolve_type(to_ast("true")) == Typeinfo("bool"));
+    REQUIRE(resolve_type(to_ast("false")) == Typeinfo("bool"));
+    REQUIRE(resolve_type(to_ast("true && true")) == Typeinfo("bool"));
+    REQUIRE(resolve_type(to_ast("false && false")) == Typeinfo("bool"));
+    REQUIRE(resolve_type(to_ast("true || true")) == Typeinfo("bool"));
+    REQUIRE(resolve_type(to_ast("false || false")) == Typeinfo("bool"));
+
+    REQUIRE(resolve_type(to_ast("!true")) == Typeinfo("bool"));
+    REQUIRE(resolve_type(to_ast("!!!!!true")) == Typeinfo("bool"));
+    REQUIRE(resolve_type(to_ast("-1")) == Typeinfo("int"));
+    REQUIRE(resolve_type(to_ast("-----1")) == Typeinfo("int"));
+    REQUIRE(resolve_type(to_ast("(-1.0)")) == Typeinfo("float"));
+    REQUIRE(resolve_type(to_ast("--(---1.0)")) == Typeinfo("float"));
+    REQUIRE(resolve_type_raw(to_ast("(!!(false) && (1<-2))")) == "bool");
+
+    REQUIRE(resolve_type(to_ast("1<2")) == Typeinfo("bool"));
+    REQUIRE(resolve_type(to_ast("1.0>2.0")) == Typeinfo("bool"));
+    REQUIRE(resolve_type(to_ast("true==!false")) == Typeinfo("bool"));
+    REQUIRE(resolve_type(to_ast("!false!=!true")) == Typeinfo("bool"));
+
+    REQUIRE(resolve_type(to_ast("if 1<2 then true else false")) == Typeinfo("bool"));
+    REQUIRE(resolve_type(to_ast("if 1<2 then 1 else 2")) == Typeinfo("int"));
+    REQUIRE(resolve_type(to_ast("if 1<2 then if 1<2 then if 1<2 then 1 else 2 else 2 else 2")) == Typeinfo("int"));
+
+    REQUIRE(resolve_type(to_ast("if true then true else false")) == Typeinfo("bool"));
+    REQUIRE(resolve_type_raw(to_ast("if A then B else C")) == ("<<id>?<id>:<id>>"));
+    REQUIRE(resolve_type_raw(to_ast("if true then B else C")) == ("<bool?<id>:<id>>"));
+    REQUIRE(resolve_type_raw(to_ast("if A then B else false")) == ("<<id>?<id>:bool>"));
+    REQUIRE(resolve_type_raw(to_ast("if A then if B then C else D else E")) == ("<<id>?<<id>?<id>:<id>>:<id>>"));
+    REQUIRE(resolve_type_raw(to_ast("if A then E else if B then C else D")) == ("<<id>?<id>:<<id>?<id>:<id>>>"));
+    REQUIRE(resolve_type_raw(to_ast("if A then if B then C else D else if E then F else G ")) == ("<<id>?<<id>?<id>:<id>>:<<id>?<id>:<id>>>"));
+    REQUIRE(resolve_type(to_ast("if true||false then false&&true else if false then true else false")) == Typeinfo("bool"));
+
     REQUIRE(resolve_type(to_ast("1")) == Typeinfo("int"));
     REQUIRE(resolve_type(to_ast("1 + 2")) == Typeinfo("int"));
     REQUIRE(resolve_type(to_ast("1 + 2 + 3")) == Typeinfo("int"));
     REQUIRE(resolve_type(to_ast("(1 + 2) + 3")) == Typeinfo("int"));
     REQUIRE(resolve_type(to_ast("(1 + 2) * 3")) == Typeinfo("int"));
+
+    REQUIRE(resolve_type(to_ast("1 > 2")) == Typeinfo("bool"));
+    REQUIRE(resolve_type(to_ast("1 <= 2 && 2 >= 3")) == Typeinfo("bool"));
+    REQUIRE(resolve_type(to_ast("(1 == 2) != (2!=0)")) == Typeinfo("bool"));
+
+    REQUIRE(resolve_type_raw(to_ast("x > 2")) == ("<<id>>int>"));
+    REQUIRE(resolve_type_raw(to_ast("1 <= y && zulu >= 3")) == ("<<int<=<id>>&&<<id>>=int>>"));
+    REQUIRE(resolve_type_raw(to_ast("1 <= 2 && zulu >= 3")) == ("<bool&&<<id>>=int>>"));
+    REQUIRE(resolve_type_raw(to_ast("(1 == 2) != (2!=0)")) == ("bool"));
 
     REQUIRE(resolve_type(to_ast("1.0")) == Typeinfo("float"));
     REQUIRE(resolve_type(to_ast("1.0 + 2.0")) == Typeinfo("float"));
@@ -72,6 +114,10 @@ TEST_CASE( "Et1/ASTQueries/resolve_type.hh", "Type resolution" ) {
                              {{"x",Typeinfo("float")},
                               {"y",Typeinfo("int")}})
                   == "<float/int>");
+
+    REQUIRE(resolve_type(to_ast("x"), {{"x",Typeinfo("bool")}}) == Typeinfo("bool"));
+    REQUIRE(resolve_type(to_ast("x && x"), {{"x",Typeinfo("bool")}}) == Typeinfo("bool"));
+    REQUIRE(resolve_type(to_ast("x && true"), {{"x",Typeinfo("bool")}}) == Typeinfo("bool"));
 }
 //--------------------------------------------------------------------------------------------------
 
@@ -91,22 +137,42 @@ namespace {
         TryResolve() = default;
         TryResolve(std::map<string,Typeinfo> const & symbols) : symbols(symbols) {}
 
-        void begin(Addition const &) {}
-        void end(Addition const &) { reduce_binary("+"); }
+        void begin(AST::Addition const &) {}
+        void end(AST::Addition const &) { reduce_binary("+"); }
+        void begin(AST::Subtraction const &) {}
+        void end(AST::Subtraction const &) { reduce_binary("-"); }
+        void begin(AST::Multiplication const &) {}
+        void end(AST::Multiplication const &) { reduce_binary("*"); }
+        void begin(AST::Division const &) {}
+        void end(AST::Division const &) { reduce_binary("/"); }
 
-        void begin(Subtraction const &) {}
-        void end(Subtraction const &) { reduce_binary("-"); }
+        void begin(AST::LessThan const &)  {}
+        void end(AST::LessThan const &)  { reduce_binary("<", "bool"); }
+        void begin(AST::LessEqual const &)  {}
+        void end(AST::LessEqual const &)  { reduce_binary("<=", "bool"); }
+        void begin(AST::GreaterThan const &)  {}
+        void end(AST::GreaterThan const &)  { reduce_binary(">", "bool"); }
+        void begin(AST::GreaterEqual const &)  {}
+        void end(AST::GreaterEqual const &)  { reduce_binary(">=", "bool"); }
+        void begin(AST::Equal const &)  {}
+        void end(AST::Equal const &)  { reduce_binary("==", "bool"); }
+        void begin(AST::NotEqual const &)  {}
+        void end(AST::NotEqual const &)  { reduce_binary("!=", "bool"); }
+        void begin(AST::LogicalAnd const &) {}
+        void end(AST::LogicalAnd const &) { reduce_binary("&&", "bool"); }
+        void begin(AST::LogicalOr const &) {}
+        void end(AST::LogicalOr const &) { reduce_binary("||", "bool"); }
+        void begin(AST::LogicalNot const &) {}
+        void end(AST::LogicalNot const &) {}
 
-        void begin(Multiplication const &) {}
-        void end(Multiplication const &) { reduce_binary("*"); }
-
-        void begin(Division const &) {}
-        void end(Division const &) { reduce_binary("/"); }
+        void begin(AST::IfThenElse const &) {}
+        void end(AST::IfThenElse const &) { reduce_ifthenelse(); }
 
         void infix() {}
 
         void visit(IntegerLiteral const &) { scope.push("int"); }
         void visit(RealLiteral const &) { scope.push("float"); }
+        void visit(BoolLiteral const &) { scope.push("bool"); }
 
         void visit(AST::Identifier const &id)
         {
@@ -118,14 +184,14 @@ namespace {
             }
         }
 
-        void begin(Call const &call) {
+        void begin(AST::Call const &call) {
             if (!call.type()) {
                 scope.push("<call>");
             } else {
                 scope.push(call.type().name());
             }
         }
-        void end(Call const &call) {
+        void end(AST::Call const &call) {
             // pop the arguments away.
             for (size_t i=0; i!=call.arguments().size(); ++i) {
                 if (scope.empty())
@@ -134,16 +200,16 @@ namespace {
             }
         }
 
-        void begin(Negation const &) {}
-        void end(Negation const &) {}
+        void begin(AST::Negation const &) {}
+        void end(AST::Negation const &) {}
 
-        void begin(ParenExpression const &) {}
-        void end(ParenExpression const &) {}
+        void begin(AST::ParenExpression const &) {}
+        void end(AST::ParenExpression const &) {}
 
-        void begin(Binding const &) {}
-        void end(Binding const &) {}
+        void begin(AST::Binding const &) {}
+        void end(AST::Binding const &) {}
 
-        void begin(LetIn const &) {}
+        void begin(AST::LetIn const &) {}
         void before_body(LetIn const &letin) {
             for (size_t i=0; i!=letin.bindings().size(); ++i) {
                 if (scope.empty())
@@ -151,7 +217,7 @@ namespace {
                 scope.pop();
             }
         }
-        void end(LetIn const &) {
+        void end(AST::LetIn const &) {
             /*if (scope.empty()) throw std::logic_error("reduce_binary: empty stack (1)");
             const string rhs = scope.top();
             scope.pop();
@@ -160,8 +226,8 @@ namespace {
             scope.push(rhs);*/
         }
 
-        void begin(Program const &) {}
-        void end(Program const &) {}
+        void begin(AST::Program const &) {}
+        void end(AST::Program const &) {}
 
         std::string type() const {
             if (scope.empty()) {
@@ -182,7 +248,7 @@ namespace {
 
 
     private:
-        void reduce_binary(string op) {
+        void reduce_binary(string op, string result_type = "") {
             if (scope.empty()) throw std::logic_error("reduce_binary: empty stack (1)");
             const string rhs = scope.top();
             scope.pop();
@@ -196,9 +262,34 @@ namespace {
 
             // Forbid reduction of non-reduced types by checking against '<'.
             if ((lhs[0] != '<') && (rhs[0] != '<') && (lhs == rhs)) {
-                scope.push(lhs);
+                scope.push(result_type != "" ? result_type : rhs);
             } else {
                 scope.push("<" + lhs + op + rhs + ">"); // << possibly use this derived name for operator overloading in the future
+            }
+        }
+
+        void reduce_ifthenelse() {
+            if (scope.empty()) throw std::logic_error("reduce_binary: empty stack (1)");
+            const string else_ = scope.top();
+            scope.pop();
+
+            if (scope.empty()) throw std::logic_error("reduce_binary: empty stack (2)");
+            const string then_ = scope.top();
+            scope.pop();
+
+            if (scope.empty()) throw std::logic_error("reduce_binary: empty stack (3)");
+            const string if_ = scope.top();
+            scope.pop();
+
+            if (if_.empty() || then_.empty() || else_.empty()) {
+                throw std::logic_error("empty type pushed (2)");
+            }
+
+            // Forbid reduction of non-reduced types by checking against '<'.
+            if ((if_[0] != '<') && (then_[0] != '<') && (else_[0] != '<') && (then_ == else_)) {
+                scope.push(then_);
+            } else {
+                scope.push("<" + if_ + "?" + then_ + ":" + else_ + ">"); // << possibly use this derived name for operator overloading in the future
             }
         }
 
@@ -211,25 +302,25 @@ namespace {
 
 
 
-string resolve_type_raw(shared_ptr<AST::ASTNode> ast)
+string resolve_type_raw(shared_ptr<ASTNode> ast)
 {
     if (!ast) return "<void>";
     return resolve_type_raw(*ast);
 }
 
-string resolve_type_raw(AST::ASTNode const &ast)
+string resolve_type_raw(ASTNode const &ast)
 {
     std::map<string,Typeinfo> none;
     return resolve_type_raw(ast, none);
 }
 
-string resolve_type_raw(shared_ptr<AST::ASTNode> ast, std::map<string,Typeinfo> const &symbols)
+string resolve_type_raw(shared_ptr<ASTNode> ast, std::map<string,Typeinfo> const &symbols)
 {
     if (!ast) return "<void>";
     return resolve_type_raw(*ast, symbols);
 }
 
-string resolve_type_raw(AST::ASTNode const &ast, std::map<string,Typeinfo> const &symbols)
+string resolve_type_raw(ASTNode const &ast, std::map<string,Typeinfo> const &symbols)
 {
     TryResolve tr(symbols);
     ast.accept(tr);
@@ -237,26 +328,26 @@ string resolve_type_raw(AST::ASTNode const &ast, std::map<string,Typeinfo> const
 }
 
 
-Typeinfo resolve_type(shared_ptr<AST::ASTNode> ast)
+Typeinfo resolve_type(shared_ptr<ASTNode> ast)
 {
     if (!ast) return Typeinfo();
     return resolve_type(*ast);
 }
 
-Typeinfo resolve_type(AST::ASTNode const &ast)
+Typeinfo resolve_type(ASTNode const &ast)
 {
     auto t = resolve_type_raw(ast);
     if (!t.empty() && t[0] != '<') return Typeinfo(t);
     return Typeinfo();
 }
 
-Typeinfo resolve_type(shared_ptr<AST::ASTNode> ast, std::map<string,Typeinfo> const &symbols)
+Typeinfo resolve_type(shared_ptr<ASTNode> ast, std::map<string,Typeinfo> const &symbols)
 {
     if (!ast) return Typeinfo();
     return resolve_type(*ast, symbols);
 }
 
-Typeinfo resolve_type(AST::ASTNode const &ast, std::map<string,Typeinfo> const &symbols)
+Typeinfo resolve_type(ASTNode const &ast, std::map<string,Typeinfo> const &symbols)
 {
     auto t = resolve_type_raw(ast, symbols);
     if (!t.empty() && t[0] != '<') return Typeinfo(t);

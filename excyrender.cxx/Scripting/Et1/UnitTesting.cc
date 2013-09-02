@@ -26,6 +26,8 @@ std::shared_ptr<AST::Program> to_ast(std::string const &code)
     } catch (std::exception &e) {
         throw std::logic_error(std::string("in to_ast(), upon building ast: ") + e.what());
     }
+    if (toks.end() != prog->to())
+        throw std::logic_error("in to_ast(), '" + code + "' was not parsed completely");
     return prog;
 }
 

@@ -17,11 +17,14 @@ namespace excyrender { namespace Nature { namespace Et1 {
     using std::vector;
 
     enum TokenKind {
-        Integer, Real,
+        Integer, Real, Bool,
         Identifier,
         LParen, RParen,
         Plus, Minus,
         Asterisk, Slash,
+        LogicalAnd, LogicalOr, LogicalNot,
+        LessThan, LessEqual, GreaterThan, GreaterEqual, EqualTo, UnequalTo,
+        If, Then, Else,
         Comma,
         Equal,
         Let, In,

@@ -74,18 +74,35 @@ namespace {
 
         void begin(Addition &) {}
         void end(Addition &) {}
-
         void begin(Subtraction &) {}
         void end(Subtraction &) {}
-
         void begin(Multiplication &) {}
         void end(Multiplication &) {}
-
         void begin(Division &) {}
         void end(Division &) {}
 
+        void begin(AST::LessThan &) {}
+        void end(AST::LessThan &) {}
+        void begin(AST::LessEqual &) {}
+        void end(AST::LessEqual &) {}
+        void begin(AST::GreaterThan &) {}
+        void end(AST::GreaterThan &) {}
+        void begin(AST::GreaterEqual &) {}
+        void end(AST::GreaterEqual &) {}
+        void begin(AST::Equal &) {}
+        void end(AST::Equal &) {}
+        void begin(AST::NotEqual &) {}
+        void end(AST::NotEqual &) {}
+        void begin(AST::LogicalAnd &) {}
+        void end(AST::LogicalAnd &) {}
+        void begin(AST::LogicalOr &) {}
+        void end(AST::LogicalOr &) {}
+        void begin(AST::LogicalNot &) {}
+        void end(AST::LogicalNot &) {}
+
         void transform(IntegerLiteral &) {}
         void transform(RealLiteral &) {}
+        void transform(BoolLiteral &) {}
         void transform(AST::Identifier &id)
         {
             if (binding_depth != 1)
@@ -123,6 +140,8 @@ namespace {
             --binding_depth;
         }
 
+        void begin(IfThenElse &) {}
+        void end(IfThenElse &) {}
 
         void begin(LetIn &) {}
         void end(LetIn &) {}
@@ -141,18 +160,35 @@ namespace {
 
         void begin(Addition &) {}
         void end(Addition &) {}
-
         void begin(Subtraction &) {}
         void end(Subtraction &) {}
-
         void begin(Multiplication &) {}
         void end(Multiplication &) {}
-
         void begin(Division &) {}
         void end(Division &) {}
 
+        void begin(AST::LessThan &) {}
+        void end(AST::LessThan &) {}
+        void begin(AST::LessEqual &) {}
+        void end(AST::LessEqual &) {}
+        void begin(AST::GreaterThan &) {}
+        void end(AST::GreaterThan &) {}
+        void begin(AST::GreaterEqual &) {}
+        void end(AST::GreaterEqual &) {}
+        void begin(AST::Equal &) {}
+        void end(AST::Equal &) {}
+        void begin(AST::NotEqual &) {}
+        void end(AST::NotEqual &) {}
+        void begin(AST::LogicalAnd &) {}
+        void end(AST::LogicalAnd &) {}
+        void begin(AST::LogicalOr &) {}
+        void end(AST::LogicalOr &) {}
+        void begin(AST::LogicalNot &) {}
+        void end(AST::LogicalNot &) {}
+
         void transform(IntegerLiteral &) {}
         void transform(RealLiteral &) {}
+        void transform(BoolLiteral &) {}
         void transform(AST::Identifier &id) {}
 
         void begin(Call &) {}
@@ -212,6 +248,9 @@ namespace {
         {
             scope.pop();
         }
+
+        void begin(IfThenElse &) {}
+        void end(IfThenElse &) {}
 
         void begin(LetIn &) {}
         void end(LetIn &) {}

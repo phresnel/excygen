@@ -39,10 +39,22 @@ namespace excyrender { namespace Nature { namespace Et1 { namespace {
         std::map<string, BinaryOperator> ret;
         // TODO: re-check map::emplace() availability. So long, // 'insert' because deleted default ctor.
 
-        ret.insert(std::make_pair("+", BinaryOperator{"+", 20, BinaryOperator::create_factory<AST::Addition>()}));
-        ret.insert(std::make_pair("-", BinaryOperator{"-", 20, BinaryOperator::create_factory<AST::Subtraction>()}));
-        ret.insert(std::make_pair("*", BinaryOperator{"*", 40, BinaryOperator::create_factory<AST::Multiplication>()}));
-        ret.insert(std::make_pair("/", BinaryOperator{"/", 40, BinaryOperator::create_factory<AST::Division>()}));
+        ret.insert(std::make_pair("*", BinaryOperator{"*", 320, BinaryOperator::create_factory<AST::Multiplication>()}));
+        ret.insert(std::make_pair("/", BinaryOperator{"/", 320, BinaryOperator::create_factory<AST::Division>()}));
+
+        ret.insert(std::make_pair("+", BinaryOperator{"+", 160, BinaryOperator::create_factory<AST::Addition>()}));
+        ret.insert(std::make_pair("-", BinaryOperator{"-", 160, BinaryOperator::create_factory<AST::Subtraction>()}));
+
+        ret.insert(std::make_pair("<", BinaryOperator{"<", 80, BinaryOperator::create_factory<AST::LessThan>()}));
+        ret.insert(std::make_pair("<=", BinaryOperator{"<=", 80, BinaryOperator::create_factory<AST::LessEqual>()}));
+        ret.insert(std::make_pair(">", BinaryOperator{">", 80, BinaryOperator::create_factory<AST::GreaterThan>()}));
+        ret.insert(std::make_pair(">=", BinaryOperator{">=", 80, BinaryOperator::create_factory<AST::GreaterEqual>()}));
+
+        ret.insert(std::make_pair("==", BinaryOperator{"==", 40, BinaryOperator::create_factory<AST::Equal>()}));
+        ret.insert(std::make_pair("!=", BinaryOperator{"!=", 40, BinaryOperator::create_factory<AST::NotEqual>()}));
+
+        ret.insert(std::make_pair("&&", BinaryOperator{"&&", 20, BinaryOperator::create_factory<AST::LogicalAnd>()}));
+        ret.insert(std::make_pair("||", BinaryOperator{"||", 10, BinaryOperator::create_factory<AST::LogicalOr>()}));
         return ret;
     }
     std::map<string, BinaryOperator> precedence_table = initial_precedence_table(); // TODO: not as a global but as a parameter, which may enable operator overloading.
@@ -308,6 +320,15 @@ namespace excyrender { namespace Nature { namespace Et1 { namespace {
         return shared_ptr<RealLiteral>(new RealLiteral(it, it+1, string(*it)));
     }
 
+    shared_ptr<AST::BoolLiteral> bool_literal(token_iter it, token_iter end)
+    {
+        using namespace AST;
+
+        if (it == end || it->kind != Bool)
+            return shared_ptr<BoolLiteral>();
+        return shared_ptr<BoolLiteral>(new BoolLiteral(it, it+1, string(*it)));
+    }
+
 
 
     shared_ptr<AST::Identifier> identifier(token_iter it, token_iter end)
@@ -333,8 +354,56 @@ namespace excyrender { namespace Nature { namespace Et1 { namespace {
                 throw std::runtime_error("expected argument to negation-operator");
             return shared_ptr<Negation>(new Negation(it, rhs->to(), rhs));
         }
+        if (it->kind == TokenKind::LogicalNot) {
+            auto rhs = terminal(it+1, end);
+            if (!rhs)
+                throw std::runtime_error("expected argument to logical-not-operator");
+            return shared_ptr<AST::LogicalNot>(new AST::LogicalNot(it, rhs->to(), rhs));
+        }
 
         return shared_ptr<AST::Unary>();
+    }
+
+
+
+    shared_ptr<AST::IfThenElse> if_then_else(token_iter it, token_iter end)
+    {
+        const auto start = it;
+
+        // <if> COND then EXPR else EXPR
+        if (it == end || it->kind != TokenKind::If)
+            return shared_ptr<AST::IfThenElse>();
+        ++it;
+
+        // if <COND> then EXPR else EXPR
+        auto cond = expression(it, end);
+        if (!cond)
+            throw std::runtime_error("expected condition after 'if'");
+        it = cond->to();
+
+        // if COND <then> EXPR else EXPR
+        if (it == end || it->kind != TokenKind::Then)
+            throw std::runtime_error("expected 'then' after condition to 'if'");
+        ++it;
+
+        // if COND then <EXPR> else EXPR
+        auto then_ = expression(it, end);
+        if (!then_)
+            throw std::runtime_error("expected expression after 'then'");
+        it = then_->to();
+
+        // if COND then EXPR <else> EXPR
+        if (it == end || it->kind != TokenKind::Else)
+            throw std::runtime_error("expected 'else' after expression to 'then'");
+        ++it;
+
+        // if COND then EXPR else <EXPR>
+        auto else_ = expression(it, end);
+        if (!else_)
+            throw std::runtime_error("expected expression after 'else'");
+        it = else_->to();
+
+        return shared_ptr<AST::IfThenElse>(new AST::IfThenElse(start, it, cond, then_, else_));
     }
 
 
@@ -343,8 +412,10 @@ namespace excyrender { namespace Nature { namespace Et1 { namespace {
     {
         if (it==end)
             return shared_ptr<AST::Terminal>();
+        if (auto e = if_then_else(it, end))
+            return e;
         if (auto e = binding(it, end))
-            return shared_ptr<AST::Terminal>();
+            return shared_ptr<AST::Terminal>(); // just catch this here
         if (auto e = call(it, end))
             return e;
         if (auto e = identifier(it, end))
@@ -353,12 +424,14 @@ namespace excyrender { namespace Nature { namespace Et1 { namespace {
             return e;
         if (auto e = real_literal(it, end))
             return e;
+        if (auto e = bool_literal(it, end))
+            return e;
         if (auto e = unary(it, end))
             return e;
         if (it->kind == LParen) {
             if (auto e = expression(it+1, end)) {
                 if (e->to()->kind != RParen)
-                    throw std::runtime_error("missing ')'");
+                    throw std::runtime_error("missing ')', got '" + string(*e->to()) + "'");
                 return shared_ptr<AST::ParenExpression>(
                             new AST::ParenExpression(it, e->to()+1, e));
             }
@@ -426,7 +499,8 @@ namespace excyrender { namespace Nature { namespace Et1 { namespace {
             //     ^
             shared_ptr<AST::Expression> rhs = terminal(it, end);
             if (!rhs)
-                throw std::runtime_error("expected operand on right-hand-side of operator");
+                throw std::runtime_error("expected operand on right-hand-side of operator "
+                                         "'" + prec_entry->second.symbol + "'");
             it = rhs->to();
 
             // 1 + 2 ? 3

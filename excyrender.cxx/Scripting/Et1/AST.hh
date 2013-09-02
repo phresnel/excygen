@@ -9,6 +9,7 @@
 #include "memory.hh"
 #include "optional.hh"
 #include <stdexcept>
+#include <type_traits>
 
 
 // -- Compilation ----------------------------------------------------------------------------------
@@ -71,6 +72,7 @@ namespace excyrender { namespace Nature { namespace Et1 { namespace AST {
     class Division;
     class IntegerLiteral;
     class RealLiteral;
+    class BoolLiteral;
     class Call;
     class Negation;
     class ParenExpression;
@@ -78,24 +80,52 @@ namespace excyrender { namespace Nature { namespace Et1 { namespace AST {
     class Identifier;
     class LetIn;
     class Program;
+    class IfThenElse;
+
+    class LessThan;
+    class LessEqual;
+    class GreaterThan;
+    class GreaterEqual;
+    class Equal;
+    class NotEqual;
+    class LogicalAnd;
+    class LogicalOr;
+    class LogicalNot;
 
     struct Visitor {
         virtual void begin(Addition const &) = 0;
         virtual void end(Addition const &) = 0;
-
         virtual void begin(Subtraction const &) = 0;
         virtual void end(Subtraction const &) = 0;
-
         virtual void begin(Multiplication const &) = 0;
         virtual void end(Multiplication const &) = 0;
-
         virtual void begin(Division const &) = 0;
         virtual void end(Division const &) = 0;
+
+        virtual void begin(LessThan const &) = 0;
+        virtual void end(LessThan const &) = 0;
+        virtual void begin(LessEqual const &) = 0;
+        virtual void end(LessEqual const &) = 0;
+        virtual void begin(GreaterThan const &) = 0;
+        virtual void end(GreaterThan const &) = 0;
+        virtual void begin(GreaterEqual const &) = 0;
+        virtual void end(GreaterEqual const &) = 0;
+        virtual void begin(Equal const &) = 0;
+        virtual void end(Equal const &) = 0;
+        virtual void begin(NotEqual const &) = 0;
+        virtual void end(NotEqual const &) = 0;
+        virtual void begin(LogicalAnd const &) = 0;
+        virtual void end(LogicalAnd const &) = 0;
+        virtual void begin(LogicalOr const &) = 0;
+        virtual void end(LogicalOr const &) = 0;
+        virtual void begin(LogicalNot const &) = 0;
+        virtual void end(LogicalNot const &) = 0;
 
         virtual void infix() {}
 
         virtual void visit(IntegerLiteral const &) = 0;
         virtual void visit(RealLiteral const &) = 0;
+        virtual void visit(BoolLiteral const &) = 0;
         virtual void visit(Identifier const &) = 0;
 
         virtual void begin(Call const &) = 0;
@@ -110,6 +140,11 @@ namespace excyrender { namespace Nature { namespace Et1 { namespace AST {
         virtual void begin(Binding const &) = 0;
         virtual void end(Binding const &) = 0;
 
+        virtual void begin(IfThenElse const &) = 0;
+        virtual void before_then() {}
+        virtual void before_else() {}
+        virtual void end(IfThenElse const &) = 0;
+
         virtual void begin(LetIn const &) = 0;
         virtual void before_body(LetIn const &) {}
         virtual void end(LetIn const &) = 0;
@@ -121,18 +156,35 @@ namespace excyrender { namespace Nature { namespace Et1 { namespace AST {
     struct Transform {
         virtual void begin(Addition &) = 0;
         virtual void end(Addition &) = 0;
-
         virtual void begin(Subtraction &) = 0;
         virtual void end(Subtraction &) = 0;
-
         virtual void begin(Multiplication &) = 0;
         virtual void end(Multiplication &) = 0;
-
         virtual void begin(Division &) = 0;
         virtual void end(Division &) = 0;
 
+        virtual void begin(LessThan &) = 0;
+        virtual void end(LessThan &) = 0;
+        virtual void begin(LessEqual &) = 0;
+        virtual void end(LessEqual &) = 0;
+        virtual void begin(GreaterThan &) = 0;
+        virtual void end(GreaterThan &) = 0;
+        virtual void begin(GreaterEqual &) = 0;
+        virtual void end(GreaterEqual &) = 0;
+        virtual void begin(Equal &) = 0;
+        virtual void end(Equal &) = 0;
+        virtual void begin(NotEqual &) = 0;
+        virtual void end(NotEqual &) = 0;
+        virtual void begin(LogicalAnd &) = 0;
+        virtual void end(LogicalAnd &) = 0;
+        virtual void begin(LogicalOr &) = 0;
+        virtual void end(LogicalOr &) = 0;
+        virtual void begin(LogicalNot &) = 0;
+        virtual void end(LogicalNot &) = 0;
+
         virtual void transform(IntegerLiteral &) = 0;
         virtual void transform(RealLiteral &) = 0;
+        virtual void transform(BoolLiteral &) = 0;
         virtual void transform(Identifier &) = 0;
 
         virtual void begin(Call &) = 0;
@@ -146,6 +198,9 @@ namespace excyrender { namespace Nature { namespace Et1 { namespace AST {
 
         virtual void begin(Binding &) = 0;
         virtual void end(Binding &) = 0;
+
+        virtual void begin(IfThenElse &) = 0;
+        virtual void end(IfThenElse &) = 0;
 
         virtual void begin(LetIn &) = 0;
         virtual void end(LetIn &) = 0;
@@ -214,6 +269,30 @@ namespace excyrender { namespace Nature { namespace Et1 { namespace AST {
                 shared_ptr<Expression> lhs, shared_ptr<Expression> rhs
                ) : Expression(from, to), lhs_(lhs), rhs_(rhs) {}
 
+        template <typename THIS>
+        static void visit_tpl(const THIS &this_, Visitor &v) {
+            v.begin(this_);
+            this_.lhs().accept(v);
+            v.infix();
+            this_.rhs().accept(v);
+            v.end(this_);
+        }
+
+        template <typename THIS>
+        static void transform_tpl(THIS &this_, Transform &v) {
+            v.begin(this_);
+            this_.lhs().accept(v);
+            this_.rhs().accept(v);
+            v.end(this_);
+        }
+
+        template <typename THIS>
+        static auto deep_copy_tpl(THIS &this_) -> typename std::remove_const<THIS>::type* {
+            return new typename std::remove_const<THIS>::type (
+                            this_.from(), this_.to(),
+                            shared_ptr<Expression>(this_.lhs().deep_copy()),
+                            shared_ptr<Expression>(this_.rhs().deep_copy()));
+        }
     private:
         shared_ptr<Expression> lhs_, rhs_;
     };
@@ -224,26 +303,9 @@ namespace excyrender { namespace Nature { namespace Et1 { namespace AST {
                   ) : Binary(from, to, lhs, rhs)
         {}
 
-        void accept(Visitor &v) const {
-            v.begin(*this);
-            lhs().accept(v);
-            v.infix();
-            rhs().accept(v);
-            v.end(*this);
-        }
-
-        void accept(Transform &v) {
-            v.begin(*this);
-            lhs().accept(v);
-            rhs().accept(v);
-            v.end(*this);
-        }
-
-        Addition* deep_copy() const {
-            return new Addition(from(), to(),
-                                shared_ptr<Expression>(lhs().deep_copy()),
-                                shared_ptr<Expression>(rhs().deep_copy()));
-        }
+        void accept(Visitor &v) const { visit_tpl(*this, v); }
+        void accept(Transform &v) { transform_tpl(*this, v); }
+        Addition* deep_copy() const { return deep_copy_tpl(*this); }
     };
 
     struct Subtraction final : Binary {
@@ -252,25 +314,9 @@ namespace excyrender { namespace Nature { namespace Et1 { namespace AST {
                     ) : Binary(from, to, lhs, rhs)
         {}
 
-        void accept(Visitor &v) const {
-            v.begin(*this);
-            lhs().accept(v);
-            v.infix();
-            rhs().accept(v);
-            v.end(*this);
-        }
-        void accept(Transform &v) {
-            v.begin(*this);
-            lhs().accept(v);
-            rhs().accept(v);
-            v.end(*this);
-        }
-
-        Subtraction* deep_copy() const {
-            return new Subtraction(from(), to(),
-                                shared_ptr<Expression>(lhs().deep_copy()),
-                                shared_ptr<Expression>(rhs().deep_copy()));
-        }
+        void accept(Visitor &v) const { visit_tpl(*this, v); }
+        void accept(Transform &v) { transform_tpl(*this, v); }
+        Subtraction* deep_copy() const { return deep_copy_tpl(*this); }
     };
 
     struct Multiplication final : Binary {
@@ -279,25 +325,9 @@ namespace excyrender { namespace Nature { namespace Et1 { namespace AST {
                        ) : Binary(from, to, lhs, rhs)
         {}
 
-        void accept(Visitor &v) const {
-            v.begin(*this);
-            lhs().accept(v);
-            v.infix();
-            rhs().accept(v);
-            v.end(*this);
-        }
-        void accept(Transform &v) {
-            v.begin(*this);
-            lhs().accept(v);
-            rhs().accept(v);
-            v.end(*this);
-        }
-
-        Multiplication* deep_copy() const {
-            return new Multiplication(from(), to(),
-                                shared_ptr<Expression>(lhs().deep_copy()),
-                                shared_ptr<Expression>(rhs().deep_copy()));
-        }
+        void accept(Visitor &v) const { visit_tpl(*this, v); }
+        void accept(Transform &v) { transform_tpl(*this, v); }
+        Multiplication* deep_copy() const { return deep_copy_tpl(*this); }
     };
 
     struct Division final : Binary {
@@ -306,25 +336,98 @@ namespace excyrender { namespace Nature { namespace Et1 { namespace AST {
                  ) : Binary(from, to, lhs, rhs)
         {}
 
-        void accept(Visitor &v) const {
-            v.begin(*this);
-            lhs().accept(v);
-            v.infix();
-            rhs().accept(v);
-            v.end(*this);
-        }
-        void accept(Transform &v) {
-            v.begin(*this);
-            lhs().accept(v);
-            rhs().accept(v);
-            v.end(*this);
-        }
+        void accept(Visitor &v) const { visit_tpl(*this, v); }
+        void accept(Transform &v) { transform_tpl(*this, v); }
+        Division* deep_copy() const { return deep_copy_tpl(*this); }
+    };
 
-        Division* deep_copy() const {
-            return new Division(from(), to(),
-                                shared_ptr<Expression>(lhs().deep_copy()),
-                                shared_ptr<Expression>(rhs().deep_copy()));
-        }
+
+    struct LessThan final : Binary {
+        LessThan (token_iter from, token_iter to,
+                  shared_ptr<Expression> lhs, shared_ptr<Expression> rhs
+                 ) : Binary(from, to, lhs, rhs)
+        {}
+
+        void accept(Visitor &v) const { visit_tpl(*this, v); }
+        void accept(Transform &v) { transform_tpl(*this, v); }
+        LessThan* deep_copy() const { return deep_copy_tpl(*this); }
+    };
+
+    struct LessEqual final : Binary {
+        LessEqual (token_iter from, token_iter to,
+                  shared_ptr<Expression> lhs, shared_ptr<Expression> rhs
+                 ) : Binary(from, to, lhs, rhs)
+        {}
+
+        void accept(Visitor &v) const { visit_tpl(*this, v); }
+        void accept(Transform &v) { transform_tpl(*this, v); }
+        LessEqual* deep_copy() const { return deep_copy_tpl(*this); }
+    };
+
+    struct GreaterThan final : Binary {
+        GreaterThan (token_iter from, token_iter to,
+                  shared_ptr<Expression> lhs, shared_ptr<Expression> rhs
+                 ) : Binary(from, to, lhs, rhs)
+        {}
+
+        void accept(Visitor &v) const { visit_tpl(*this, v); }
+        void accept(Transform &v) { transform_tpl(*this, v); }
+        GreaterThan* deep_copy() const { return deep_copy_tpl(*this); }
+    };
+
+    struct GreaterEqual final : Binary {
+        GreaterEqual (token_iter from, token_iter to,
+                  shared_ptr<Expression> lhs, shared_ptr<Expression> rhs
+                 ) : Binary(from, to, lhs, rhs)
+        {}
+
+        void accept(Visitor &v) const { visit_tpl(*this, v); }
+        void accept(Transform &v) { transform_tpl(*this, v); }
+        GreaterEqual* deep_copy() const { return deep_copy_tpl(*this); }
+    };
+
+    struct Equal final : Binary {
+        Equal (token_iter from, token_iter to,
+                  shared_ptr<Expression> lhs, shared_ptr<Expression> rhs
+                 ) : Binary(from, to, lhs, rhs)
+        {}
+
+        void accept(Visitor &v) const { visit_tpl(*this, v); }
+        void accept(Transform &v) { transform_tpl(*this, v); }
+        Equal* deep_copy() const { return deep_copy_tpl(*this); }
+    };
+
+    struct NotEqual final : Binary {
+        NotEqual (token_iter from, token_iter to,
+                  shared_ptr<Expression> lhs, shared_ptr<Expression> rhs
+                 ) : Binary(from, to, lhs, rhs)
+        {}
+
+        void accept(Visitor &v) const { visit_tpl(*this, v); }
+        void accept(Transform &v) { transform_tpl(*this, v); }
+        NotEqual* deep_copy() const { return deep_copy_tpl(*this); }
+    };
+
+    struct LogicalAnd final : Binary {
+        LogicalAnd (token_iter from, token_iter to,
+                  shared_ptr<Expression> lhs, shared_ptr<Expression> rhs
+                 ) : Binary(from, to, lhs, rhs)
+        {}
+
+        void accept(Visitor &v) const { visit_tpl(*this, v); }
+        void accept(Transform &v) { transform_tpl(*this, v); }
+        LogicalAnd* deep_copy() const { return deep_copy_tpl(*this); }
+    };
+
+    struct LogicalOr final : Binary {
+        LogicalOr (token_iter from, token_iter to,
+                  shared_ptr<Expression> lhs, shared_ptr<Expression> rhs
+                 ) : Binary(from, to, lhs, rhs)
+        {}
+
+        void accept(Visitor &v) const { visit_tpl(*this, v); }
+        void accept(Transform &v) { transform_tpl(*this, v); }
+        LogicalOr* deep_copy() const { return deep_copy_tpl(*this); }
     };
 
 
@@ -350,32 +453,27 @@ namespace excyrender { namespace Nature { namespace Et1 { namespace AST {
         IntegerLiteral (token_iter from, token_iter to, string value) :
             Literal(from, to, value) {}
 
-        void accept(Visitor &v) const {
-            v.visit(*this);
-        }
-        void accept(Transform &v) {
-            v.transform(*this);
-        }
-
-        IntegerLiteral *deep_copy() const {
-            return new IntegerLiteral(from(), to(), value());
-        }
+        void accept(Visitor &v) const { v.visit(*this); }
+        void accept(Transform &v) { v.transform(*this); }
+        IntegerLiteral *deep_copy() const { return new IntegerLiteral(from(), to(), value()); }
     };
 
     struct RealLiteral final : Literal {
         RealLiteral (token_iter from, token_iter to, string value) :
             Literal(from, to, value) {}
 
-        void accept(Visitor &v) const {
-            v.visit(*this);
-        }
-        void accept(Transform &v) {
-            v.transform(*this);
-        }
+        void accept(Visitor &v) const { v.visit(*this); }
+        void accept(Transform &v) { v.transform(*this); }
+        RealLiteral *deep_copy() const { return new RealLiteral(from(), to(), value()); }
+    };
 
-        RealLiteral *deep_copy() const {
-            return new RealLiteral(from(), to(), value());
-        }
+    struct BoolLiteral final : Literal {
+        BoolLiteral (token_iter from, token_iter to, string value) :
+            Literal(from, to, value) {}
+
+        void accept(Visitor &v) const { v.visit(*this); }
+        void accept(Transform &v) { v.transform(*this); }
+        BoolLiteral *deep_copy() const { return new BoolLiteral(from(), to(), value()); }
     };
 
 
@@ -490,6 +588,58 @@ namespace excyrender { namespace Nature { namespace Et1 { namespace AST {
         string id_;
         vector<Argument> arguments_;
         shared_ptr<Expression> body_;
+    };
+
+    struct IfThenElse final : Terminal {
+        IfThenElse(token_iter from, token_iter to,
+                   shared_ptr<Expression> condition, // we must enfroce upon type-resolution that this bool
+                   shared_ptr<Expression> then,
+                   shared_ptr<Expression> else_)
+        : Terminal(from, to),
+          condition_(condition),
+          thenExpression_(then),
+          elseExpression_(else_)
+        {}
+
+        Expression& condition() { return *condition_; }
+        Expression& thenExpression() { return *thenExpression_; }
+        Expression& elseExpression() { return *elseExpression_; }
+
+        Expression const & condition() const { return *condition_; }
+        Expression const & thenExpression() const { return *thenExpression_; }
+        Expression const & elseExpression() const { return *elseExpression_; }
+
+        void reset_condition(Expression *expr) { condition_.reset(expr); }
+        void reset_thenExpression(Expression *expr) { thenExpression_.reset(expr); }
+        void reset_elseExpression(Expression *expr) { elseExpression_.reset(expr); }
+
+        IfThenElse* deep_copy() const {
+            return new IfThenElse(from(), to(),
+                                  shared_ptr<Expression>(condition_->deep_copy()),
+                                  shared_ptr<Expression>(thenExpression_->deep_copy()),
+                                  shared_ptr<Expression>(elseExpression_->deep_copy()));
+        }
+
+        void accept(Visitor &v) const {
+            v.begin(*this);
+            condition().accept(v);
+            v.before_then();
+            thenExpression().accept(v);
+            v.before_else();
+            elseExpression().accept(v);
+            v.end(*this);
+        }
+        void accept(Transform &v) {
+            v.begin(*this);
+            condition().accept(v);
+            thenExpression().accept(v);
+            elseExpression().accept(v);
+            v.end(*this);
+        }
+    private:
+        shared_ptr<Expression> condition_;
+        shared_ptr<Expression> thenExpression_;
+        shared_ptr<Expression> elseExpression_;
     };
 
     struct LetIn final : Terminal {
@@ -614,6 +764,27 @@ namespace excyrender { namespace Nature { namespace Et1 { namespace AST {
 
         Negation* deep_copy() const {
             return new Negation(from(), to(), shared_ptr<Expression>(rhs().deep_copy()));
+        }
+    };
+
+    struct LogicalNot final : Unary {
+        LogicalNot (token_iter from, token_iter to, shared_ptr<Expression> rhs) :
+            Unary(from, to, rhs)
+        {}
+
+        void accept(Visitor &v) const {
+            v.begin(*this);
+            rhs().accept(v);
+            v.end(*this);
+        }
+        void accept(Transform &v) {
+            v.begin(*this);
+            rhs().accept(v);
+            v.end(*this);
+        }
+
+        LogicalNot* deep_copy() const {
+            return new LogicalNot(from(), to(), shared_ptr<Expression>(rhs().deep_copy()));
         }
     };
 

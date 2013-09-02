@@ -24,6 +24,14 @@ TEST_CASE( "Et1/ASTPasses/1100_resolve_types.hh", "Type resolution" ) {
 
     auto passes = [](std::shared_ptr<AST::Program> ast) { ASTPasses::resolve_types(ast); };
 
+    REQUIRE(equal("let y = true in y",
+                  "let bool y = true in y",
+                  passes));
+
+    REQUIRE(equal("let y = if true then true else false || true in y",
+                  "let bool y = if true then true else false || true in y",
+                  passes));
+
     REQUIRE(equal("let y = 1 in y",
                   "let int y = 1 in y",
                   passes));
@@ -52,6 +60,13 @@ TEST_CASE( "Et1/ASTPasses/1100_resolve_types.hh", "Type resolution" ) {
                   "let q(x) = x, "
                   "    float q(float x) = x "
                   "in q(2.0)",
+                  passes));
+
+    REQUIRE(equal("let q(x) = x in q(true)",
+
+                  "let q(x) = x, "
+                  "    bool q(bool x) = x "
+                  "in q(true)",
                   passes));
 
 
@@ -169,20 +184,37 @@ namespace {
 
     struct ResolveTypes final : Transform {
 
-        void begin(Addition &) {}
-        void end(Addition &bin) { resolve(bin); }
+        void begin(AST::Addition &) {}
+        void end(AST::Addition &bin) { resolve(bin); }
+        void begin(AST::Subtraction &) {}
+        void end(AST::Subtraction &bin) { resolve(bin); }
+        void begin(AST::Multiplication &) {}
+        void end(AST::Multiplication &bin) { resolve(bin); }
+        void begin(AST::Division &) {}
+        void end(AST::Division &bin) { resolve(bin); }
 
-        void begin(Subtraction &) {}
-        void end(Subtraction &bin) { resolve(bin); }
-
-        void begin(Multiplication &) {}
-        void end(Multiplication &bin) { resolve(bin); }
-
-        void begin(Division &) {}
-        void end(Division &bin) { resolve(bin); }
+        void begin(AST::LessThan &) {}
+        void end(AST::LessThan &bin) { resolve(bin); }
+        void begin(AST::LessEqual &) {}
+        void end(AST::LessEqual &bin) { resolve(bin); }
+        void begin(AST::GreaterThan &) {}
+        void end(AST::GreaterThan &bin) { resolve(bin); }
+        void begin(AST::GreaterEqual &) {}
+        void end(AST::GreaterEqual &bin) { resolve(bin); }
+        void begin(AST::Equal &) {}
+        void end(AST::Equal &bin) { resolve(bin); }
+        void begin(AST::NotEqual &) {}
+        void end(AST::NotEqual &bin) { resolve(bin); }
+        void begin(AST::LogicalAnd &) {}
+        void end(AST::LogicalAnd &bin) { resolve(bin); }
+        void begin(AST::LogicalOr &) {}
+        void end(AST::LogicalOr &bin) { resolve(bin); }
+        void begin(AST::LogicalNot &) {}
+        void end(AST::LogicalNot &u) { resolve(u); }
 
         void transform(IntegerLiteral &term) { resolve(term); }
         void transform(RealLiteral &term) { resolve(term); }
+        void transform(BoolLiteral &term) { resolve(term); }
 
         void transform(AST::Identifier &id) {
             resolve(id);
@@ -196,7 +228,7 @@ namespace {
             }
         }
 
-        void begin(Call &) {}
+        void begin(AST::Call &) {}
 
 
         static Binding* lookup (Call &call, vector<Binding*> visible_bindings)
@@ -243,7 +275,10 @@ namespace {
             return binding;
         }
 
-        void end(Call &call)
+        void begin(AST::IfThenElse &) {}
+        void end(AST::IfThenElse &) {}
+
+        void end(AST::Call &call)
         {
             for (auto &arg : call.arguments()) {
                 if (!arg->type()) {
@@ -278,34 +313,34 @@ namespace {
             }
         }
 
-        void begin(Negation &) {}
-        void end(Negation &neg) { resolve(neg); }
+        void begin(AST::Negation &) {}
+        void end(AST::Negation &neg) { resolve(neg); }
 
-        void begin(ParenExpression &) {}
-        void end(ParenExpression &p) { resolve(p); }
+        void begin(AST::ParenExpression &) {}
+        void end(AST::ParenExpression &p) { resolve(p); }
 
-        void begin(Binding &binding)
+        void begin(AST::Binding &binding)
         {
             scope.push(scope.top().enter_binding(binding));
         }
-        void end(Binding &binding)
+        void end(AST::Binding &binding)
         {
             resolve(binding.body(), binding);
             scope.pop();
         }
 
-        void begin(LetIn &letin) {
+        void begin(AST::LetIn &letin) {
             scope.push(scope.top().enter_declarative_region(letin.bindings()));
         }
-        void end(LetIn &letin) {
+        void end(AST::LetIn &letin) {
             resolve(letin.value(), letin);
             scope.pop();
         }
 
-        void begin(Program &p) {
+        void begin(AST::Program &p) {
             scope.push(Scope::EnterProgram(p.bindings()));
         }
-        void end(Program &p) {
+        void end(AST::Program &p) {
             resolve(p.value(), p);
             scope.pop();
         }

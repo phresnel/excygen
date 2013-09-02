@@ -104,6 +104,15 @@ namespace excyrender { namespace Nature { namespace Et1 {
                 ++it;
             return it;
         }
+
+        optional<iterator> boolean(iterator it, iterator end) {
+            if (auto id = identifier(it, end)) {
+                string val = string(it, *id);
+                if (val == "true" || val == "false")
+                    return id;
+            }
+            return optional<iterator>();
+        }
     }
 
 
@@ -115,6 +124,8 @@ namespace excyrender { namespace Nature { namespace Et1 {
 
         //std::cout << "tokenizing [" << str << "]\n";
         for (auto it = str.begin(), end=str.end(); it!=end; ) {
+            auto peek = [&it,&end]() { if (it+1 != end) return *(it+1); return '\0'; };
+
             while (it!=end && is_whitespace(*it))
                 ++it;
             if (it==end)
@@ -124,6 +135,9 @@ namespace excyrender { namespace Nature { namespace Et1 {
                 it = *oit;
             } else if (auto oit = integer(it, end)) {
                 tokens.emplace_back(Integer, it, *oit);
+                it = *oit;
+            } else if (auto oit = boolean(it, end)) {
+                tokens.emplace_back(Bool, it, *oit);
                 it = *oit;
             } else if (*it == '(') {
                 tokens.emplace_back(LParen, it, it+1);
@@ -146,8 +160,35 @@ namespace excyrender { namespace Nature { namespace Et1 {
             } else if (*it == ',') {
                 tokens.emplace_back(Comma, it, it+1);
                 ++it;
+            } else if (*it == '=' && peek() == '=') {
+                tokens.emplace_back(EqualTo, it, it+2);
+                it += 2;
+            } else if (*it == '!' && peek() == '=') {
+                tokens.emplace_back(UnequalTo, it, it+2);
+                it += 2;
             } else if (*it == '=') {
                 tokens.emplace_back(Equal, it, it+1);
+                ++it;
+            } else if (*it == '&' && peek() == '&') {
+                tokens.emplace_back(LogicalAnd, it, it+2);
+                it += 2;
+            } else if (*it == '|' && peek() == '|') {
+                tokens.emplace_back(LogicalOr, it, it+2);
+                it += 2;
+            } else if (*it == '<' && peek() == '=') {
+                tokens.emplace_back(LessEqual, it, it+2);
+                it += 2;
+            } else if (*it == '<') {
+                tokens.emplace_back(LessThan, it, it+1);
+                ++it;
+            } else if (*it == '>' && peek() == '=') {
+                tokens.emplace_back(GreaterEqual, it, it+2);
+                it += 2;
+            } else if (*it == '>') {
+                tokens.emplace_back(GreaterThan, it, it+1);
+                ++it;
+            } else if (*it == '!') {
+                tokens.emplace_back(LogicalNot, it, it+1);
                 ++it;
             } else if (auto oit = identifier(it, end)) {
                 if (string(it,*oit) == "let") {
@@ -158,6 +199,12 @@ namespace excyrender { namespace Nature { namespace Et1 {
                     tokens.emplace_back(Static, it, *oit);
                 } else if (string(it,*oit) == "dynamic") {
                     tokens.emplace_back(Dynamic, it, *oit);
+                } else if (string(it,*oit) == "if") {
+                    tokens.emplace_back(If, it, *oit);
+                } else if (string(it,*oit) == "then") {
+                    tokens.emplace_back(Then, it, *oit);
+                } else if (string(it,*oit) == "else") {
+                    tokens.emplace_back(Else, it, *oit);
                 } else {
                     tokens.emplace_back(Identifier, it, *oit);
                 }

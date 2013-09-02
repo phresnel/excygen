@@ -69,18 +69,38 @@ namespace {
 
         void begin(AST::Addition const &) {}
         void end(AST::Addition const &) {}
-
         void begin(AST::Subtraction const &) {}
         void end(AST::Subtraction const &) {}
-
         void begin(AST::Multiplication const &) {}
         void end(AST::Multiplication const &) {}
-
         void begin(AST::Division const &) {}
         void end(AST::Division const &) {}
 
+        void begin(AST::LessThan const &)  {}
+        void end(AST::LessThan const &)  {}
+        void begin(AST::LessEqual const &)  {}
+        void end(AST::LessEqual const &)  {}
+        void begin(AST::GreaterThan const &)  {}
+        void end(AST::GreaterThan const &)  {}
+        void begin(AST::GreaterEqual const &)  {}
+        void end(AST::GreaterEqual const &)  {}
+        void begin(AST::Equal const &)  {}
+        void end(AST::Equal const &)  {}
+        void begin(AST::NotEqual const &) {}
+        void end(AST::NotEqual const &) {}
+        void begin(AST::LogicalAnd const &) {}
+        void end(AST::LogicalAnd const &) {}
+        void begin(AST::LogicalOr const &) {}
+        void end(AST::LogicalOr const &) {}
+        void begin(AST::LogicalNot const &) {}
+        void end(AST::LogicalNot const &) {}
+
+        void begin(AST::IfThenElse const &) {}
+        void end(AST::IfThenElse const &) {}
+
         void visit(AST::IntegerLiteral const &) {}
         void visit(AST::RealLiteral const &) {}
+        void visit(AST::BoolLiteral const &) {}
 
         void visit(AST::Identifier const &id)
         {

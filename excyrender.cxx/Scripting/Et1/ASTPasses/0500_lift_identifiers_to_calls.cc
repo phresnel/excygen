@@ -28,6 +28,26 @@ TEST_CASE( "Et1/ASTPasses/0500_lift_identifiers_to_calls", "Identifier to call p
                   passes));
 
     REQUIRE(equal("let x = "
+                  "   let y = -x*-2 "
+                  "   in y "
+                  "in x",
+                  "let x = "
+                  "   let y(x) = -x*-2 "
+                  "   in y(x) "
+                  "in x ",
+                  passes));
+
+    REQUIRE(equal("let x = "
+                  "   let y = !x*!false "
+                  "   in y "
+                  "in x",
+                  "let x = "
+                  "   let y(x) = !x*!false "
+                  "   in y(x) "
+                  "in x ",
+                  passes));
+
+    REQUIRE(equal("let x = "
                   "   let a = "
                   "      let b = "
                   "         let c = "
@@ -80,8 +100,17 @@ namespace {
         }
 
         void binary(Binary &op) {
+            if (!cross_bindings && binding_depth>0)
+                return;
             if (auto id = dynamic_cast<AST::Identifier*>(&op.lhs()))
                 if (shall (id->id())) op.reset_lhs(new Call(id->from(), id->to(), id->id(), {}));
+            if (auto id = dynamic_cast<AST::Identifier*>(&op.rhs()))
+                if (shall (id->id())) op.reset_rhs(new Call(id->from(), id->to(), id->id(), {}));
+        }
+
+        void unary(Unary &op) {
+            if (!cross_bindings && binding_depth>0)
+                return;
             if (auto id = dynamic_cast<AST::Identifier*>(&op.rhs()))
                 if (shall (id->id())) op.reset_rhs(new Call(id->from(), id->to(), id->id(), {}));
         }
@@ -92,23 +121,40 @@ namespace {
             which(which), cross_bindings(cross_bindings)
         {}
 
-        void begin(Addition &op) { binary(op); }
-        void end(Addition &) {}
+        void begin(AST::Addition &op) { binary(op); }
+        void end(AST::Addition &) {}
+        void begin(AST::Subtraction &op) { binary(op); }
+        void end(AST::Subtraction &) {}
+        void begin(AST::Multiplication &op) { binary(op); }
+        void end(AST::Multiplication &) {}
+        void begin(AST::Division &op) { binary(op); }
+        void end(AST::Division &) {}
+        void begin(AST::LessThan &op) { binary(op); }
+        void end(AST::LessThan &) {}
+        void begin(AST::LessEqual &op) { binary(op); }
+        void end(AST::LessEqual &) {}
+        void begin(AST::GreaterThan &op) { binary(op); }
+        void end(AST::GreaterThan &) {}
+        void begin(AST::GreaterEqual &op) { binary(op); }
+        void end(AST::GreaterEqual &) {}
+        void begin(AST::Equal &op) { binary(op); }
+        void end(AST::Equal &) {}
+        void begin(AST::NotEqual &op) { binary(op); }
+        void end(AST::NotEqual &) {}
+        void begin(AST::LogicalAnd &op) { binary(op); }
+        void end(AST::LogicalAnd &) {}
+        void begin(AST::LogicalOr &op) { binary(op); }
+        void end(AST::LogicalOr &) {}
 
-        void begin(Subtraction &op) { binary(op); }
-        void end(Subtraction &) {}
-
-        void begin(Multiplication &op) { binary(op); }
-        void end(Multiplication &) {}
-
-        void begin(Division &op) { binary(op); }
-        void end(Division &) {}
+        void begin(AST::LogicalNot &n) { unary(n); }
+        void end(AST::LogicalNot &) {}
 
         void transform(IntegerLiteral &) {}
         void transform(RealLiteral &) {}
+        void transform(BoolLiteral &) {}
         void transform(AST::Identifier &) {}
 
-        void begin(Call &call) {
+        void begin(AST::Call &call) {
             if (!cross_bindings && binding_depth>0)
                 return;
             for (auto &a : call.arguments()) {
@@ -116,45 +162,43 @@ namespace {
                     if (shall (id->id()))a.reset(new Call(id->from(), id->to(), id->id(), {}));
             }
         }
-        void end(Call &) {}
+        void end(AST::Call &) {}
 
-        void begin(Negation &n) {
-            if (!cross_bindings && binding_depth>0)
-                return;
-            if (auto id = dynamic_cast<AST::Identifier*>(&n.rhs()))
-                if (shall (id->id()))n.reset_rhs(new Call(id->from(), id->to(), id->id(), {}));
-        }
-        void end(Negation &) {}
+        void begin(AST::Negation &n) { unary(n); }
+        void end(AST::Negation &) {}
 
-        void begin(ParenExpression &) {}
-        void end(ParenExpression &) {}
+        void begin(AST::ParenExpression &) {}
+        void end(AST::ParenExpression &) {}
 
-        void begin(Binding &binding) {
+        void begin(AST::Binding &binding) {
             ++binding_depth;
             if (cross_bindings || binding_depth==0) {
                 if (auto id = dynamic_cast<AST::Identifier*>(&binding.body()))
                     if (shall (id->id()))binding.reset_body(new Call(id->from(), id->to(), id->id(), {}));
             }
         }
-        void end(Binding &) {
+        void end(AST::Binding &) {
             --binding_depth;
         }
 
-        void begin(LetIn &letin) {
+        void begin(AST::IfThenElse &) {}
+        void end(AST::IfThenElse &) {}
+
+        void begin(AST::LetIn &letin) {
             if (!cross_bindings && binding_depth>0)
                 return;
             if (auto id = dynamic_cast<AST::Identifier*>(&letin.value()))
                 if (shall (id->id()))letin.reset_value(new Call(id->from(), id->to(), id->id(), {}));
         }
-        void end(LetIn &) {}
+        void end(AST::LetIn &) {}
 
-        void begin(Program &prog) {
+        void begin(AST::Program &prog) {
             if (!cross_bindings && binding_depth>0)
                 return;
             if (auto id = dynamic_cast<AST::Identifier*>(&prog.value()))
                 if (shall (id->id()))prog.reset_value(new Call(id->from(), id->to(), id->id(), {}));
         }
-        void end(Program &) {}
+        void end(AST::Program &) {}
 
     private:
         std::set<std::string> which;

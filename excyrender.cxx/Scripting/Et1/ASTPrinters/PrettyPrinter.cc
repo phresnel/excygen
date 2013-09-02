@@ -20,7 +20,10 @@ bool compare_token_sequence (std::string const &code) {
     ast->accept(pp);
     auto result = tokenize(ss.str()) == tokens;
     if (!result) {
-        std::cout << "tokens: (\n " << tokenize(ss.str()) << "\n" << " " << tokenize(code) << "\n)\n";
+        std::cout << "tokens: {\n"
+                  << "got:      " << tokenize(ss.str()) << "\n"
+                  << "expected: " << tokenize(code) << "\n"
+                  << "}\n";
         std::cout << "input: {\n" << code << "\n}\n";
         std::cout << "pretty: {\n" << ss.str() << "\n}\n";
     }
@@ -32,6 +35,11 @@ TEST_CASE( "Et1/ASTPrinters/PrettyPrinter", "Pretty printing" ) {
     REQUIRE(compare_token_sequence("let f(x) = x+1+2 in f(3)"));
     REQUIRE(compare_token_sequence("let f(x,y,z) = x+y+z*f(x/y,2+z,-1-z) in f(1,2,3)"));
     REQUIRE(compare_token_sequence("let int f(x) = x*2 in f(1)"));
+
+    REQUIRE(compare_token_sequence("if true then 2 else 3"));
+    REQUIRE(compare_token_sequence("if false then 2 else 3"));
+    REQUIRE(compare_token_sequence("if true then 2.0 else 3.0"));
+    REQUIRE(compare_token_sequence("if false then 2.0 else 3.0"));
 }
 //--------------------------------------------------------------------------------------------------
 

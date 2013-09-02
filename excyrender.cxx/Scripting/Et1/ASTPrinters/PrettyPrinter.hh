@@ -20,74 +20,50 @@ namespace excyrender { namespace Nature { namespace Et1 { namespace ASTPrinters 
             scope.push({""});
         }
 
-        void begin(AST::Addition const &)
-        {
-            scope.push({" + "});
-        }
-        void end(AST::Addition const &)
-        {
-            scope.pop();
-        }
+        void begin(AST::Addition const &) { scope.push({" + "}); }
+        void end(AST::Addition const &) { scope.pop(); }
+        void begin(AST::Subtraction const &) { scope.push({" - "}); }
+        void end(AST::Subtraction const &) { scope.pop(); }
+        void begin(AST::Multiplication const &) { scope.push({" * "}); }
+        void end(AST::Multiplication const &) { scope.pop(); }
+        void begin(AST::Division const &) { scope.push({" / "}); }
+        void end(AST::Division const &) { scope.pop(); }
 
-        void begin(AST::Subtraction const &)
-        {
-            scope.push({" - "});
-        }
-        void end(AST::Subtraction const &)
-        {
-            scope.pop();
-        }
-
-        void begin(AST::Multiplication const &)
-        {
-            scope.push({" * "});
-        }
-        void end(AST::Multiplication const &)
-        {
-            scope.pop();
-        }
-
-        void begin(AST::Division const &)
-        {
-            scope.push({" / "});
-        }
-        void end(AST::Division const &)
-        {
-            scope.pop();
-        }
+        void begin(AST::LessThan const &)  { scope.push({" < "}); }
+        void end(AST::LessThan const &)  { scope.pop(); }
+        void begin(AST::LessEqual const &)  { scope.push({" <= "}); }
+        void end(AST::LessEqual const &)  { scope.pop(); }
+        void begin(AST::GreaterThan const &)  { scope.push({" > "}); }
+        void end(AST::GreaterThan const &)  { scope.pop(); }
+        void begin(AST::GreaterEqual const &)  { scope.push({" >= "}); }
+        void end(AST::GreaterEqual const &)  { scope.pop(); }
+        void begin(AST::Equal const &)  { scope.push({" == "}); }
+        void end(AST::Equal const &)  { scope.pop(); }
+        void begin(AST::NotEqual const &)  { scope.push({" != "}); }
+        void end(AST::NotEqual const &)  { scope.pop(); }
+        void begin(AST::LogicalAnd const &) { scope.push({" && "}); }
+        void end(AST::LogicalAnd const &) { scope.pop(); }
+        void begin(AST::LogicalOr const &) { scope.push({" || "}); }
+        void end(AST::LogicalOr const &) { scope.pop(); }
+        void begin(AST::LogicalNot const &) { os << " !"; }
+        void end(AST::LogicalNot const &) {}
 
         void infix()
         {
             if (!scope.empty()) os << scope.top().Operator;
         }
 
-        void begin(AST::Negation const &)
-        {
-            os << " -";
-        }
-        void end(AST::Negation const &)
-        {
-        }
+        void begin(AST::Negation const &) { os << " -"; }
+        void end(AST::Negation const &) { }
 
-        void visit(AST::IntegerLiteral const &lit)
-        {
-            os << lit.value();
-        }
+        void visit(AST::IntegerLiteral const &lit) { os << lit.value(); }
+        void visit(AST::RealLiteral const &lit) { os << lit.value(); }
+        void visit(AST::BoolLiteral const &lit) { os << lit.value(); }
 
-        void visit(AST::RealLiteral const &lit)
-        {
-            os << lit.value();
-        }
-
-        void visit(AST::Identifier const &id)
-        {
-            //if (scope.top().argCount++) os << scope.top().Operator;
-            os << id.id();
-        }
+        void visit(AST::Identifier const &id) { os << id.id(); }
 
         void begin(AST::Call const &call)
         {
-            //if (scope.top().argCount++) os << scope.top().Operator;
             scope.push({", "});
             os << call.id() << "(";
         }
@@ -97,15 +73,8 @@ namespace excyrender { namespace Nature { namespace Et1 { namespace ASTPrinters 
             scope.pop();
         }
 
-        void begin(AST::ParenExpression const &call)
-        {
-            //if (scope.top().argCount++) os << scope.top().Operator;
-            os << "(";
-        }
-        void end(AST::ParenExpression const &)
-        {
-            os << ")";
-        }
+        void begin(AST::ParenExpression const &call) { os << "("; }
+        void end(AST::ParenExpression const &) { os << ")"; }
 
         void begin(AST::Binding const &binding)
         {
@@ -141,6 +110,24 @@ namespace excyrender { namespace Nature { namespace Et1 { namespace ASTPrinters 
         {
             scope.pop();
         }
+
+        void begin(AST::IfThenElse const &ite)
+        {
+            os << "if ";
+        }
+        void before_then()
+        {
+            os << "\n";
+            indent();
+            os << "then ";
+        }
+        void before_else()
+        {
+            os << "\n";
+            indent();
+            os << "else ";
+        }
+        void end(AST::IfThenElse const &ite) {}
 
         void begin(AST::LetIn const &letin)
         {
