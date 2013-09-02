@@ -106,6 +106,8 @@
 ../excyrender.cxx/Scripting/Et1/ASTQueries/resolve_type.cc
 ../excyrender.cxx/Scripting/Et1/ASTQueries/has_unresolved.hh
 ../excyrender.cxx/Scripting/Et1/ASTQueries/has_unresolved.cc
+../excyrender.cxx/Scripting/Et1/ASTQueries/equal.hh
+../excyrender.cxx/Scripting/Et1/ASTQueries/equal.cc
 
 ../excyrender.cxx/Scripting/Et1/ASTPrinters/PrettyPrinter.hh
 ../excyrender.cxx/Scripting/Et1/ASTPrinters/PrettyPrinter.cc

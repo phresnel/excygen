@@ -54,4 +54,11 @@ std::string pretty_print(std::string in) {
     return ss.str();
 }
 
+std::string pretty_print(AST::ASTNode const &ast) {
+    std::stringstream ss;
+    PrettyPrinter pp(ss);
+    ast.accept(pp);
+    return ss.str();
+}
+
 } } } }

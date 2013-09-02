@@ -173,6 +173,7 @@ namespace excyrender { namespace Nature { namespace Et1 { namespace ASTPrinters 
     };
 
     std::string pretty_print(std::string in);
+    std::string pretty_print(AST::ASTNode const &ast);
 
 } } } }
 

@@ -5,6 +5,7 @@
 #include "1100_resolve_types.hh"
 #include "../ASTQueries/resolve_type.hh"
 #include "../ASTQueries/has_unresolved.hh"
+#include "../ASTQueries/equal.hh"
 
 #include <stack>
 #include <iostream>
@@ -457,13 +458,18 @@ void resolve_types(shared_ptr<AST::ASTNode> ast) {
         return;
     }
 
+    decltype(ast) prev_ast;
     int i = 0;
     while (1) {
         ++i;
+
         ResolveTypes ll;
+        prev_ast.reset (ast->deep_copy());
         ast->accept(ll);
         if (!ASTQueries::has_unresolved(ast)) {
             break;
+        } else if (ASTQueries::equal(*prev_ast, *ast)) {
+            throw std::runtime_error("program not fully resolvable");
         }
 
         if (i>4096) {
