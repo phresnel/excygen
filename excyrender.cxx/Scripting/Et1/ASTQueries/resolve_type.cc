@@ -46,6 +46,7 @@ TEST_CASE( "Et1/ASTQueries/resolve_type.hh", "Type resolution" ) {
     REQUIRE(resolve_type(to_ast("if 1<2 then 1 else 2")) == Typeinfo("int"));
     REQUIRE(resolve_type(to_ast("if 1<2 then if 1<2 then if 1<2 then 1 else 2 else 2 else 2")) == Typeinfo("int"));
 
+    REQUIRE(resolve_type_raw(to_ast("if true then 1 else false")) == ("<bool?int:bool>"));
     REQUIRE(resolve_type(to_ast("if true then true else false")) == Typeinfo("bool"));
     REQUIRE(resolve_type_raw(to_ast("if A then B else C")) == ("<<id>?<id>:<id>>"));
     REQUIRE(resolve_type_raw(to_ast("if true then B else C")) == ("<bool?<id>:<id>>"));

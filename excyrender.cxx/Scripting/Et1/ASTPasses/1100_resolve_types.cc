@@ -28,6 +28,10 @@ TEST_CASE( "Et1/ASTPasses/1100_resolve_types.hh", "Type resolution" ) {
                   "let bool y = true in y",
                   passes));
 
+    REQUIRE(equal("if 1 then true else 1",
+                  "if 1 then true else 1",
+                  passes));
+
     REQUIRE(equal("let y = if true then true else false || true in y",
                   "let bool y = if true then true else false || true in y",
                   passes));
@@ -276,7 +280,7 @@ namespace {
         }
 
         void begin(AST::IfThenElse &) {}
-        void end(AST::IfThenElse &) {}
+        void end(AST::IfThenElse &t) { resolve(t); }
 
         void end(AST::Call &call)
         {
