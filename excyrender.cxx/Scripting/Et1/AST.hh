@@ -480,10 +480,13 @@ namespace excyrender { namespace Nature { namespace Et1 { namespace AST {
     struct Reference : Terminal {
         virtual ~Reference() {}
         string id() const { return name; }
+        void reset_referee(shared_ptr<Binding> binding) { referee_ = binding; }
+        shared_ptr<Binding> referee() const { return referee_; }
     protected:
         Reference (token_iter from, token_iter to, string name) : Terminal(from, to), name(name) {}
     private:
         string name;
+        shared_ptr<Binding> referee_;
     };
 
     struct Identifier final : Reference {
