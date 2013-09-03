@@ -30,7 +30,7 @@ bool compare_token_sequence (std::string const &code) {
     return result;
 }
 
-TEST_CASE( "Et1/ASTPrinters/PrettyPrinter", "Pretty printing" ) {
+TEST_CASE( "Et1/Backends/PrettyPrinter", "Pretty printing" ) {
     REQUIRE(compare_token_sequence("let f(x) = x*2 in f(1)"));
     REQUIRE(compare_token_sequence("let f(x) = x+1+2 in f(3)"));
     REQUIRE(compare_token_sequence("let f(x,y,z) = x+y+z*f(x/y,2+z,-1-z) in f(1,2,3)"));

@@ -9,7 +9,7 @@
 
 //- Tests ------------------------------------------------------------------------------------------
 #include "../UnitTesting.hh"
-#include "../ASTPrinters/PrettyPrinter.hh"
+#include "../Backends/PrettyPrinter.hh"
 
 TEST_CASE( "Et1/ASTPasses/0500_lift_identifiers_to_calls", "Identifier to call promotion" ) {
     using namespace excyrender::Nature::Et1;

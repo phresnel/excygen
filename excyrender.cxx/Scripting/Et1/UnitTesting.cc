@@ -5,7 +5,7 @@
 #define UNITTESTING_HH_20130822
 
 #include "UnitTesting.hh"
-#include "ASTPrinters/PrettyPrinter.hh"
+#include "Backends/PrettyPrinter.hh"
 #include <stdexcept>
 #include <sstream>
 

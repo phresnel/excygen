@@ -13,7 +13,7 @@
 
 //- Tests ------------------------------------------------------------------------------------------
 #include "../UnitTesting.hh"
-#include "../ASTPrinters/PrettyPrinter.hh"
+#include "../Backends/PrettyPrinter.hh"
 
 TEST_CASE( "Et1/ASTQueries/resolve_type.hh", "Type resolution" ) {
     using namespace excyrender::Nature::Et1;

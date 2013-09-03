@@ -16,7 +16,7 @@
 
 //- Tests ------------------------------------------------------------------------------------------
 #include "../UnitTesting.hh"
-#include "../ASTPrinters/PrettyPrinter.hh"
+#include "../Backends/PrettyPrinter.hh"
 
 TEST_CASE( "Et1/ASTPasses/1000_lambda_lift", "Lambda Lifting" ) {
     using namespace excyrender::Nature::Et1;
