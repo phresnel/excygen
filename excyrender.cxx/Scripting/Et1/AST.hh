@@ -150,6 +150,7 @@ namespace excyrender { namespace Nature { namespace Et1 { namespace AST {
         virtual void end(LetIn const &) = 0;
 
         virtual void begin(Program const &) = 0;
+        virtual void before_body(Program const &) {}
         virtual void end(Program const &) = 0;
     };
 
@@ -808,6 +809,7 @@ namespace excyrender { namespace Nature { namespace Et1 { namespace AST {
                 first = false;
                 b->accept(v);
             }
+            v.before_body(*this);
             value().accept(v);
             v.end(*this);
         }

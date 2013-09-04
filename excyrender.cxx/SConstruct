@@ -2,7 +2,8 @@ Execute('../bootstrap')
 
 env = Environment(CPPPATH = ['.', '../bootstrapped/Catch/include/'],
                   #CXXFLAGS="-std=c++0x -Wall -O3 -ffast-math -march=native -msse2 -fopenmp",
-                  CXXFLAGS="-std=c++0x -Wall -g -O0 -fopenmp",
+                  CXXFLAGS="-std=c++0x -Wall -g -O0 -fopenmp `python-config --include`",
+                  CPPFLAGS="`python-config --ldflags`"
                   )
 
 excygen = env.Program(target='excygen',
@@ -21,6 +22,7 @@ excygen = env.Program(target='excygen',
                         'Scripting/Et1/AST.cc',
                         'Scripting/Et1/ASTPasses/1000_lambda_lift.cc',
                         'Scripting/Et1/ASTPasses/1100_resolve_types.cc',
+                        'Scripting/Et1/ASTPasses/1200_globalize_functions.cc',
                         'Scripting/Et1/ASTPasses/0500_lift_identifiers_to_calls.cc',
                         'Scripting/Et1/ASTQueries/equal.cc',
                         'Scripting/Et1/ASTQueries/find_references.cc',
@@ -28,7 +30,7 @@ excygen = env.Program(target='excygen',
                         'Scripting/Et1/ASTQueries/resolve_type.cc',
                         'Scripting/Et1/ASTQueries/has_unresolved.cc',
                         'Scripting/Et1/Backends/PrettyPrinter.cc',
-                        'Scripting/Et1/Backends/LLVM.cc',
+                        'Scripting/Et1/Backends/Python.cc',
                         'Scripting/Et1/UnitTesting.cc'
                        ],
                 LIBS=['gomp', 'SDL', 'SDL_image']

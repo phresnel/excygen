@@ -1,22 +1,44 @@
 // (C) 2013 Sebastian Mach (1983), this file is published under the terms of the
 // GNU General Public License, Version 3 (a.k.a. GPLv3).
 // See COPYING in the root-folder of the excygen project folder.
-#ifndef PRETTYPRINTER_HH_INCLUDED_20130821
-#define PRETTYPRINTER_HH_INCLUDED_20130821
 
-#include "../AST.hh"
-#include <iostream>
+#include "Python.hh"
+#include "Python.h"
+#include "../UnitTesting.hh"
 #include <stack>
 
-namespace excyrender { namespace Nature { namespace Et1 { namespace ASTPrinters {
 
-    struct PrettyPrinter final : AST::Visitor {
+//--------------------------------------------------------------------------------------------------
+TEST_CASE( "Et1/Backends/Python", "Python backend" ) {
 
-        PrettyPrinter() {
+    using namespace excyrender::Nature::Et1::Backends;
+    return;
+
+    std::string py = "let f(x) = x*2.0, z=let foo(frob)=frob+1.0 in foo(1.0) < f(3.0) in z";
+    std::string c = to_python(py);
+
+    std::cerr << "--------------------\n";
+    std::cerr << py << std::endl;
+    std::cerr << "--------------------\n";
+    std::cerr << c << std::endl;
+    std::cerr << "--------------------\n";
+
+
+}
+//--------------------------------------------------------------------------------------------------
+
+
+
+namespace excyrender { namespace Nature { namespace Et1 { namespace Backends { namespace {
+
+
+    struct PythonPrinter final : AST::Visitor {
+
+        PythonPrinter() {
             scope.push({""});
         }
 
-        PrettyPrinter(std::ostream &os) : os(os) {
+        PythonPrinter(std::ostream &os) : os(os) {
             scope.push({""});
         }
 
@@ -78,33 +100,22 @@ namespace excyrender { namespace Nature { namespace Et1 { namespace ASTPrinters 
 
         void begin(AST::Binding const &binding)
         {
-            //if (scope.top().argCount++) os << scope.top().Operator;
             scope.push({""});
-            indent();
-            if (binding.type())
-                os << binding.type().name() << ' ' << binding.id();
-            else
-                os << binding.id();
-
-
             if (!binding.arguments().empty()) {
-                os << "(";
+                indent();
+                os << "defun " << binding.id() << "(";
+
                 bool first = true;
                 for (auto a : binding.arguments()) {
-                    if (!first) {
-                        os << ", ";
-                    }
+                    if (!first) os << ", ";
                     first = false;
-                    if (a.type) {
-                        os << a.type.name() << ' ' << a.name;
-                    } else {
-                        os << a.name; // I consider omitting "auto" good practice for readability.
-                                      // (e.g. 'f(auto x, auto y)' vs. 'f(x,y)')
-                    }
+                    os << a.name;
                 }
-                os << ")";
+                os << "): return ";
+            } else {
+                indent();
+                os << binding.id() << " = ";
             }
-            os << " = ";
         }
         void end(AST::Binding const &)
         {
@@ -131,43 +142,28 @@ namespace excyrender { namespace Nature { namespace Et1 { namespace ASTPrinters 
 
         void begin(AST::LetIn const &letin)
         {
-            os << "let\n";
-            ++indent_; ++indent_;
-            scope.push({",\n"});
+            scope.push({"\n"});
         }
         void before_body(AST::LetIn const &)
         {
-            --indent_;
-            os << '\n';
-            indent(-1); os << "in ";
-            scope.pop();
+            os << "\n";
+            indent();
+            os << "return ";
         }
         void end(AST::LetIn const &)
         {
-            --indent_;
-        }
-
-        void begin(AST::Program const &prog)
-        {
-            if (prog.bindings().empty())
-                return;
-            os << "let\n";
-            ++indent_; ++indent_;
-            scope.push({",\n"});
-        }
-        void before_body(AST::Program const &prog)
-        {
-            if (prog.bindings().empty())
-                return;
-            --indent_;
-            os << '\n';
-            indent(-1); os << "in ";
             scope.pop();
         }
-        void end(AST::Program const &prog)
+
+        void begin(AST::Program const &id)
         {
-            if (prog.bindings().empty())
-                return;
+            scope.push({"\n"});
+            os << "def whew():\n";
+            ++indent_;
+        }
+        void end(AST::Program const &)
+        {
+            scope.pop();
             --indent_;
         }
 
@@ -189,9 +185,20 @@ namespace excyrender { namespace Nature { namespace Et1 { namespace ASTPrinters 
         std::stack<Operation> scope;
     };
 
-    std::string pretty_print(std::string in);
-    std::string pretty_print(AST::ASTNode const &ast);
+
+} } } } }
+
+
+namespace excyrender { namespace Nature { namespace Et1 { namespace Backends {
+
+string to_python(string et1)
+{
+    using namespace excyrender::Nature::Et1::detail;
+
+    std::stringstream ss;
+    PythonPrinter pp(ss);
+    to_ast(et1)->accept(pp);
+    return ss.str();
+}
 
 } } } }
-
-#endif // PRETTYPRINTER_HH_INCLUDED_20130821
