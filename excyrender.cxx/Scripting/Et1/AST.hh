@@ -257,6 +257,9 @@ namespace excyrender { namespace Nature { namespace Et1 { namespace AST {
         Expression &lhs() { return *lhs_; }
         Expression &rhs() { return *rhs_; }
 
+        shared_ptr<Expression> &lhs_ptr() { return lhs_; }
+        shared_ptr<Expression> &rhs_ptr() { return rhs_; }
+
         void reset_lhs(Expression *e) {
             if (!e) throw std::logic_error("Binary::reset_lhs with nullptr");
             lhs_.reset(e);
@@ -575,6 +578,7 @@ namespace excyrender { namespace Nature { namespace Et1 { namespace AST {
 
         Expression const &body() const { return *body_; }
         Expression &body() { return *body_; }
+        shared_ptr<Expression>& body_ptr() { return body_; }
         vector<Argument> const &arguments() const { return arguments_; }
         vector<Argument> &arguments() { return arguments_; }
 
@@ -616,6 +620,10 @@ namespace excyrender { namespace Nature { namespace Et1 { namespace AST {
         void reset_condition(Expression *expr) { condition_.reset(expr); }
         void reset_thenExpression(Expression *expr) { thenExpression_.reset(expr); }
         void reset_elseExpression(Expression *expr) { elseExpression_.reset(expr); }
+
+        shared_ptr<Expression> &condition_ptr() { return condition_; }
+        shared_ptr<Expression> &thenExpression_ptr() { return thenExpression_; }
+        shared_ptr<Expression> &elseExpression_ptr() { return elseExpression_; }
 
         IfThenElse* deep_copy() const {
             return new IfThenElse(from(), to(),
@@ -682,6 +690,7 @@ namespace excyrender { namespace Nature { namespace Et1 { namespace AST {
             if (!e) throw std::logic_error("LetIn::reset_value with nullptr");
             value_.reset(e);
         }
+        shared_ptr<Expression>& value_ptr() { return value_; }
 
         vector<shared_ptr<Binding>> &bindings() { return bindings_; }
         vector<shared_ptr<Binding>> const &bindings() const { return bindings_; }
@@ -726,6 +735,8 @@ namespace excyrender { namespace Nature { namespace Et1 { namespace AST {
                                        shared_ptr<Expression>(expression_->deep_copy()));
         }
 
+        shared_ptr<Expression>& expression_ptr() { return expression_; }
+
     private:
         shared_ptr<Expression> expression_;
     };
@@ -741,6 +752,8 @@ namespace excyrender { namespace Nature { namespace Et1 { namespace AST {
             if (!e) throw std::logic_error("Unary::reset_rhs with nullptr");
             rhs_.reset(e);
         }
+
+        shared_ptr<Expression>& rhs_ptr() { return rhs_; }
     protected:
         Unary (token_iter from, token_iter to, shared_ptr<Expression> rhs) :
             Terminal(from, to), rhs_(rhs) {}
@@ -824,6 +837,7 @@ namespace excyrender { namespace Nature { namespace Et1 { namespace AST {
 
         Expression const &value() const { return *value_; }
         Expression &value() { return *value_; }
+        shared_ptr<Expression>& value_ptr() { return value_; }
 
         void reset_value(Expression *e) {
             if (!e) throw std::logic_error("LetProgram::reset_value with nullptr");

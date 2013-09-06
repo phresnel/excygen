@@ -151,7 +151,7 @@ namespace excyrender { namespace Nature { namespace Et1 { namespace ASTPrinters 
         {
             if (prog.bindings().empty())
                 return;
-            os << "let\n";
+            os << "program\n";
             ++indent_; ++indent_;
             scope.push({",\n"});
         }

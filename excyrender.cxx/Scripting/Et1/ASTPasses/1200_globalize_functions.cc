@@ -16,7 +16,7 @@ TEST_CASE( "Et1/ASTPasses/1200_globalize_functions", "Globalize functions" ) {
     using namespace excyrender::Nature::Et1::ASTPasses;
 
 
-    string in = "let f(x) = let g(x) = x*let y=2 in y in g(x) in f(x)";
+    string in = "let foobar = 1, f(x) = let g(x) = x*let y=2 in y in g(x) in f(x)";
     auto ast = detail::to_ast(in);
 
     std::cerr << "------------------------\n";
@@ -95,6 +95,148 @@ namespace excyrender { namespace Nature { namespace Et1 { namespace ASTPasses { 
     private:
         vector<shared_ptr<AST::Binding>> *bindings_ = nullptr;
     };
+} } } } }
+
+namespace excyrender { namespace Nature { namespace Et1 { namespace Algorithm { namespace {
+
+    struct TransformExpressions : AST::Transform {
+        TransformExpressions(std::function<void (shared_ptr<AST::Expression>&)> repl)
+        : replace(repl) {}
+
+    private:
+        std::function<void (shared_ptr<AST::Expression>&)> replace;
+
+    public:
+        void begin(AST::Addition &ast) {
+            replace(ast.lhs_ptr());
+            replace(ast.rhs_ptr());
+        }
+        void end(AST::Addition &ast) {}
+
+        void begin(AST::Subtraction &ast) {
+            replace(ast.lhs_ptr());
+            replace(ast.rhs_ptr());
+        }
+        void end(AST::Subtraction &ast) {}
+
+        void begin(AST::Multiplication &ast) {
+            replace(ast.lhs_ptr());
+            replace(ast.rhs_ptr());
+        }
+        void end(AST::Multiplication &ast) {}
+
+        void begin(AST::Division &ast) {
+            replace(ast.lhs_ptr());
+            replace(ast.rhs_ptr());
+        }
+        void end(AST::Division &ast) {}
+
+        void begin(AST::LessThan &ast) {
+            replace(ast.lhs_ptr());
+            replace(ast.rhs_ptr());
+        }
+        void end(AST::LessThan &ast) {}
+
+        void begin(AST::LessEqual &ast) {
+            replace(ast.lhs_ptr());
+            replace(ast.rhs_ptr());
+        }
+        void end(AST::LessEqual &ast) {}
+
+        void begin(AST::GreaterThan &ast) {
+            replace(ast.lhs_ptr());
+            replace(ast.rhs_ptr());
+        }
+        void end(AST::GreaterThan &ast) {}
+
+        void begin(AST::GreaterEqual &ast) {
+            replace(ast.lhs_ptr());
+            replace(ast.rhs_ptr());
+        }
+        void end(AST::GreaterEqual &ast) {}
+
+        void begin(AST::Equal &ast) {
+            replace(ast.lhs_ptr());
+            replace(ast.rhs_ptr());
+        }
+        void end(AST::Equal &ast) {}
+
+        void begin(AST::NotEqual &ast) {
+            replace(ast.lhs_ptr());
+            replace(ast.rhs_ptr());
+        }
+        void end(AST::NotEqual &ast) {}
+
+        void begin(AST::LogicalAnd &ast) {
+            replace(ast.lhs_ptr());
+            replace(ast.rhs_ptr());
+        }
+        void end(AST::LogicalAnd &ast) {}
+
+        void begin(AST::LogicalOr &ast) {
+            replace(ast.lhs_ptr());
+            replace(ast.rhs_ptr());
+        }
+        void end(AST::LogicalOr &ast) {}
+
+        void begin(AST::LogicalNot &ast) {
+            replace(ast.rhs_ptr());
+        }
+        void end(AST::LogicalNot &) {}
+
+        void transform(AST::IntegerLiteral &) {}
+        void transform(AST::RealLiteral &) {}
+        void transform(AST::BoolLiteral &) {}
+        void transform(AST::Identifier &) {}
+
+        void begin(AST::Call &call) {
+            for (auto &ptr : call.arguments())
+                replace(ptr);
+        }
+        void end(AST::Call &) {}
+
+        void begin(AST::Negation &ast) {
+            replace(ast.rhs_ptr());
+        }
+        void end(AST::Negation &) {}
+
+        void begin(AST::ParenExpression &ast) {
+            replace(ast.expression_ptr());
+        }
+        void end(AST::ParenExpression &) {}
+
+        void begin(AST::Binding &b) {
+            replace(b.body_ptr());
+        }
+        void end(AST::Binding &) {}
+
+        void begin(AST::IfThenElse &b) {
+            replace(b.condition_ptr());
+            replace(b.thenExpression_ptr());
+            replace(b.elseExpression_ptr());
+        }
+        void end(AST::IfThenElse &) {}
+
+        void begin(AST::LetIn &b) {
+            replace(b.value_ptr());
+            // the list of bindings must remain a list of bindings, so not expanding on them here.
+        }
+        void end(AST::LetIn &) {}
+
+        void begin(AST::Program &b) {
+            replace(b.value_ptr());
+            // the list of bindings must remain a list of bindings, so not expanding on them here.
+        }
+        void end(AST::Program &) {}
+
+    private:
+    };
+
+    void transform_expressions (AST::ASTNode &ast, std::function<void (shared_ptr<AST::Expression>&)> t)
+    {
+        TransformExpressions te(t);
+        ast.accept(te);
+    }
 
 } } } } }
 
@@ -106,8 +248,25 @@ void globalize_functions(shared_ptr<AST::ASTNode> ast)
     GlobalizeFunctions gf;
     ast->accept(gf);
 
-    //PeelLetIns pi;
-    //ast->accept(pi);
+    Algorithm::transform_expressions(*ast, [] (shared_ptr<AST::Expression> &expr) {
+        AST::LetIn* letin = dynamic_cast<AST::LetIn*>(expr.get());
+        if (!letin) return;
+
+        // remove all parameterless bindings
+        auto &bindings = letin->bindings();
+        auto from = std::remove_if(bindings.begin(), bindings.end(),
+                             [] (shared_ptr<AST::Binding> b) { return !b->arguments().empty(); } );
+        bindings.erase(from, bindings.end());
+
+        // replace all letins without bindings
+        if (letin->bindings().empty()) {
+            expr = letin->value_ptr();
+        }
+    });
+
+
+    // TODO: extract the transform-algorithm
+    // TODO: write an unused-elimination pass at phase 1150
 }
 
 } } } }
