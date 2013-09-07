@@ -480,10 +480,59 @@ namespace excyrender { namespace Nature { namespace Et1 { namespace AST {
         BoolLiteral *deep_copy() const { return new BoolLiteral(from(), to(), value()); }
     };
 
+    struct Binding final : Terminal {
+        Binding(token_iter from, token_iter to,
+                string id,
+                Typeinfo type,
+                vector<Argument> arguments,
+                shared_ptr<Expression> body)
+            : Terminal (from, to, type), id_(id), arguments_(arguments), body_(body)
+        {}
+
+        void accept(Visitor &v) const {
+            v.begin(*this);
+            body().accept(v);
+            v.end(*this);
+        }
+        void accept(Transform &v) {
+            v.begin(*this);
+            body().accept(v);
+            v.end(*this);
+        }
+
+        string id() const { return id_; }
+
+        bool is_generic() const {
+            return std::any_of(arguments().begin(),
+                               arguments().end(),
+                               [](Argument const &arg) -> bool { return !arg.type; });
+        }
+
+        Expression const &body() const { return *body_; }
+        Expression &body() { return *body_; }
+        shared_ptr<Expression>& body_ptr() { return body_; }
+        vector<Argument> const &arguments() const { return arguments_; }
+        vector<Argument> &arguments() { return arguments_; }
+
+        void reset_body(Expression *e) {
+            if (!e) throw std::logic_error("Binding::reset_body with nullptr");
+            body_.reset(e);
+        }
+
+        Binding* deep_copy() const {
+            return new Binding(from(), to(), id(), type(), arguments(),
+                               shared_ptr<Expression>(body_->deep_copy()));
+        }
+
+    private:
+        string id_;
+        vector<Argument> arguments_;
+        shared_ptr<Expression> body_;
+    };
 
     struct Reference : Terminal {
         virtual ~Reference() {}
-        string id() const { return name; }
+        string id() const { return referee_ ? referee_->id() : name; }
         void reset_referee(shared_ptr<Binding> binding) { referee_ = binding; }
         shared_ptr<Binding> referee() const { return referee_; }
     protected:
@@ -546,56 +595,6 @@ namespace excyrender { namespace Nature { namespace Et1 { namespace AST {
 
     private:
         vector<shared_ptr<Expression>> arguments_;
-    };
-
-    struct Binding final : Terminal {
-        Binding(token_iter from, token_iter to,
-                string id,
-                Typeinfo type,
-                vector<Argument> arguments,
-                shared_ptr<Expression> body)
-            : Terminal (from, to, type), id_(id), arguments_(arguments), body_(body)
-        {}
-
-        void accept(Visitor &v) const {
-            v.begin(*this);
-            body().accept(v);
-            v.end(*this);
-        }
-        void accept(Transform &v) {
-            v.begin(*this);
-            body().accept(v);
-            v.end(*this);
-        }
-
-        string id() const { return id_; }
-
-        bool is_generic() const {
-            return std::any_of(arguments().begin(),
-                               arguments().end(),
-                               [](Argument const &arg) -> bool { return !arg.type; });
-        }
-
-        Expression const &body() const { return *body_; }
-        Expression &body() { return *body_; }
-        shared_ptr<Expression>& body_ptr() { return body_; }
-        vector<Argument> const &arguments() const { return arguments_; }
-        vector<Argument> &arguments() { return arguments_; }
-
-        void reset_body(Expression *e) {
-            if (!e) throw std::logic_error("Binding::reset_body with nullptr");
-            body_.reset(e);
-        }
-
-        Binding* deep_copy() const {
-            return new Binding(from(), to(), id(), type(), arguments(),
-                               shared_ptr<Expression>(body_->deep_copy()));
-        }
-
-    private:
-        string id_;
-        vector<Argument> arguments_;
-        shared_ptr<Expression> body_;
     };
 
     struct IfThenElse final : Terminal {
