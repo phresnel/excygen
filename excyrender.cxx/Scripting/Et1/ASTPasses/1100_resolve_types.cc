@@ -237,7 +237,7 @@ namespace {
         void begin(AST::Call &) {}
 
 
-        static shared_ptr<Binding> lookup (Call &call, vector<shared_ptr<Binding>> visible_bindings)
+        static shared_ptr<Binding> lookup (Call const &call, vector<shared_ptr<Binding>> visible_bindings)
         {
             auto fitness = [&](Binding &b) -> int {
                 if (b.id() != call.id())
@@ -303,11 +303,11 @@ namespace {
                     }
                 } else {
                     // GENERIC
-                    if (Binding *insta = scope.top().instantiate(*binding, call.arguments())) {
+                    if (auto insta = scope.top().instantiate(*binding, call.arguments())) {
                         insta->accept(*this);
                         if (!call.type() && insta->type()) {
                             call.reset_type(insta->type());
-                            call.reset_referee(binding);
+                            call.reset_referee(insta);
                         } else if (call.type() != binding->type()) {
                             throw std::logic_error ("impossible (2)");
                         }
@@ -422,7 +422,7 @@ namespace {
 
              // Returns: new     <- instantiation happened.
              //          nullptr <- nothing happened.
-             Binding* instantiate(Binding& binding, vector<shared_ptr<Expression>> const &args) {
+             shared_ptr<Binding> instantiate(Binding const& binding, vector<shared_ptr<Expression>> const &args) {
                 if (args.size() != binding.arguments().size())
                     throw std::runtime_error("wrong number of arguments in call to " + binding.id());
 
@@ -456,7 +456,7 @@ namespace {
                 bindings_declarative_region->push_back(insta);
                 visible_bindings.push_back(insta);
 
-                return &*insta;
+                return bindings_declarative_region->back();
              }
          };
 
