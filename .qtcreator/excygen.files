@@ -97,6 +97,8 @@
 ../excyrender.cxx/Scripting/Et1/ASTPasses/1000_lambda_lift.cc
 ../excyrender.cxx/Scripting/Et1/ASTPasses/1100_resolve_types.hh
 ../excyrender.cxx/Scripting/Et1/ASTPasses/1100_resolve_types.cc
+../excyrender.cxx/Scripting/Et1/ASTPasses/1150_mangle.hh
+../excyrender.cxx/Scripting/Et1/ASTPasses/1150_mangle.cc
 ../excyrender.cxx/Scripting/Et1/ASTPasses/1200_globalize_functions.hh
 ../excyrender.cxx/Scripting/Et1/ASTPasses/1200_globalize_functions.cc
 

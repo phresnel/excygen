@@ -501,6 +501,7 @@ namespace excyrender { namespace Nature { namespace Et1 { namespace AST {
         }
 
         string id() const { return id_; }
+        void reset_id(string const &id) { id_ = id; }
 
         bool is_generic() const {
             return std::any_of(arguments().begin(),
