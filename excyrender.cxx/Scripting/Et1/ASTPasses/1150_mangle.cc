@@ -16,19 +16,58 @@ TEST_CASE( "Et1/ASTPasses/1150_mangle", "Name mangling" ) {
     using namespace excyrender::Nature::Et1;
     using namespace excyrender::Nature::Et1::ASTPrinters;
     using namespace excyrender::Nature::Et1::ASTPasses;
+    using namespace excyrender::Nature::Et1::detail;
 
+    auto passes = [](std::shared_ptr<AST::Program> ast) { lambda_lift(ast);
+                                                          resolve_types(ast);
+                                                          mangle(ast); };
 
-    string in = "let f(x) = let g(x) = x in g(x) in f(1)";
-    auto ast = detail::to_ast(in);
+    // Non nested.
+    REQUIRE(equal("let y = true in y",
+                  "let bool y = true in y",
+                  passes));
 
-    std::cerr << "------------------------\n";
-    std::cerr << pretty_print(*ast) << '\n';
-    std::cerr << "------------------------\n";
-    lambda_lift(ast);
-    resolve_types(ast);
-    mangle(ast);
-    std::cerr << pretty_print(*ast) << '\n';
-    std::cerr << "------------------------\n";
+    REQUIRE(equal("let f(x) = true in f(2)",
+                  "let bool $f$_$auto$(x) = true, "
+                  "    bool $f$_$int$(int x) = true "
+                  " in $f$_$int$(2)",
+                  passes));
+
+    REQUIRE(equal("let f(x) = x, "
+                  "    y = f(2.0) "
+                  "in f(2)",
+
+                  "let $f$_$auto$(x) = x, "
+                  "    float y = $f$_$float$(2.0), "
+                  "    float $f$_$float$(float x) = x, "
+                  "    int $f$_$int$(int x) = x "
+                  "in $f$_$int$(2)",
+                  passes));
+
+    // Nested. Note that within generic functions, there is no full call resolution.
+    REQUIRE(equal("let f(x) = "
+                  "   let g(x) = "
+                  "      let h(x) = x "
+                  "      in h(x) "
+                  "   in g(x) "
+                  "in f(2.0) ",
+
+                  "let $f$_$auto$(x) = "
+                  "   let $f$g$_$auto$(x) = "
+                  "      let $f$g$h$_$auto$(x) = x "
+                  "      in h(x) "
+                  "   in g(x), "
+                  "  float $f$_$float$(float x) = "
+                  "   let $f$g$_$auto$(x) = "
+                  "        let $f$g$h$_$auto$(x) = x "
+                  "        in h(x), "
+                  "    float $f$g$_$float$(float x) = "
+                  "        let $f$g$h$_$auto$(x) = x, "
+                  "            float $f$g$h$_$float$(float x) = x "
+                  "        in $f$g$h$_$float$(x) "
+                  "   in $f$g$_$float$(x) "
+                  "in $f$_$float$(2.0) ",
+                  passes));
 
 }
 //- Tests ------------------------------------------------------------------------------------------
@@ -82,14 +121,19 @@ namespace excyrender { namespace Nature { namespace Et1 { namespace ASTPasses { 
         void end(AST::ParenExpression &) {}
 
         void begin(AST::Binding &b) {
+            if (b.arguments().empty()) // not mangling parameterless bindings
+                return;
+
             string id = b.id();
             string arg_part;
             for (auto &a : b.arguments())
                 arg_part += a.type.name() + "$";
-            b.reset_id(N.top() + id + "$_$" + arg_part);
+            b.reset_id(N.top() + id + (arg_part.empty() ? "" : ("$_$" + arg_part)));
             N.push(N.top() + id + "$");
         }
-        void end(AST::Binding &) {
+        void end(AST::Binding &b) {
+            if (b.arguments().empty()) // not mangling parameterless bindings
+                return;
             N.pop();
         }
 
