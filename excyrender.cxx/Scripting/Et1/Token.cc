@@ -97,10 +97,10 @@ namespace excyrender { namespace Nature { namespace Et1 {
         }
 
         optional<iterator> identifier(iterator it, iterator end) {
-            if (!is_letter(*it))
+            if (!is_letter(*it) && *it!='_' && *it!='$')
                 return optional<iterator>();
             ++it;
-            while (it!=end && (is_letter(*it) || is_digit(*it)))
+            while (it!=end && (is_letter(*it) || is_digit(*it) || *it=='_' || *it=='$'))
                 ++it;
             return it;
         }
