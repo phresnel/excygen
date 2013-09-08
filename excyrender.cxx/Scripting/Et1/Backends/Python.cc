@@ -7,14 +7,21 @@
 #include "../UnitTesting.hh"
 #include <stack>
 
+#include "../ASTPasses/1200_globalize_functions.hh"
+#include "../ASTPasses/1150_mangle.hh"
+#include "../ASTPasses/1100_resolve_types.hh"
+#include "../ASTPasses/1000_lambda_lift.hh"
+
 
 //--------------------------------------------------------------------------------------------------
 TEST_CASE( "Et1/Backends/Python", "Python backend" ) {
 
     using namespace excyrender::Nature::Et1::Backends;
-    return;
 
-    std::string py = "let f(x) = x*2.0, z=let foo(frob)=frob+1.0 in foo(1.0) < f(3.0) in z";
+
+    //std::string py = "let f(x) = x*2.0, z=let foo(frob)=frob+1.0 in if foo(1.0) < f(3.0) then 1 else 2 in z";
+
+    std::string py = "if true then let f(x)=1 in f(2) else 2";
     std::string c = to_python(py);
 
     std::cerr << "--------------------\n";
@@ -119,26 +126,25 @@ namespace excyrender { namespace Nature { namespace Et1 { namespace Backends { n
         }
         void end(AST::Binding const &)
         {
+            os << '\n';
             scope.pop();
         }
 
         void begin(AST::IfThenElse const &ite)
         {
-            os << "if ";
+            indent(); os << "$__ternary(";
         }
         void before_then()
         {
-            os << "\n";
-            indent();
-            os << "then ";
+            os << ", ";
         }
         void before_else()
         {
-            os << "\n";
-            indent();
-            os << "else ";
+            os << ", ";
         }
-        void end(AST::IfThenElse const &ite) {}
+        void end(AST::IfThenElse const &ite) {
+            os << ")";
+        }
 
         void begin(AST::LetIn const &letin)
         {
@@ -157,7 +163,8 @@ namespace excyrender { namespace Nature { namespace Et1 { namespace Backends { n
 
         void begin(AST::Program const &id)
         {
-            scope.push({"\n"});
+            //scope.push({"\n"});
+            os << "def $__ternary(cond,t,e): \n    return t if cond else e\n\n";
             os << "def whew():\n";
             ++indent_;
         }
@@ -171,7 +178,7 @@ namespace excyrender { namespace Nature { namespace Et1 { namespace Backends { n
         std::ostream &os = std::cout;
         int indent_ = 0;
         void indent(int shift=0) {
-            for (int i=0; i!=(indent_*2)+shift; ++i) {
+            for (int i=0; i!=(indent_*4)+shift; ++i) {
                 os << ' ';
             }
         }
@@ -197,7 +204,13 @@ string to_python(string et1)
 
     std::stringstream ss;
     PythonPrinter pp(ss);
-    to_ast(et1)->accept(pp);
+    auto ast = to_ast(et1);
+
+    ASTPasses::lambda_lift(ast);
+    ASTPasses::resolve_types(ast);
+    ASTPasses::mangle(ast);
+    ASTPasses::globalize_functions(ast);
+    ast->accept(pp);
     return ss.str();
 }
 
