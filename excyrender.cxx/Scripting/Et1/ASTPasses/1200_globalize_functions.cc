@@ -3,7 +3,9 @@
 // See COPYING in the root-folder of the excygen project folder.
 
 #include "1200_globalize_functions.hh"
-
+#include "1150_mangle.hh"
+#include "1100_resolve_types.hh"
+#include "1000_lambda_lift.hh"
 
 //- Tests ------------------------------------------------------------------------------------------
 #include "../UnitTesting.hh"
@@ -14,18 +16,35 @@ TEST_CASE( "Et1/ASTPasses/1200_globalize_functions", "Globalize functions" ) {
     using namespace excyrender::Nature::Et1;
     using namespace excyrender::Nature::Et1::ASTPrinters;
     using namespace excyrender::Nature::Et1::ASTPasses;
+    using namespace excyrender::Nature::Et1::detail;
 
+    auto passes = [](std::shared_ptr<AST::Program> ast) { lambda_lift(ast);
+                                                          resolve_types(ast);
+                                                          mangle(ast);
+                                                          globalize_functions(ast); };
 
-    string in = "let foobar = 1, f(x) = let g(x) = x*let y=2 in y in g(x) in f(x)";
-    auto ast = detail::to_ast(in);
+    // Non nested.
+    REQUIRE(equal("let y = true in y",
+                  "let bool y = true in y",
+                  passes));
 
-    std::cerr << "------------------------\n";
-    std::cerr << pretty_print(*ast) << '\n';
-    std::cerr << "------------------------\n";
-    globalize_functions(ast);
-    std::cerr << pretty_print(*ast) << '\n';
-    std::cerr << "------------------------\n";
+    REQUIRE(equal("let f(x) = true in f(2)",
 
+                  "program bool $f$_$auto$(x) = true, "
+                  "        bool $f$_$int$(int x) = true "
+                  " in $f$_$int$(2)",
+                  passes));
+
+    REQUIRE(equal("let f(x) = x, "
+                  "    y = f(2.0) "
+                  "in f(2)",
+
+                  "program $f$_$auto$(x) = x, "
+                  "    float $f$_$float$(float x) = x, "
+                  "    int $f$_$int$(int x) = x "
+                  "in let float y = $f$_$float$(2.0) "
+                  "in $f$_$int$(2)",
+                  passes));
 }
 //- Tests ------------------------------------------------------------------------------------------
 
@@ -82,8 +101,10 @@ namespace excyrender { namespace Nature { namespace Et1 { namespace ASTPasses { 
         void end(AST::IfThenElse &) {}
 
         void begin(AST::LetIn &letin) {
-            for (auto &b : letin.bindings())
-                bindings_->push_back(b);
+            for (auto &b : letin.bindings()) {
+                if (!b->arguments().empty())
+                    bindings_->push_back(b);
+            }
         }
         void end(AST::LetIn &) {}
 
@@ -245,20 +266,22 @@ namespace excyrender { namespace Nature { namespace Et1 { namespace ASTPasses {
 
 void globalize_functions(shared_ptr<AST::ASTNode> ast)
 {
+    // Copy all functions to the global namespace.
     GlobalizeFunctions gf;
     ast->accept(gf);
 
+    // Remove local function definitions.
     Algorithm::transform_expressions(*ast, [] (shared_ptr<AST::Expression> &expr) {
         AST::LetIn* letin = dynamic_cast<AST::LetIn*>(expr.get());
         if (!letin) return;
 
-        // remove all parameterless bindings
+        // remove all function-bindings
         auto &bindings = letin->bindings();
         auto from = std::remove_if(bindings.begin(), bindings.end(),
                              [] (shared_ptr<AST::Binding> b) { return !b->arguments().empty(); } );
         bindings.erase(from, bindings.end());
 
-        // replace all letins without bindings
+        // replace all LetIns without bindings by just their value.
         if (letin->bindings().empty()) {
             expr = letin->value_ptr();
         }
