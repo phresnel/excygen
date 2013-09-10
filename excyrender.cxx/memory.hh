@@ -9,6 +9,8 @@
 namespace excyrender {
     using std::shared_ptr;
     using std::unique_ptr;
+
+    using std::dynamic_pointer_cast;
 }
 
 #endif // MEMORY_HH_INCLUDED_20130811

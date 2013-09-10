@@ -131,13 +131,14 @@ namespace excyrender { namespace Nature { namespace Et1 { namespace ASTPrinters 
 
         void begin(AST::LetIn const &letin)
         {
+            ++indent_;
+            os << '\n';
+            indent(-1);
             os << "let\n";
-            ++indent_; ++indent_;
             scope.push({",\n"});
         }
         void before_body(AST::LetIn const &)
         {
-            --indent_;
             os << '\n';
             indent(-1); os << "in ";
             scope.pop();
@@ -152,30 +153,30 @@ namespace excyrender { namespace Nature { namespace Et1 { namespace ASTPrinters 
             if (prog.bindings().empty())
                 return;
             os << "program\n";
-            ++indent_; ++indent_;
+            ++indent_;
             scope.push({",\n"});
         }
         void before_body(AST::Program const &prog)
         {
             if (prog.bindings().empty())
                 return;
-            --indent_;
             os << '\n';
-            indent(-1); os << "in ";
+            --indent_;
+            os << "in\n";
+            indent();
             scope.pop();
         }
         void end(AST::Program const &prog)
         {
             if (prog.bindings().empty())
                 return;
-            --indent_;
         }
 
     private:
         std::ostream &os = std::cout;
         int indent_ = 0;
-        void indent(int shift=0) {
-            for (int i=0; i!=(indent_*2)+shift; ++i) {
+        void indent(int half_indents=0) {
+            for (int i=0; i!=(indent_*4)+half_indents*2; ++i) {
                 os << ' ';
             }
         }

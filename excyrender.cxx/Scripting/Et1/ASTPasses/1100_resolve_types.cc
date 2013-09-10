@@ -358,6 +358,14 @@ namespace {
                 }
             }
             if (!binding) {
+                for (auto b : scope.top().visible_bindings) {
+                    if (b.get() == &binding_) {
+                        binding = b;
+                        break;
+                    }
+                }
+            }
+            if (!binding) {
                 throw std::logic_error("internal: couldn't find shared_ptr corresponding to binding");
             }
             scope.push(scope.top().enter_binding(binding));
@@ -378,6 +386,11 @@ namespace {
 
         void begin(AST::Program &p) {
             scope.push(Scope::EnterProgram(p.bindings()));
+
+            // Possibly the value expression is just a binding:
+            if (auto b = dynamic_pointer_cast<AST::Binding>(p.value_ptr())) {
+                scope.top().visible_bindings.push_back(b);
+            }
         }
         void end(AST::Program &p) {
             resolve(p.value(), p);

@@ -11,21 +11,32 @@
 #include "../ASTPasses/1150_mangle.hh"
 #include "../ASTPasses/1100_resolve_types.hh"
 #include "../ASTPasses/1000_lambda_lift.hh"
+#include "../Backends/PrettyPrinter.hh"
 
 
 //--------------------------------------------------------------------------------------------------
 TEST_CASE( "Et1/Backends/Python", "Python backend" ) {
 
+    using namespace excyrender::Nature::Et1;
     using namespace excyrender::Nature::Et1::Backends;
+    using namespace excyrender::Nature::Et1::ASTPrinters;
 
 
     //std::string py = "let f(x) = x*2.0, z=let foo(frob)=frob+1.0 in if foo(1.0) < f(3.0) then 1 else 2 in z";
 
-    std::string py = "let x=2.1, y=7.5, f(x)=false in if x<(y/4.0) then f(1) else true";
-    std::string c = to_python(py);
+    std::string et = "float program (float u, float v) = let x=2.1, y=7.5, f(x)=y in if x<(y/4.0) then f(1) else 1.0";
+    std::string c = to_python(et);
+
+    auto prepped = detail::to_ast(et);
+    ASTPasses::lambda_lift(prepped);
+    ASTPasses::resolve_types(prepped);
+    ASTPasses::mangle(prepped);
+    ASTPasses::globalize_functions(prepped);
 
     std::cerr << "--------------------\n";
-    std::cerr << py << std::endl;
+    std::cerr << pretty_print(et) << std::endl;
+    std::cerr << "--------------------\n";
+    std::cerr << pretty_print(*prepped) << std::endl;
     std::cerr << "--------------------\n";
     std::cerr << c << std::endl;
     std::cerr << "--------------------\n";
@@ -156,6 +167,7 @@ namespace excyrender { namespace Nature { namespace Et1 { namespace Backends { n
         {
             //os << '\n';
             scope.push({""});
+            ++indent_;
         }
         void before_body(AST::LetIn const &)
         {
@@ -166,14 +178,15 @@ namespace excyrender { namespace Nature { namespace Et1 { namespace Backends { n
         void end(AST::LetIn const &)
         {
             scope.pop();
+            --indent_;
         }
 
         void begin(AST::Program const &id)
         {
             //scope.push({"\n"});
             os << "def __ternary(cond,t,e): \n    return t() if cond else e()\n\n";
-            os << "def __et1_fun_main():";
-            ++indent_;
+            /*os << "def __et1_fun_main():";
+            ++indent_;*/
         }
         void before_body(AST::Program const &)
         {
@@ -181,7 +194,7 @@ namespace excyrender { namespace Nature { namespace Et1 { namespace Backends { n
         void end(AST::Program const &)
         {
             //scope.pop();
-            --indent_;
+            //--indent_;
         }
 
     private:

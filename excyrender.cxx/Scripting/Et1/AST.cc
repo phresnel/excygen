@@ -579,7 +579,20 @@ namespace excyrender { namespace Nature { namespace Et1 { namespace AST {
             it = value->to();
 
             return shared_ptr<AST::Program>(new AST::Program(start, it, bindings, value));
-        } else if (auto e = expression(it, end)) {
+        }
+        // Single top level binding.
+        else if (auto e = binding(it, end)) {
+            if (e->to() != end)
+                throw std::runtime_error("stray input after top level binding");
+            return shared_ptr<AST::Program>(
+                      new AST::Program(it, end,
+                                       vector<shared_ptr<AST::Binding>>(),
+                                       e));
+        }
+        // Single top level expression.
+        else if (auto e = expression(it, end)) {
+            if (e->to() != end)
+                throw std::runtime_error("stray input after top level binding");
             return shared_ptr<AST::Program>(
                       new AST::Program(it, end,
                                        vector<shared_ptr<AST::Binding>>(),
