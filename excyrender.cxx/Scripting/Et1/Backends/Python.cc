@@ -21,7 +21,7 @@ TEST_CASE( "Et1/Backends/Python", "Python backend" ) {
 
     //std::string py = "let f(x) = x*2.0, z=let foo(frob)=frob+1.0 in if foo(1.0) < f(3.0) then 1 else 2 in z";
 
-    std::string py = "if true then let f(x)=1 in f(2) else 2";
+    std::string py = "let x=2 in if x==x then 1 else 2";
     std::string c = to_python(py);
 
     std::cerr << "--------------------\n";
@@ -38,6 +38,11 @@ TEST_CASE( "Et1/Backends/Python", "Python backend" ) {
 
 namespace excyrender { namespace Nature { namespace Et1 { namespace Backends { namespace {
 
+    std::string pythonize_id(std::string id) {
+        for(auto &c : id)
+            c = c=='$' ? '_' : c;
+        return id;
+    }
 
     struct PythonPrinter final : AST::Visitor {
 
@@ -87,14 +92,14 @@ namespace excyrender { namespace Nature { namespace Et1 { namespace Backends { n
 
         void visit(AST::IntegerLiteral const &lit) { os << lit.value(); }
         void visit(AST::RealLiteral const &lit) { os << lit.value(); }
-        void visit(AST::BoolLiteral const &lit) { os << lit.value(); }
+        void visit(AST::BoolLiteral const &lit) { os << (lit.value() == "true" ? "True" : "False"); }
 
-        void visit(AST::Identifier const &id) { os << id.id(); }
+        void visit(AST::Identifier const &id) { os << pythonize_id(id.id()); }
 
         void begin(AST::Call const &call)
         {
             scope.push({", "});
-            os << call.id() << "(";
+            os << pythonize_id(call.id()) << "(";
         }
         void end(AST::Call const &)
         {
@@ -110,18 +115,18 @@ namespace excyrender { namespace Nature { namespace Et1 { namespace Backends { n
             scope.push({""});
             if (!binding.arguments().empty()) {
                 indent();
-                os << "defun " << binding.id() << "(";
+                os << "def " << pythonize_id(binding.id()) << "(";
 
                 bool first = true;
                 for (auto a : binding.arguments()) {
                     if (!first) os << ", ";
                     first = false;
-                    os << a.name;
+                    os << pythonize_id(a.name);
                 }
-                os << "): return ";
+                os << "): ";
             } else {
                 indent();
-                os << binding.id() << " = ";
+                os << pythonize_id(binding.id()) << " = ";
             }
         }
         void end(AST::Binding const &)
@@ -132,15 +137,15 @@ namespace excyrender { namespace Nature { namespace Et1 { namespace Backends { n
 
         void begin(AST::IfThenElse const &ite)
         {
-            indent(); os << "$__ternary(";
+            os << "__ternary(";
         }
         void before_then()
         {
-            os << ", ";
+            os << ", lambda: ";
         }
         void before_else()
         {
-            os << ", ";
+            os << ", lambda: ";
         }
         void end(AST::IfThenElse const &ite) {
             os << ")";
@@ -152,7 +157,6 @@ namespace excyrender { namespace Nature { namespace Et1 { namespace Backends { n
         }
         void before_body(AST::LetIn const &)
         {
-            os << "\n";
             indent();
             os << "return ";
         }
@@ -164,9 +168,12 @@ namespace excyrender { namespace Nature { namespace Et1 { namespace Backends { n
         void begin(AST::Program const &id)
         {
             //scope.push({"\n"});
-            os << "def $__ternary(cond,t,e): \n    return t if cond else e\n\n";
+            os << "def __ternary(cond,t,e): \n    return t() if cond else e()\n\n";
             os << "def whew():\n";
             ++indent_;
+        }
+        void before_body(AST::Program const &)
+        {
         }
         void end(AST::Program const &)
         {

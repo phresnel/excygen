@@ -3,6 +3,7 @@
 // See COPYING in the root-folder of the excygen project folder.
 
 #include "has_unresolved.hh"
+#include "../Backends/PrettyPrinter.hh"
 #include <stack>
 
 
@@ -90,7 +91,18 @@ namespace {
 
         void check(AST::ASTNode const &ast) {
             if (within_generic.top()) return;
-            if (!ast.type()) has_unresolved = true;
+            if (!ast.type()) {
+                std::string pretty_ = ASTPrinters::pretty_print(ast),
+                            pretty;
+                for (auto c : pretty_) {
+                    if (c == '\n')
+                        pretty += "\n            ";
+                    else
+                        pretty.push_back(c);
+                }
+                std::cerr << "unresolved: \"" << pretty << '"' << std::endl;
+                has_unresolved = true;
+            }
         }
 
         std::stack<bool> within_generic;

@@ -29,6 +29,15 @@ TEST_CASE( "Et1/ASTQueries/resolve_type.hh", "Type resolution" ) {
     REQUIRE(resolve_type(to_ast("true || true")) == Typeinfo("bool"));
     REQUIRE(resolve_type(to_ast("false || false")) == Typeinfo("bool"));
 
+    REQUIRE(resolve_type_raw(to_ast("x && true")) == ("<<id>&&bool>"));
+    REQUIRE(resolve_type_raw(to_ast("x && false")) == ("<<id>&&bool>"));
+    REQUIRE(resolve_type_raw(to_ast("x || true")) == ("<<id>||bool>"));
+    REQUIRE(resolve_type_raw(to_ast("x || false")) == ("<<id>||bool>"));
+    REQUIRE(resolve_type_raw(to_ast("x < true")) == ("<<id><bool>"));
+    REQUIRE(resolve_type_raw(to_ast("x > false")) == ("<<id>>bool>"));
+    REQUIRE(resolve_type_raw(to_ast("x <= true")) == ("<<id><=bool>"));
+    REQUIRE(resolve_type_raw(to_ast("x >= false")) == ("<<id>>=bool>"));
+
     REQUIRE(resolve_type(to_ast("!true")) == Typeinfo("bool"));
     REQUIRE(resolve_type(to_ast("!!!!!true")) == Typeinfo("bool"));
     REQUIRE(resolve_type(to_ast("-1")) == Typeinfo("int"));
@@ -177,6 +186,13 @@ namespace {
 
         void visit(AST::Identifier const &id)
         {
+            // if already resolved, use it
+            if (id.type()) {
+                scope.push(id.type().name());
+                return;
+            }
+
+            // else, try resolve
             auto e = symbols.find(id.id());
             if (e!=symbols.end() && e->second) {
                 scope.push(e->second.name());
@@ -337,9 +353,8 @@ Typeinfo resolve_type(shared_ptr<ASTNode> ast)
 
 Typeinfo resolve_type(ASTNode const &ast)
 {
-    auto t = resolve_type_raw(ast);
-    if (!t.empty() && t[0] != '<') return Typeinfo(t);
-    return Typeinfo();
+    std::map<string,Typeinfo> const symbols;
+    return resolve_type(ast, symbols);
 }
 
 Typeinfo resolve_type(shared_ptr<ASTNode> ast, std::map<string,Typeinfo> const &symbols)
@@ -350,6 +365,8 @@ Typeinfo resolve_type(shared_ptr<ASTNode> ast, std::map<string,Typeinfo> const &
 
 Typeinfo resolve_type(ASTNode const &ast, std::map<string,Typeinfo> const &symbols)
 {
+    if (ast.type())
+        return ast.type();
     auto t = resolve_type_raw(ast, symbols);
     if (!t.empty() && t[0] != '<') return Typeinfo(t);
     return Typeinfo();

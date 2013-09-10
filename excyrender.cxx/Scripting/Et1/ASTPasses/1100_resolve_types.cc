@@ -29,6 +29,27 @@ TEST_CASE( "Et1/ASTPasses/1100_resolve_types.hh", "Type resolution" ) {
                   "let bool y = true in y",
                   passes));
 
+    // check relational operators
+    REQUIRE(equal("let y = true in y==y", "let bool y = true in y==y", passes));
+    REQUIRE(equal("let y = true in y!=y", "let bool y = true in y!=y", passes));
+    REQUIRE(equal("let y = true in y<y", "let bool y = true in y<y", passes));
+    REQUIRE(equal("let y = true in y>y", "let bool y = true in y>y", passes));
+    REQUIRE(equal("let y = true in y<=y", "let bool y = true in y<=y", passes));
+    REQUIRE(equal("let y = true in y>=y", "let bool y = true in y>=y", passes));
+
+    // check logical operators
+    REQUIRE(equal("let y = true in y&&y", "let bool y = true in y&&y", passes));
+    REQUIRE(equal("let y = true in y||y", "let bool y = true in y||y", passes));
+    REQUIRE(equal("let y = true in ! y<=y", "let bool y = true in ! y<=y", passes));
+    REQUIRE(equal("let y = true in (y&&y)||!(y)", "let bool y = true in (y&&y)||!(y)", passes));
+
+    // check arithmetic operators
+    REQUIRE(equal("let y = 1 in y+y", "let int y = 1 in y+y", passes));
+    REQUIRE(equal("let y = 1 in y-y", "let int y = 1 in y-y", passes));
+    REQUIRE(equal("let y = 1 in y*y", "let int y = 1 in y*y", passes));
+    REQUIRE(equal("let y = 1 in y/y", "let int y = 1 in y/y", passes));
+    REQUIRE(equal("let y = 1 in y/-y", "let int y = 1 in y/-y", passes));
+
     // TODO: check exception
     /*REQUIRE(equal("if 1 then true else 1",
                   "if 1 then true else 1",
@@ -391,6 +412,10 @@ namespace {
              vector<shared_ptr<Binding>> *bindings_declarative_region;
              vector<shared_ptr<Binding>> visible_bindings;
 
+             // enter_binding:
+             // * inherit bindings
+             // * add binding to list of visible bindings
+             // * begin new symbol table with binding arguments
              Scope enter_binding(shared_ptr<Binding> binding) const {
                 Scope ret;
                 ret.visible_bindings = visible_bindings;
@@ -406,16 +431,18 @@ namespace {
              Scope enter_declarative_region(vector<shared_ptr<Binding>> &bindings_declarative_region) const {
                 Scope ret;
                 ret = *this;
-                for (auto b : bindings_declarative_region)
+                for (auto b : bindings_declarative_region) {
                     ret.visible_bindings.push_back(b);
+                }
                 ret.bindings_declarative_region = &bindings_declarative_region;
                 return ret;
              }
 
              static Scope EnterProgram (vector<shared_ptr<Binding>> &bindings_declarative_region) {
                 Scope ret;
-                for (auto b : bindings_declarative_region)
+                for (auto b : bindings_declarative_region) {
                     ret.visible_bindings.push_back(b);
+                }
                 ret.bindings_declarative_region = &bindings_declarative_region;
                 return ret;
              }
