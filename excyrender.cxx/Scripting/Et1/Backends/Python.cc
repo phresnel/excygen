@@ -21,7 +21,7 @@ TEST_CASE( "Et1/Backends/Python", "Python backend" ) {
 
     //std::string py = "let f(x) = x*2.0, z=let foo(frob)=frob+1.0 in if foo(1.0) < f(3.0) then 1 else 2 in z";
 
-    std::string py = "let x=2 in if x==x then 1 else 2";
+    std::string py = "let x=2.1, y=7.5, f(x)=false in if x<(y/4.0) then f(1) else true";
     std::string c = to_python(py);
 
     std::cerr << "--------------------\n";
@@ -114,6 +114,7 @@ namespace excyrender { namespace Nature { namespace Et1 { namespace Backends { n
         {
             scope.push({""});
             if (!binding.arguments().empty()) {
+                os << '\n';
                 indent();
                 os << "def " << pythonize_id(binding.id()) << "(";
 
@@ -125,13 +126,13 @@ namespace excyrender { namespace Nature { namespace Et1 { namespace Backends { n
                 }
                 os << "): ";
             } else {
+                os << '\n';
                 indent();
                 os << pythonize_id(binding.id()) << " = ";
             }
         }
         void end(AST::Binding const &)
         {
-            os << '\n';
             scope.pop();
         }
 
@@ -153,10 +154,12 @@ namespace excyrender { namespace Nature { namespace Et1 { namespace Backends { n
 
         void begin(AST::LetIn const &letin)
         {
-            scope.push({"\n"});
+            //os << '\n';
+            scope.push({""});
         }
         void before_body(AST::LetIn const &)
         {
+            os << '\n';
             indent();
             os << "return ";
         }
@@ -169,7 +172,7 @@ namespace excyrender { namespace Nature { namespace Et1 { namespace Backends { n
         {
             //scope.push({"\n"});
             os << "def __ternary(cond,t,e): \n    return t() if cond else e()\n\n";
-            os << "def whew():\n";
+            os << "def __et1_fun_main():";
             ++indent_;
         }
         void before_body(AST::Program const &)
@@ -177,7 +180,7 @@ namespace excyrender { namespace Nature { namespace Et1 { namespace Backends { n
         }
         void end(AST::Program const &)
         {
-            scope.pop();
+            //scope.pop();
             --indent_;
         }
 
