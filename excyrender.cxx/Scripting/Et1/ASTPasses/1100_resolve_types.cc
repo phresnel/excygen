@@ -425,6 +425,8 @@ namespace {
              vector<shared_ptr<Binding>> *bindings_declarative_region;
              vector<shared_ptr<Binding>> visible_bindings;
 
+             // TODO: make above members private, and unify lookup onto them.
+
              // enter_binding:
              // * inherit bindings
              // * add binding to list of visible bindings

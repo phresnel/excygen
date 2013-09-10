@@ -24,7 +24,7 @@ TEST_CASE( "Et1/Backends/Python", "Python backend" ) {
 
     //std::string py = "let f(x) = x*2.0, z=let foo(frob)=frob+1.0 in if foo(1.0) < f(3.0) then 1 else 2 in z";
 
-    std::string et = "program (float u, float v) = let x=2.1, y=7.5, f(x)=y in if x<(y/4.0) then f(1) else 1.0";
+    std::string et = "program (float u, float v) = let x=let t=2.1 in t, y=7.5, f(x)=y in if x<(y/4.0) then f(1) else 1.0";
     std::string c = to_python(et);
 
     auto prepped = detail::to_ast(et);
@@ -173,7 +173,6 @@ namespace excyrender { namespace Nature { namespace Et1 { namespace Backends { n
         {
             os << '\n';
             indent();
-            os << "return ";
         }
         void end(AST::LetIn const &)
         {
