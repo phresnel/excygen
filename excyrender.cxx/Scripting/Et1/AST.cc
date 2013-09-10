@@ -584,6 +584,8 @@ namespace excyrender { namespace Nature { namespace Et1 { namespace AST {
         else if (auto e = binding(it, end)) {
             if (e->to() != end)
                 throw std::runtime_error("stray input after top level binding");
+            if (e->is_generic())
+                throw std::runtime_error("top level binding must not be generic");
             return shared_ptr<AST::Program>(
                       new AST::Program(it, end,
                                        vector<shared_ptr<AST::Binding>>(),
