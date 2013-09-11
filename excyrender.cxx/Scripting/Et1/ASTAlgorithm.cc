@@ -123,14 +123,14 @@ namespace excyrender { namespace Nature { namespace Et1 { namespace Algorithm {
         }
         void end(AST::IfThenElse &) {}
 
-        void begin(AST::LetIn &b) {
-            replace(b.value_ptr());
+        void begin(AST::LetIn &li) {
+            replace(li.value_ptr());
             // the list of bindings must remain a list of bindings, so not expanding on them here.
         }
         void end(AST::LetIn &) {}
 
-        void begin(AST::Program &b) {
-            replace(b.value_ptr());
+        void begin(AST::Program &p) {
+            replace(p.value_ptr());
             // the list of bindings must remain a list of bindings, so not expanding on them here.
         }
         void end(AST::Program &) {}

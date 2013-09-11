@@ -118,13 +118,13 @@ namespace excyrender { namespace Nature { namespace Et1 { namespace ASTPrinters 
         void before_then()
         {
             os << "\n";
-            indent();
+            indent(1);
             os << "then ";
         }
         void before_else()
         {
             os << "\n";
-            indent();
+            indent(1);
             os << "else ";
         }
         void end(AST::IfThenElse const &ite) {}

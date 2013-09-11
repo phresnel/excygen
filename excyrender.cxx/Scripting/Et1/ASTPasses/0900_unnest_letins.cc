@@ -22,6 +22,7 @@ TEST_CASE( "Et1/ASTPasses/0900_unnest_letins.hh", "Let-In Unnesting" ) {
     using namespace excyrender;
     using namespace excyrender::Nature::Et1;
     using detail::equal;
+    using Algorithm::transform_expressions;
 
     auto passes = [](std::shared_ptr<AST::Program> ast) {
         //ASTPasses::unnest_letins(ast);
@@ -29,34 +30,69 @@ TEST_CASE( "Et1/ASTPasses/0900_unnest_letins.hh", "Let-In Unnesting" ) {
         ASTPasses::globalize_functions(ast);
     };
 
-    string str = "let y = true in y";
+    string str = "let B(y) = if y then 1 else (let x=1 in x)"
+                 "in B(true)";
     auto ast = detail::to_ast(str);
 
     std::cerr << "-incoming----------------------------------------------------\n";
     std::cerr << ASTPrinters::pretty_print(*ast) << std::endl;
 
     std::cerr << "-ALPHA-------------------------------------------------------\n";
-
     int idc = 0;
     auto gen_name = [&idc] () { return "$" + std::to_string(idc++); };
 
-    Algorithm::transform_expressions(*ast, [&gen_name](shared_ptr<AST::Expression> &e) {
-        auto letin = dynamic_pointer_cast<AST::LetIn>(e);
-        if (letin) {
-            std::cerr << "turning to function: " << ASTPrinters::pretty_print(letin) << '\n';
+    Algorithm::for_each_at_end<AST::LetIn>(*ast, [&gen_name] (AST::LetIn &letin) {
 
-            shared_ptr<AST::Binding> b (new AST::Binding(
-                letin->from(), letin->to(),
-                gen_name(), letin->type(),
-                std::vector<AST::Argument>(),
-                letin,
-                AST::Binding::Function
-            ));
+        vector<shared_ptr<AST::Binding>> new_bindings;
 
-            std::cerr << "new function: " << ASTPrinters::pretty_print(b) << '\n';
+        for (auto &binding_ : letin.bindings()) {
+            AST::Binding &binding = *binding_;
+        //Algorithm::for_each<AST::Binding>(letin, [&] (AST::Binding &binding) {
+
+            transform_expressions(binding, [&binding, &gen_name, &new_bindings](shared_ptr<AST::Expression> &e) {
+                auto letin = dynamic_pointer_cast<AST::LetIn>(e);
+                if (letin) {
+                    //std::cerr << "turning to function: " << ASTPrinters::pretty_print(letin) << '\n';
+
+                    auto args = binding.kind() == AST::Binding::Function
+                                ? binding.arguments()
+                                : std::vector<AST::Argument>();
+
+                    shared_ptr<AST::Binding> b (new AST::Binding(
+                        letin->from(), letin->to(),
+                        gen_name(), letin->type(),
+                        args,
+                        letin,
+                        AST::Binding::Function
+                    ));
+                    new_bindings.push_back(b);
+                    //std::cerr << "new function: " << ASTPrinters::pretty_print(b) << '\n';
+                    vector<shared_ptr<AST::Expression>> forwarded_args;
+                    for (auto a : args) {
+                        forwarded_args.emplace_back(new AST::Identifier(letin->from(), letin->to(),
+                                                                        a.name));
+                    }
+
+                    shared_ptr<AST::Call> call (new AST::Call(b->from(), b->to(),
+                                                b->id(), forwarded_args));
+                    call->reset_referee(b);
+                    e = call;
+
+                    //std::cerr << "new call: " << ASTPrinters::pretty_print(e) << '\n';
+                }
+            });
+        }
+
+        for (auto b : new_bindings) {
+            letin.bindings().push_back(b);
         }
     });
 
+
+    std::cerr << "-outgoing----------------------------------------------------\n";
+    ASTPasses::lambda_lift(ast);
+    ASTPasses::globalize_functions(ast);
+    std::cerr << ASTPrinters::pretty_print(*ast) << std::endl;
 
     std::cerr << "-END---------------------------------------------------------\n";
 

@@ -557,7 +557,7 @@ namespace excyrender { namespace Nature { namespace Et1 { namespace AST {
     struct Reference : Terminal {
         virtual ~Reference() {}
         string id() const { return referee_ ? referee_->id() : name; }
-        void reset_referee(shared_ptr<Binding> binding) { referee_ = binding; }
+        void reset_referee(shared_ptr<Binding> binding) noexcept { referee_ = binding; }
         shared_ptr<Binding> referee() const { return referee_; }
     protected:
         Reference (token_iter from, token_iter to, string name) : Terminal(from, to), name(name) {}
