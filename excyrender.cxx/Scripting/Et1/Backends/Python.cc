@@ -11,33 +11,35 @@
 #include "../ASTPasses/1150_mangle.hh"
 #include "../ASTPasses/1100_resolve_types.hh"
 #include "../ASTPasses/1000_lambda_lift.hh"
+#include "../ASTPasses/0900_unnest_letins.hh"
 #include "../Backends/PrettyPrinter.hh"
 
 
 //--------------------------------------------------------------------------------------------------
 TEST_CASE( "Et1/Backends/Python", "Python backend" ) {
-
     using namespace excyrender::Nature::Et1;
     using namespace excyrender::Nature::Et1::Backends;
     using namespace excyrender::Nature::Et1::ASTPrinters;
 
-
+return;
     //std::string py = "let f(x) = x*2.0, z=let foo(frob)=frob+1.0 in if foo(1.0) < f(3.0) then 1 else 2 in z";
 
     std::string et = "program (float u, float v) = let x=let t=2.1 in t, y=7.5, f(x)=y in if x<(y/4.0) then f(1) else 1.0";
-    std::string c = to_python(et);
-
-    auto prepped = detail::to_ast(et);
-    ASTPasses::lambda_lift(prepped);
-    ASTPasses::resolve_types(prepped);
-    ASTPasses::mangle(prepped);
-    ASTPasses::globalize_functions(prepped);
 
     std::cerr << "--------------------\n";
     std::cerr << pretty_print(et) << std::endl;
+
     std::cerr << "--------------------\n";
+    auto prepped = detail::to_ast(et);
+    ASTPasses::unnest_letins(prepped);
+    ASTPasses::lambda_lift(prepped);
+    /*ASTPasses::resolve_types(prepped);
+    ASTPasses::mangle(prepped);
+    ASTPasses::globalize_functions(prepped);*/
     std::cerr << pretty_print(*prepped) << std::endl;
+
     std::cerr << "--------------------\n";
+    std::string c = to_python(et);
     std::cerr << c << std::endl;
     std::cerr << "--------------------\n";
 
@@ -228,6 +230,7 @@ string to_python(string et1)
     PythonPrinter pp(ss);
     auto ast = to_ast(et1);
 
+    ASTPasses::unnest_letins(ast);
     ASTPasses::lambda_lift(ast);
     ASTPasses::resolve_types(ast);
     ASTPasses::mangle(ast);

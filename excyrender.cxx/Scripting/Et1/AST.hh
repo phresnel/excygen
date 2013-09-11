@@ -481,12 +481,18 @@ namespace excyrender { namespace Nature { namespace Et1 { namespace AST {
     };
 
     struct Binding final : Terminal {
+        enum Kind {
+            Value,
+            Function
+        };
+
         Binding(token_iter from, token_iter to,
                 string id,
                 Typeinfo type,
                 vector<Argument> arguments,
-                shared_ptr<Expression> body)
-            : Terminal (from, to, type), id_(id), arguments_(arguments), body_(body)
+                shared_ptr<Expression> body,
+                Kind kind)
+            : Terminal (from, to, type), id_(id), arguments_(arguments), body_(body), kind_(kind)
         {}
 
         void accept(Visitor &v) const {
@@ -503,7 +509,12 @@ namespace excyrender { namespace Nature { namespace Et1 { namespace AST {
         string id() const { return id_; }
         void reset_id(string const &id) { id_ = id; }
 
-        bool is_generic() const {
+        Kind kind() const { return kind_; }
+        void reset_kind(Kind kind) { kind_ = kind; }
+
+        bool is_generic() const { // TODO: can be non-member
+            if (kind() == Value)
+                return false;
             return std::any_of(arguments().begin(),
                                arguments().end(),
                                [](Argument const &arg) -> bool { return !arg.type; });
@@ -512,23 +523,35 @@ namespace excyrender { namespace Nature { namespace Et1 { namespace AST {
         Expression const &body() const { return *body_; }
         Expression &body() { return *body_; }
         shared_ptr<Expression>& body_ptr() { return body_; }
-        vector<Argument> const &arguments() const { return arguments_; }
-        vector<Argument> &arguments() { return arguments_; }
+
+        vector<Argument> const &arguments() const {
+            if (kind() == Value)
+                throw std::logic_error("called Binding::arguments() on value binding (1)");
+            return arguments_;
+        }
+        vector<Argument> &arguments() {
+            if (kind() == Value)
+                throw std::logic_error("called Binding::arguments() on value binding (2)");
+            return arguments_;
+        }
 
         void reset_body(Expression *e) {
-            if (!e) throw std::logic_error("Binding::reset_body with nullptr");
+            if (!e)
+                throw std::logic_error("Binding::reset_body with nullptr");
             body_.reset(e);
         }
 
         Binding* deep_copy() const {
-            return new Binding(from(), to(), id(), type(), arguments(),
-                               shared_ptr<Expression>(body_->deep_copy()));
+            return new Binding(from(), to(), id(), type(), arguments_,
+                               shared_ptr<Expression>(body_->deep_copy()),
+                               kind());
         }
 
     private:
         string id_;
         vector<Argument> arguments_;
         shared_ptr<Expression> body_;
+        Kind kind_;
     };
 
     struct Reference : Terminal {

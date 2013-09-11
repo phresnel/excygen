@@ -263,17 +263,25 @@ namespace {
             auto fitness = [&](Binding &b) -> int {
                 if (b.id() != call.id())
                     return -2;
-                if (b.arguments().size() != call.arguments().size())
-                    return -2;
+
+                if (b.kind()==Binding::Value) {
+                    if (!call.arguments().empty())
+                        return -2;
+                } else {
+                    if (b.arguments().size() != call.arguments().size())
+                        return -2;
+                }
                 // count the number of matching arguments.
                 int f = 0;
-                for (size_t i=0; i<b.arguments().size(); ++i) {
-                    if (!b.arguments()[i].type) {
-                        f += 1;
-                    } else if (b.arguments()[i].type == call.arguments()[i]->type()) {
-                        f += 1+b.arguments().size();
-                    } else {
-                        return -1;
+                if (b.kind() == Binding::Function) {
+                    for (size_t i=0; i<b.arguments().size(); ++i) {
+                        if (!b.arguments()[i].type) {
+                            f += 1;
+                        } else if (b.arguments()[i].type == call.arguments()[i]->type()) {
+                            f += 1+b.arguments().size();
+                        } else {
+                            return -1;
+                        }
                     }
                 }
                 return f;
@@ -437,8 +445,9 @@ namespace {
                 ret.visible_bindings.push_back(binding);
                 ret.bindings_declarative_region = bindings_declarative_region;
 
-                for (auto a : binding->arguments()) {
-                    ret.symbols[a.name] = a.type;
+                if (binding->kind() == Binding::Function) {
+                    for (auto a : binding->arguments())
+                        ret.symbols[a.name] = a.type;
                 }
                 return ret;
              }

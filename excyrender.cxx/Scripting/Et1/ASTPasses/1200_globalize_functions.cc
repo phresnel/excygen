@@ -104,7 +104,7 @@ namespace excyrender { namespace Nature { namespace Et1 { namespace ASTPasses { 
 
         void begin(AST::LetIn &letin) {
             for (auto &b : letin.bindings()) {
-                if (!b->arguments().empty())
+                if (b->kind() == AST::Binding::Function)
                     bindings_->push_back(b);
             }
         }
@@ -137,7 +137,8 @@ void globalize_functions(shared_ptr<AST::ASTNode> ast)
         // remove all function-bindings
         auto &bindings = letin->bindings();
         auto from = std::remove_if(bindings.begin(), bindings.end(),
-                             [] (shared_ptr<AST::Binding> b) { return !b->arguments().empty(); } );
+                             [] (shared_ptr<AST::Binding> b) {
+                                  return b->kind() == AST::Binding::Function; } );
         bindings.erase(from, bindings.end());
 
         // replace all LetIns without bindings by just their value.

@@ -212,8 +212,10 @@ namespace {
             // * which don't refer to one of their own bindings.
             auto non_locals = ASTQueries::find_references(binding.body(), false);
 
-            for (Argument a : binding.arguments())
-                non_locals.erase(a.name);
+            if (binding.kind() == Binding::Function) {
+                for (Argument a : binding.arguments())
+                    non_locals.erase(a.name);
+            }
             non_locals.erase(binding.id());
 
             auto bodies_own_names = ASTQueries::find_binding_names(binding.body(), false);
@@ -224,6 +226,7 @@ namespace {
                 return;
 
             // Append all non-local references onto the argument list.
+            binding.reset_kind(Binding::Function);
             for (auto a : non_locals) {
                 binding.arguments().push_back(Argument(AST::Typeinfo(), a));
             }

@@ -242,7 +242,8 @@ namespace excyrender { namespace Nature { namespace Et1 { namespace {
         if (it == end)
             return shared_ptr<AST::Binding>();
 
-        if (it->kind == LParen) {
+        const bool has_argument_list = (it->kind == LParen);
+        if (has_argument_list) {
             ++it;
 
             struct range { token_iter from, to;
@@ -298,7 +299,9 @@ namespace excyrender { namespace Nature { namespace Et1 { namespace {
             throw std::runtime_error("expected binding expression");
 
         return shared_ptr<AST::Binding>(new AST::Binding(start, e->to(),
-                                                         name, type, arguments, e));
+                                                         name, type, arguments, e,
+                                                         has_argument_list ? AST::Binding::Function
+                                                                           : AST::Binding::Value));
     }
 
 

@@ -87,7 +87,7 @@ namespace excyrender { namespace Nature { namespace Et1 { namespace ASTPrinters 
                 os << binding.id();
 
 
-            if (!binding.arguments().empty()) {
+            if (binding.kind() == AST::Binding::Function) {
                 os << "(";
                 bool first = true;
                 for (auto a : binding.arguments()) {
@@ -192,6 +192,7 @@ namespace excyrender { namespace Nature { namespace Et1 { namespace ASTPrinters 
 
     std::string pretty_print(std::string in);
     std::string pretty_print(AST::ASTNode const &ast);
+    std::string pretty_print(shared_ptr<AST::ASTNode> ast);
 
 } } } }
 

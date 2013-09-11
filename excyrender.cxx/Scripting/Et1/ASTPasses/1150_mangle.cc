@@ -27,6 +27,10 @@ TEST_CASE( "Et1/ASTPasses/1150_mangle", "Name mangling" ) {
                   "let bool y = true in y",
                   passes));
 
+    REQUIRE(equal("let y() = true in $y$_$",
+                  "let bool $y$_() = true in $y$_$",
+                  passes));
+
     REQUIRE(equal("let f(x) = true in f(2)",
                   "let bool $f$_$auto$(x) = true, "
                   "    bool $f$_$int$(int x) = true "
@@ -121,7 +125,9 @@ namespace excyrender { namespace Nature { namespace Et1 { namespace ASTPasses { 
         void end(AST::ParenExpression &) {}
 
         void begin(AST::Binding &b) {
-            if (b.arguments().empty()) // not mangling parameterless bindings
+            //if (b.arguments().empty()) // not mangling parameterless bindings
+            //    return;
+            if (b.kind() == AST::Binding::Value)
                 return;
 
             string id = b.id();
@@ -132,7 +138,9 @@ namespace excyrender { namespace Nature { namespace Et1 { namespace ASTPasses { 
             N.push(N.top() + id + "$");
         }
         void end(AST::Binding &b) {
-            if (b.arguments().empty()) // not mangling parameterless bindings
+            //if (b.arguments().empty()) // not mangling parameterless bindings
+            //    return;
+            if (b.kind() == AST::Binding::Value)
                 return;
             N.pop();
         }

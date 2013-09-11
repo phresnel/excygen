@@ -31,6 +31,8 @@ bool compare_token_sequence (std::string const &code) {
 }
 
 TEST_CASE( "Et1/Backends/PrettyPrinter", "Pretty printing" ) {
+    REQUIRE(compare_token_sequence("let f() = 1 in f()"));
+    REQUIRE(compare_token_sequence("let f = 1 in f"));
     REQUIRE(compare_token_sequence("let f(x) = x*2 in f(1)"));
     REQUIRE(compare_token_sequence("let f(x) = x+1+2 in f(3)"));
     REQUIRE(compare_token_sequence("let f(x,y,z) = x+y+z*f(x/y,2+z,-1-z) in f(1,2,3)"));
@@ -58,6 +60,14 @@ std::string pretty_print(AST::ASTNode const &ast) {
     std::stringstream ss;
     PrettyPrinter pp(ss);
     ast.accept(pp);
+    return ss.str();
+}
+
+std::string pretty_print(shared_ptr<AST::ASTNode> ast) {
+    if (!ast) return "";
+    std::stringstream ss;
+    PrettyPrinter pp(ss);
+    ast->accept(pp);
     return ss.str();
 }
 
