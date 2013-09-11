@@ -259,7 +259,8 @@ namespace excyrender { namespace Nature { namespace Et1 { namespace {
                 }
                 else if (it->kind==RParen) {
                     if (nesting == 0) {
-                        args.emplace_back(start_cur, it);
+                        if (start_cur != it)
+                            args.emplace_back(start_cur, it);
                         break;
                     }
                     --nesting;
