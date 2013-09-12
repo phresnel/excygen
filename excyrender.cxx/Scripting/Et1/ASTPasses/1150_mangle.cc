@@ -23,12 +23,16 @@ TEST_CASE( "Et1/ASTPasses/1150_mangle", "Name mangling" ) {
                                                           mangle(ast); };
 
     // Non nested.
-    REQUIRE(equal("let y = true in y",
-                  "let bool y = true in y",
+    REQUIRE(equal("y = true",
+                  "bool $y = true",
                   passes));
 
-    REQUIRE(equal("let y() = true in $y$_$",
-                  "let bool $y$_() = true in $y$_$",
+    REQUIRE(equal("let y = true in y",
+                  "let bool $y = true in $y",
+                  passes));
+
+    REQUIRE(equal("let y() = true in y()",
+                  "let bool $y() = true in $y()",
                   passes));
 
     REQUIRE(equal("let f(x) = true in f(2)",
@@ -125,23 +129,16 @@ namespace excyrender { namespace Nature { namespace Et1 { namespace ASTPasses { 
         void end(AST::ParenExpression &) {}
 
         void begin(AST::Binding &b) {
-            //if (b.arguments().empty()) // not mangling parameterless bindings
-            //    return;
-            if (b.kind() == AST::Binding::Value)
-                return;
-
             string id = b.id();
             string arg_part;
-            for (auto &a : b.arguments())
-                arg_part += a.type.name() + "$";
+            if (b.kind() == AST::Binding::Function) {
+                for (auto &a : b.arguments())
+                    arg_part += a.type.name() + "$";
+            }
             b.reset_id(N.top() + id + (arg_part.empty() ? "" : ("$_$" + arg_part)));
             N.push(N.top() + id + "$");
         }
         void end(AST::Binding &b) {
-            //if (b.arguments().empty()) // not mangling parameterless bindings
-            //    return;
-            if (b.kind() == AST::Binding::Value)
-                return;
             N.pop();
         }
 

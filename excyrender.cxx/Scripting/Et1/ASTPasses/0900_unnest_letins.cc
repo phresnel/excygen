@@ -25,7 +25,7 @@ TEST_CASE( "Et1/ASTPasses/0900_unnest_letins.hh", "Let-In Unnesting" ) {
     using Algorithm::transform_expressions;
 
     auto passes = [](std::shared_ptr<AST::Program> ast) {
-        //ASTPasses::unnest_letins(ast);
+        ASTPasses::unnest_letins(ast);
         ASTPasses::lambda_lift(ast);
         ASTPasses::globalize_functions(ast);
     };
