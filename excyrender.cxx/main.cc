@@ -202,7 +202,8 @@ int main (int argc, char *argv[]) {
         builder.add(std::shared_ptr<Primitives::FinitePrimitive>(new
                              PrimitiveFromFiniteShape (std::shared_ptr<Shapes::FiniteShape>(
                                                           new Shapes::Terrain2d(
-                                                               world_rect, world_rect, 512,
+                                                               world_rect, world_rect,
+                                                               512,
                                                                //[](real u,real v) { return -4 + 5*sin(u) * sin(v); }
                                                                //Nature::Et1::compile("let foo(int x,typeof(x) y) = x+y in foo(1,2)")
                                                                Scripting::Python::PyHeightFun("test")
