@@ -34,6 +34,8 @@
 #include "DebugPixel.hh"
 
 #include "Scripting/Et1.hh"
+#include "Scripting/Python.hh"
+#include <Python.h>
 
 #include <iostream>
 #include <functional>
@@ -138,6 +140,9 @@ int main (int argc, char *argv[]) {
         return 1;
     }
 
+    Py_SetProgramName(argv[0]);
+    Py_Initialize();
+
     try {
         using namespace excyrender;
         using namespace Primitives;
@@ -147,9 +152,9 @@ int main (int argc, char *argv[]) {
         using Surface::BSDF;
         using namespace Photometry::Texture;
 
-        const auto width = 800,
-                   height = 800;
-        const auto samples_per_pixel = 1;
+        const auto width = 512,
+                   height = 512;
+        const auto samples_per_pixel = 5;
         std::vector<Photometry::RGB> pixels(width*height);
         std::vector<DebugPixel> debug(width*height);
 
@@ -193,18 +198,18 @@ int main (int argc, char *argv[]) {
         }
         */
 
+        const auto world_rect = Geometry::Rectangle({-1000,-1000},{1000,1000});
         builder.add(std::shared_ptr<Primitives::FinitePrimitive>(new
                              PrimitiveFromFiniteShape (std::shared_ptr<Shapes::FiniteShape>(
                                                           new Shapes::Terrain2d(
-                                                               Geometry::Rectangle({-100,-100},{100,100}),
-                                                               Geometry::Rectangle({0,0},{100,100}),
-                                                               512,
+                                                               world_rect, world_rect, 512,
                                                                //[](real u,real v) { return -4 + 5*sin(u) * sin(v); }
-                                                               Nature::Et1::compile("let foo(int x,typeof(x) y) = x+y in foo(1,2)")
+                                                               //Nature::Et1::compile("let foo(int x,typeof(x) y) = x+y in foo(1,2)")
+                                                               Scripting::Python::PyHeightFun("test")
                                                            )),
                              std::shared_ptr<Material::Material>(new Material::Lambertian(
                                   shared_ptr<SpectrumTexture>(new ColorImageTexture(Photometry::Texture::XZPlanarMapping(0.4,0.4,0,0),
-                                                                                    "Rock_07_UV_H_CM_1.jpg"))
+                                                                                    "loose_gravel_9261459 (mayang.com).JPG"))
                              ))
                          ))
                 );
@@ -243,5 +248,7 @@ int main (int argc, char *argv[]) {
     } catch (std::exception &e) {
         std::cerr << "error:" << e.what() << "(" << typeid(e).name() << ")\n";
     }
+
+    Py_Finalize();
 }
 

@@ -91,7 +91,6 @@
 ../excyrender.cxx/Scripting/Et1/AST.cc
 ../excyrender.cxx/Scripting/Et1/ASTAlgorithm.hh
 ../excyrender.cxx/Scripting/Et1/ASTAlgorithm.cc
-
 ../excyrender.cxx/Scripting/Et1/ASTPasses/0500_lift_identifiers_to_calls.hh
 ../excyrender.cxx/Scripting/Et1/ASTPasses/0500_lift_identifiers_to_calls.cc
 ../excyrender.cxx/Scripting/Et1/ASTPasses/0900_unnest_letins.hh
@@ -104,7 +103,6 @@
 ../excyrender.cxx/Scripting/Et1/ASTPasses/1150_mangle.cc
 ../excyrender.cxx/Scripting/Et1/ASTPasses/1200_globalize_functions.hh
 ../excyrender.cxx/Scripting/Et1/ASTPasses/1200_globalize_functions.cc
-
 ../excyrender.cxx/Scripting/Et1/ASTQueries/find_references.hh
 ../excyrender.cxx/Scripting/Et1/ASTQueries/find_references.cc
 ../excyrender.cxx/Scripting/Et1/ASTQueries/find_binding_names.hh
@@ -115,11 +113,14 @@
 ../excyrender.cxx/Scripting/Et1/ASTQueries/has_unresolved.cc
 ../excyrender.cxx/Scripting/Et1/ASTQueries/equal.hh
 ../excyrender.cxx/Scripting/Et1/ASTQueries/equal.cc
-
 ../excyrender.cxx/Scripting/Et1/Backends/PrettyPrinter.hh
 ../excyrender.cxx/Scripting/Et1/Backends/PrettyPrinter.cc
 ../excyrender.cxx/Scripting/Et1/Backends/Python.hh
 ../excyrender.cxx/Scripting/Et1/Backends/Python.cc
+
+../excyrender.cxx/Scripting/Python.hh
+../excyrender.cxx/Scripting/Python.cc
+../excyrender.cxx/Scripting/Python/py_bindings.cc
 
 
 ../excyrender.cxx/main_test.cc

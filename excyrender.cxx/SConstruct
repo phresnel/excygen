@@ -1,10 +1,17 @@
 Execute('../bootstrap')
 
 env = Environment(CPPPATH = ['.', '../bootstrapped/Catch/include/'],
-                  #CXXFLAGS="-std=c++0x -Wall -O3 -ffast-math -march=native -msse2 -fopenmp",
-                  CXXFLAGS="-std=c++0x -Wall -g -O0 -fopenmp `python-config --include`",
+                  CXXFLAGS="-std=c++0x -Wall -O3 -ffast-math -march=native -msse2 -fopenmp `python-config --include`",
+                  #CXXFLAGS="-std=c++0x -Wall -g -O0 -fopenmp `python-config --include`",
                   CPPFLAGS="`python-config --ldflags`"
                   )
+
+py_bindings = env.SharedLibrary(target='py_bindings',
+                                SHLIBPREFIX='', # so the bindings so/dll's name is just 'py_bindings'
+                                source=['Scripting/Python/py_bindings.cc'],
+                                LIBS=['boost_python', 'noise',
+                                      'pthread', 'dl', 'util', 'm', 'python2.7' # python-config --libs
+                                ])
 
 excygen = env.Program(target='excygen',
                 source=['main.cc',
@@ -34,11 +41,16 @@ excygen = env.Program(target='excygen',
                         'Scripting/Et1/ASTQueries/has_unresolved.cc',
                         'Scripting/Et1/Backends/PrettyPrinter.cc',
                         'Scripting/Et1/Backends/Python.cc',
-                        'Scripting/Et1/UnitTesting.cc'
+                        'Scripting/Et1/UnitTesting.cc',
+                        'Scripting/Python.cc'
                        ],
-                LIBS=['gomp', 'SDL', 'SDL_image']
+                LIBS=['gomp', 'SDL', 'SDL_image',
+                      'pthread', 'dl', 'util', 'm', 'python2.7' # python-config --libs
+                     ]
                 )
+
 Default(excygen)
+Depends(excygen, py_bindings)
 
 def PhonyTarget(target, action):
     import os

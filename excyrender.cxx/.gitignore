@@ -2,3 +2,6 @@ a.out
 .sconsign.dblite
 *.o
 excygen
+py_bindings.so
+*.pyc
+Scripting/Python/py_bindings.os
