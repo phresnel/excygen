@@ -1,5 +1,6 @@
 import py_bindings
-rm = py_bindings.RidgedMulti()
+
+noise = py_bindings.RidgedMulti(seed=3)
 
 def height(u, v):
-    return rm(u*0.0015, v*0.0015)*200 - 350
+    return noise(u*0.0015, v*0.0015)*200 - 350
