@@ -4,8 +4,8 @@
 #ifndef AABB_HH_INCLUDED_20130718
 #define AABB_HH_INCLUDED_20130718
 
-#include <Geometry/Point.hh>
-#include <Geometry/Ray.hh>
+#include "Geometry/Point.hh"
+#include "Geometry/Ray.hh"
 #include <algorithm>
 #include <stdexcept>
 #include <tuple>
@@ -33,8 +33,8 @@ namespace excyrender {
 
     struct AABB
     {
-        constexpr Geometry::Point min() const noexcept { return min_; }
-        constexpr Geometry::Point max() const noexcept { return max_; }
+        constexpr Geometry::Point const& min() const noexcept { return min_; }
+        constexpr Geometry::Point const& max() const noexcept { return max_; }
 
         constexpr AABB() = delete;
         AABB (AABB const &) = default;
@@ -42,6 +42,11 @@ namespace excyrender {
 
         constexpr AABB (Geometry::Point const &min, Geometry::Point const &max)
             : min_(detail::enforce_min_lt_max(min, max)), max_(max)
+        {
+        }
+
+        constexpr AABB (Geometry::Point const &m)
+            : min_(m), max_(m)
         {
         }
 
@@ -53,7 +58,10 @@ namespace excyrender {
         return os << "aabb{" << aabb.min() << "," << aabb.max() << "}";
     }
 
-
+    inline AABB union_(AABB const &b, Geometry::Point const &p) noexcept {
+        return {Geometry::Point(min(b.min().x, p.x), min(b.min().y, p.y), min(b.min().z, p.z)),
+                Geometry::Point(max(b.max().x, p.x), max(b.max().y, p.y), max(b.max().z, p.z)) };
+    }
 
     inline constexpr real left  (AABB const &aabb) noexcept { return aabb.min().x; }
     inline constexpr real right (AABB const &aabb) noexcept { return aabb.max().x; }
