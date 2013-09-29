@@ -37,7 +37,7 @@ namespace excyrender { namespace Geometry {
             return !(*this == rhs);
         }
 
-        Matrix44 operator* (Matrix44 const &rhs) noexcept {
+        Matrix44 operator* (Matrix44 const &rhs) const noexcept {
             Matrix44 r;
             for (int i = 0; i < 4; ++i) {
                 for (int j = 0; j < 4; ++j) {

@@ -25,6 +25,11 @@ namespace excyrender { namespace Geometry {
         {
         }
 
+        Transform(Matrix44 const &m)
+          : m(m), inv(inverse(m))
+        {
+        }
+
         static Transform Translate(const Vector &delta);
         static Transform Scale(real x, real y, real z);
         static Transform RotateX(Angle angle);
@@ -32,6 +37,8 @@ namespace excyrender { namespace Geometry {
         static Transform RotateZ(Angle angle);
         static Transform Rotate(Angle angle, const Vector &axis);
         static Transform LookAt(const Point &pos, const Point &look, const Vector &up);
+        static Transform Orthographic(real znear, real zfar);
+        static Transform Perspective(Angle fov, real n, real f);
 
         friend constexpr Transform inverse(Transform const &t) noexcept;
         friend constexpr Transform transpose(Transform const &t) noexcept;
@@ -43,6 +50,10 @@ namespace excyrender { namespace Geometry {
         constexpr bool operator!= (Transform const &rhs) noexcept {
             return !(*this == rhs);
         }
+
+        Transform operator* (const Transform &t2) const noexcept {
+            return Transform(m*t2.m, inv*t2.inv);
+    }
 
     private:
 
