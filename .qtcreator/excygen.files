@@ -5,6 +5,14 @@
 ../excyrender.cxx/Geometry/Point.hh
 ../excyrender.cxx/Geometry/Direction.hh
 ../excyrender.cxx/Geometry/Vector.hh
+../excyrender.cxx/Geometry/Rectangle.hh
+../excyrender.cxx/Geometry/Point2d.hh
+../excyrender.cxx/Geometry/Angle.hh
+../excyrender.cxx/Geometry/Angle.cc
+../excyrender.cxx/Geometry/Matrix44.hh
+../excyrender.cxx/Geometry/Matrix44.cc
+../excyrender.cxx/Geometry/Transform.hh
+../excyrender.cxx/Geometry/Transform.cc
 
 ../excyrender.cxx/AABB.hh
 ../excyrender.cxx/real.hh
@@ -78,8 +86,6 @@
 ../excyrender.cxx/Photometry/Texture/PlanarMapping2d.hh
 ../excyrender.cxx/Shapes/Terrain2d.hh
 ../excyrender.cxx/Shapes/Terrain2d.cc
-../excyrender.cxx/Geometry/Rectangle.hh
-../excyrender.cxx/Geometry/Point2d.hh
 
 ../excyrender.cxx/Nature/HeightFunction.hh
 
