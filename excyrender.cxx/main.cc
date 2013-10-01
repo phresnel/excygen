@@ -37,7 +37,10 @@
 #include "Scripting/Python.hh"
 #include <Python.h>
 
+#include <boost/algorithm/string.hpp>
+
 #include <iostream>
+#include <fstream>
 #include <functional>
 #include <vector>
 #include <memory>
@@ -132,11 +135,26 @@ int main (int argc, char *argv[]) {
         for (auto &s : args)
             args_c_str.emplace_back(const_cast<char*>(s.c_str()));
         return unit_tests(args_c_str.size(), &args_c_str[0]);
+    } else if (argc == 2 && boost::algorithm::ends_with(std::string(argv[1]), ".py")) {
+        void PythonAPI(std::string const &);
+
+        std::ifstream t(argv[1]);
+        if (!t.good()) {
+            std::cerr << "could not open \"" << argv[1] << "\"." << std::endl;
+            return 1;
+        }
+        std::stringstream buffer;
+        buffer << t.rdbuf();
+
+        PythonAPI(buffer.str());
+
+        return 0;
     } else if (argc != 1) {
         std::cerr << "invalid command line. use:\n"
                   << " * <excygen>\n"
                   << " * <excygen> test     <-- this will execute all unit tests\n"
-                  << " * <excygen> test -?  <-- this shows available options for unit tests\n";
+                  << " * <excygen> test -?  <-- this shows available options for unit tests\n"
+                  << " * <excygen> <python-file>  <-- runs the Python API over <python-file>\n";
         return 1;
     }
 

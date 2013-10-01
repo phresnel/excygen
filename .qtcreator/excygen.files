@@ -1,4 +1,5 @@
 ../excyrender.cxx/main.cc
+../excyrender.cxx/PythonAPI.cc
 
 ../excyrender.cxx/Geometry/Normal.hh
 ../excyrender.cxx/Geometry/Ray.hh
