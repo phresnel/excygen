@@ -1,9 +1,10 @@
 Execute('../bootstrap')
 
 env = Environment(CPPPATH = ['.', '../bootstrapped/Catch/include/'],
-                  CXXFLAGS="-std=c++0x -Wall -O3 -ffast-math -march=native -msse2 -fopenmp `python-config --include`",
+                  CXXFLAGS = "-std=c++0x -Wall -O3 -ffast-math -march=native -msse2 -fopenmp "
+                           + "-I/usr/include/python2.7 -I/usr/include/i386-linux-gnu/python2.7 ", # python-config --include`
                   #CXXFLAGS="-std=c++0x -Wall -g -O0 -fopenmp `python-config --include`",
-                  CPPFLAGS="`python-config --ldflags`"
+                  CPPFLAGS=""
                   )
 
 py_bindings = env.SharedLibrary(target='py_bindings',
@@ -16,6 +17,7 @@ py_bindings = env.SharedLibrary(target='py_bindings',
 excygen = env.Program(target='excygen',
                 source=['main.cc',
                         'main_test.cc',
+                        'PythonAPI.cc',
                         'ImageFormat/PPM.cc',
                         'Photometry/SPD/Regular.cc',
                         'Photometry/SPD/Constant.cc',
@@ -48,7 +50,7 @@ excygen = env.Program(target='excygen',
                         'Scripting/Python.cc'
                        ],
                 LIBS=['gomp', 'SDL', 'SDL_image',
-                      'pthread', 'dl', 'util', 'm', 'python2.7' # python-config --libs
+                      'pthread', 'dl', 'util', 'm', 'python2.7', 'boost_python' # python-config --libs
                      ]
                 )
 
