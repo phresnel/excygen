@@ -7,6 +7,7 @@
 #include "real.hh"
 
 namespace excyrender { namespace Photometry { namespace ColorSpace {
+    inline
     triple<real> XYZ_to_sRGB(triple<real> const &c) {
         return make_triple(3.240479*get<0>(c) - 1.537150*get<1>(c) - 0.498535*get<2>(c),
                           -0.969256*get<0>(c) + 1.875991*get<1>(c) + 0.041556*get<2>(c),
