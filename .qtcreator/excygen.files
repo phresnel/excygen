@@ -134,3 +134,7 @@
 ../excyrender.cxx/Scripting/Et1/UnitTesting.hh
 ../excyrender.cxx/Scripting/Et1/UnitTesting.cc
 ../excyrender.cxx/main_test.hh
+../excyrender.cxx/raytrace.hh
+../excyrender.cxx/raytrace.cc
+../excyrender.cxx/RNG.hh
+../excyrender.cxx/RNG.cc

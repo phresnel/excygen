@@ -1,7 +1,17 @@
+// (C) 2013 Sebastian Mach (1983), this file is published under the terms of the
+// GNU General Public License, Version 3 (a.k.a. GPLv3).
+// See COPYING in the root-folder of the excygen project folder.
+
+#include "raytrace.hh"
+#include "Photometry/Lighting.hh"
+#include "Primitives/PrimitiveList.hh"
+#include "SurfaceIntegrators/Path.hh"
+#include "ImageFormat/PPM.hh"
+
 #include <Python.h>
 #include <boost/python.hpp>
-#include <iostream>
 
+#include <iostream>
 
 namespace PyAPI {
     std::string api_version()
@@ -22,10 +32,48 @@ namespace PyAPI {
             width(width), height(height), samples_per_pixel(samples_per_pixel) {}
     };
 
+    struct SurfaceIntegrator {
+        int maximum_recursion = 5;
+
+        SurfaceIntegrator() {}
+    };
+
 
     void render(Renderer const &renderer) {
+        using namespace excyrender;
+
+        SurfaceIntegrator surface_integrator;
+
         std::clog << "rendering (" << renderer.width << "x" << renderer.height << "@"
                   << renderer.samples_per_pixel << "spp)" << std::endl;
+
+        std::vector<Photometry::RGB> pixels(renderer.width*renderer.height);
+        std::vector<DebugPixel> debug(renderer.width*renderer.height);
+
+        std::vector<std::shared_ptr<Photometry::LightSource>> const lightSources({
+            std::shared_ptr<Photometry::LightSource>(new Photometry::Directional (
+                  Geometry::direction(1,0.5,-1),
+                  Photometry::Spectrum::FromRGB(400,800,8,{10,10,10}))
+            )
+        });
+
+        Primitives::PrimitiveList const primitive({});
+
+        auto const integrator =
+                SurfaceIntegrators::Path(
+                    surface_integrator.maximum_recursion,
+                    primitive,
+                    lightSources,
+                    [](Geometry::Direction const &) {
+                        return Photometry::Spectrum::FromRGB(400,800,8,{1,2,3});
+                    }
+                );
+
+        raytrace (renderer.width, renderer.height, renderer.samples_per_pixel,
+                  integrator, pixels, debug);
+
+        ImageFormat::ppm (std::cout,
+                          renderer.width, renderer.height, pixels);
     }
 }
 
