@@ -7,6 +7,7 @@
 #include "Primitives/PrimitiveList.hh"
 #include "SurfaceIntegrators/Path.hh"
 #include "ImageFormat/PPM.hh"
+#include "Geometry/Direction.hh"
 
 #include <Python.h>
 #include <boost/python.hpp>
@@ -38,8 +39,17 @@ namespace PyAPI {
         SurfaceIntegrator() {}
     };
 
+    struct SunSky {
+        excyrender::Geometry::Direction direction;
 
-    void render(Renderer const &renderer) {
+        SunSky(excyrender::Geometry::Direction const &direction)
+            : direction(direction) {}
+    };
+
+
+    void render(Renderer const &renderer,
+                SunSky const &sunSky)
+    {
         using namespace excyrender;
 
         SurfaceIntegrator surface_integrator;
@@ -52,7 +62,7 @@ namespace PyAPI {
 
         std::vector<std::shared_ptr<Photometry::LightSource>> const lightSources({
             std::shared_ptr<Photometry::LightSource>(new Photometry::Directional (
-                  Geometry::direction(1,0.5,-1),
+                  sunSky.direction,
                   Photometry::Spectrum::FromRGB(400,800,8,{10,10,10}))
             )
         });
@@ -82,15 +92,35 @@ namespace PyAPI {
 BOOST_PYTHON_MODULE(excygen) {
     using namespace boost::python;
     using namespace PyAPI;
+
+    //== API Meta ==================================================================================
     def("api_version", api_version);
     def("api_compile_date", api_compile_date);
 
-    def("render", render, (arg("renderer")));
+
+    //== Geometric API =============================================================================
+
+    // Direction
+    excyrender::Geometry::Direction (*direction)(excyrender::real,excyrender::real,excyrender::real) = &excyrender::Geometry::direction;
+    def("direction", direction);
+
+    class_<excyrender::Geometry::Direction>
+      ("Direction", init<excyrender::Geometry::Direction>())
+      .def("x", &excyrender::Geometry::Direction::x)
+      .def("y", &excyrender::Geometry::Direction::y)
+      .def("z", &excyrender::Geometry::Direction::z);
+
+
+    //== Rendering API =============================================================================
+    def("render", render, (arg("renderer"), arg("sun_sky")));
 
     class_<Renderer>("Renderer", init<int, int, int>((arg("width")=640, arg("height")=480, arg("sample_per_pixel")=16)))
       .def_readonly("width", &Renderer::width)
       .def_readonly("height", &Renderer::height)
       .def_readonly("samples_per_pixel", &Renderer::samples_per_pixel);
+
+    class_<SunSky>("SunSky", init<excyrender::Geometry::Direction>((arg("direction"))))
+      .def_readonly("direction", &SunSky::direction);
 }
 
 

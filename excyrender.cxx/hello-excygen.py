@@ -1,5 +1,7 @@
-import excygen
+from excygen import *
 
-preview = excygen.Renderer(width=512, height=512)
+preview = Renderer(width=512, height=512)
 
-excygen.render(preview)
+render(renderer=preview,
+       sun_sky=SunSky(direction=direction(1,2,3))
+      )
