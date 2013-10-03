@@ -8,6 +8,7 @@
 #include "Geometry/Direction.hh"
 #include "Photometry/CIEMatchingCurves.hh"
 #include "Photometry/ColorSpace.hh"
+#include "Geometry/Transform.hh"
 
 #include "SurfaceIntegrators/Path.hh"
 
@@ -87,7 +88,8 @@ namespace excyrender {
                 for (auto i=0; i!=samples_per_pixel; ++i) {
                     const auto u = (x + rng()-real(0.5)) / real(width),
                                v = 1 - (y + rng()-real(0.5)) / real(height);
-                    const auto ray = Ray{Point{0,0.5,0}, Geometry::direction(u-0.5, v-0.5, 0.8)};
+                    const auto ray = inverse(Transform::LookAt({0,-200,-100}, {0,-200,0},{0,1,0}))
+                                   * Ray{Point{0,0,0}, Geometry::direction(u-0.5, v-0.5, 0.8)};
                     sum += integrate(ray, rng) * (real(1) / samples_per_pixel);
                     current_debug = 0;
                 }
@@ -152,9 +154,9 @@ int main (int argc, char *argv[]) {
         using Surface::BSDF;
         using namespace Photometry::Texture;
 
-        const auto width = 512,
-                   height = 512;
-        const auto samples_per_pixel = 5;
+        const auto width = 800,
+                   height = 800;
+        const auto samples_per_pixel = 200;
         std::vector<Photometry::RGB> pixels(width*height);
         std::vector<DebugPixel> debug(width*height);
 
@@ -203,14 +205,17 @@ int main (int argc, char *argv[]) {
                              PrimitiveFromFiniteShape (std::shared_ptr<Shapes::FiniteShape>(
                                                           new Shapes::Terrain2d(
                                                                world_rect, world_rect,
-                                                               512,
+                                                               2048,
                                                                //[](real u,real v) { return -4 + 5*sin(u) * sin(v); }
                                                                //Nature::Et1::compile("let foo(int x,typeof(x) y) = x+y in foo(1,2)")
                                                                Scripting::Python::PyHeightFun("test")
                                                            )),
-                             std::shared_ptr<Material::Material>(new Material::Lambertian(
-                                  shared_ptr<SpectrumTexture>(new ColorImageTexture(Photometry::Texture::XZPlanarMapping(0.4,0.4,0,0),
-                                                                                    "loose_gravel_9261459 (mayang.com).JPG"))
+                             std::shared_ptr<Material::Material>(
+                                     new Material::BSDFPassthrough(BSDF({
+                                        std::shared_ptr<BxDF>(new Surface::Lambertian (Spectrum::FromRGB(400,800,8, {0.7,0.7,0.7})))})
+                                  //new Material::Lambertian(
+                                  //shared_ptr<SpectrumTexture>(ColorImageTexture(Photometry::Texture::XZPlanarMapping(0.4,0.4,0,0),
+                                  //                                                  "loose_gravel_9261459 (mayang.com).JPG"))
                              ))
                          ))
                 );
