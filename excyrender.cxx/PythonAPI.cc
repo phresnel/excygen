@@ -6,6 +6,7 @@
 #include "Photometry/Lighting.hh"
 
 #include "Photometry/Texture/ImageTexture.hh"
+#include "Photometry/Texture/ConstantTexture.hh"
 #include "Photometry/Texture/UVMapping2d.hh"
 #include "Photometry/Texture/PlanarMapping2d.hh"
 #include "Photometry/Material/Lambertian.hh"
@@ -123,35 +124,57 @@ void photometry_api()
 }
 
 
-
 void material_api()
 {
+    // TODO: rid this class once we have a generic Color class.
+    struct PyConstantTexture final : excyrender::Photometry::Texture::SpectrumTexture
+    {
+        PyConstantTexture (excyrender::Photometry::RGB const &rgb) :
+            val(excyrender::Photometry::Spectrum::FromRGB(400,800,8,rgb))
+        {}
+
+        excyrender::Photometry::Spectrum operator() (excyrender::DifferentialGeometry const &dg) const noexcept {
+            return val(dg);
+        }
+    private:
+        excyrender::Photometry::Texture::ConstantTexture<excyrender::Photometry::Spectrum> val;
+    };
+
     using namespace boost::python;
     using namespace PyAPI;
 
     using excyrender::real;
     using excyrender::Geometry::Vector;
+    using excyrender::Photometry::Spectrum;
     using namespace excyrender::Photometry::Texture;
     using namespace excyrender::Photometry;
 
-    // Mappings
+
+    // Mappings -----------------------------------------------------------------------------------
     class_<UVMapping2d, std::shared_ptr<UVMapping2d>, Mapping2d>
       ("UVMapping2d", init<real,real,real,real>((arg("scale_u"), arg("scale_v"), arg("offset_u")=0, arg("offset_v")=0)));
 
     class_<PlanarMapping2d, std::shared_ptr<PlanarMapping2d>, Mapping2d>
       ("PlanarMapping2d", init<Vector,Vector,real,real>((arg("vs"), arg("vt"), arg("offset_u")=0, arg("offset_v")=0)));
 
-
     implicitly_convertible<std::shared_ptr<UVMapping2d>,     std::shared_ptr<Mapping2d> >();
     implicitly_convertible<std::shared_ptr<PlanarMapping2d>, std::shared_ptr<Mapping2d> >();
 
-    // Textures
+
+    // Textures -----------------------------------------------------------------------------------
     class_<ColorImageTexture, std::shared_ptr<ColorImageTexture>, boost::noncopyable>
       ("ImageTexture", init<std::shared_ptr<Mapping2d>, std::string>((arg("mapping"), arg("filename"))));
 
-    // Materials
+    class_<PyConstantTexture, std::shared_ptr<PyConstantTexture>, boost::noncopyable>
+      ("ConstantTexture", init<RGB>());
+
+    implicitly_convertible<std::shared_ptr<ColorImageTexture>, std::shared_ptr<SpectrumTexture> >();
+    implicitly_convertible<std::shared_ptr<PyConstantTexture>, std::shared_ptr<SpectrumTexture> >();
+
+
+    // Materials ----------------------------------------------------------------------------------
     class_<Material::Lambertian, std::shared_ptr<Material::Lambertian>>
-      ("Lambertian", init<std::shared_ptr<ColorImageTexture>>((arg("texture"))));
+      ("Lambertian", init<std::shared_ptr<SpectrumTexture>>((arg("texture"))));
 }
 
 

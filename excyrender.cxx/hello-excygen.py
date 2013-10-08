@@ -15,3 +15,5 @@ print foo
 
 mat = Lambertian(ImageTexture(PlanarMapping2d(Vector(1,0,0), Vector(0,0,1), offset_v=2),
                               filename="loose_gravel_9261459 (mayang.com).JPG"))
+
+m = Lambertian(ConstantTexture(RGB(1,2,3)))
