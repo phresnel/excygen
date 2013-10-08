@@ -8,6 +8,7 @@
 #include "Photometry/Texture/ImageTexture.hh"
 #include "Photometry/Texture/UVMapping2d.hh"
 #include "Photometry/Texture/PlanarMapping2d.hh"
+#include "Photometry/Material/Lambertian.hh"
 
 #include "Primitives/PrimitiveList.hh"
 #include "SurfaceIntegrators/Path.hh"
@@ -133,10 +134,6 @@ void material_api()
     using namespace excyrender::Photometry::Texture;
     using namespace excyrender::Photometry;
 
-    // Textures
-    class_<ImageTexture<Spectrum>, std::shared_ptr<ImageTexture<Spectrum>>, boost::noncopyable>
-      ("ImageTexture", init<std::shared_ptr<Mapping2d>, std::string>((arg("mapping"), arg("filename"))));
-
     // Mappings
     class_<UVMapping2d, std::shared_ptr<UVMapping2d>, Mapping2d>
       ("UVMapping2d", init<real,real,real,real>((arg("scale_u"), arg("scale_v"), arg("offset_u")=0, arg("offset_v")=0)));
@@ -147,6 +144,14 @@ void material_api()
 
     implicitly_convertible<std::shared_ptr<UVMapping2d>,     std::shared_ptr<Mapping2d> >();
     implicitly_convertible<std::shared_ptr<PlanarMapping2d>, std::shared_ptr<Mapping2d> >();
+
+    // Textures
+    class_<ColorImageTexture, std::shared_ptr<ColorImageTexture>, boost::noncopyable>
+      ("ImageTexture", init<std::shared_ptr<Mapping2d>, std::string>((arg("mapping"), arg("filename"))));
+
+    // Materials
+    class_<Material::Lambertian, std::shared_ptr<Material::Lambertian>>
+      ("Lambertian", init<std::shared_ptr<ColorImageTexture>>((arg("texture"))));
 }
 
 
