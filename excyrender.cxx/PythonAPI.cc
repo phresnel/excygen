@@ -41,9 +41,16 @@ namespace PyAPI {
 
     struct SunSky {
         excyrender::Geometry::Direction direction;
+        excyrender::Photometry::RGB sunlight;
+        excyrender::Photometry::RGB skylight;
 
-        SunSky(excyrender::Geometry::Direction const &direction)
-            : direction(direction) {}
+        SunSky(excyrender::Geometry::Direction const &direction,
+               excyrender::Photometry::RGB const &sunlight,
+               excyrender::Photometry::RGB const &skylight)
+            : direction(direction),
+              sunlight(sunlight),
+              skylight(skylight)
+        {}
     };
 
 
@@ -63,7 +70,7 @@ namespace PyAPI {
         std::vector<std::shared_ptr<Photometry::LightSource>> const lightSources({
             std::shared_ptr<Photometry::LightSource>(new Photometry::Directional (
                   sunSky.direction,
-                  Photometry::Spectrum::FromRGB(400,800,8,{10,10,10}))
+                  Photometry::Spectrum::FromRGB(400,800,8,sunSky.sunlight))
             )
         });
 
@@ -74,8 +81,8 @@ namespace PyAPI {
                     surface_integrator.maximum_recursion,
                     primitive,
                     lightSources,
-                    [](Geometry::Direction const &) {
-                        return Photometry::Spectrum::FromRGB(400,800,8,{1,2,3});
+                    [&sunSky](Geometry::Direction const &) {
+                        return Photometry::Spectrum::FromRGB(400,800,8,sunSky.skylight);
                     }
                 );
 
@@ -96,6 +103,13 @@ BOOST_PYTHON_MODULE(excygen) {
     //== API Meta ==================================================================================
     def("api_version", api_version);
     def("api_compile_date", api_compile_date);
+
+
+    //== Photometry API ============================================================================
+    class_<excyrender::Photometry::RGB>
+      ("RGB")
+      .def(init<excyrender::real, excyrender::real, excyrender::real>())
+    ;
 
 
     //== Geometric API =============================================================================
@@ -119,7 +133,11 @@ BOOST_PYTHON_MODULE(excygen) {
       .def_readonly("height", &Renderer::height)
       .def_readonly("samples_per_pixel", &Renderer::samples_per_pixel);
 
-    class_<SunSky>("SunSky", init<excyrender::Geometry::Direction>((arg("direction"))))
+    class_<SunSky>("SunSky", init<excyrender::Geometry::Direction,
+                                  excyrender::Photometry::RGB,
+                                  excyrender::Photometry::RGB>((arg("direction"),
+                                                                arg("sunlight")=excyrender::Photometry::RGB(10,10,10),
+                                                                arg("skylight")=excyrender::Photometry::RGB(1,2,3))))
       .def_readonly("direction", &SunSky::direction);
 }
 
