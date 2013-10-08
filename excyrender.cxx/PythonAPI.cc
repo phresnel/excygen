@@ -11,7 +11,9 @@
 #include "Primitives/PrimitiveList.hh"
 #include "SurfaceIntegrators/Path.hh"
 #include "ImageFormat/PPM.hh"
+
 #include "Geometry/Direction.hh"
+#include "Geometry/Vector.hh"
 
 #include <Python.h>
 #include <boost/python.hpp>
@@ -136,12 +138,13 @@ void material_api()
     using namespace excyrender::Photometry::Texture;
     using namespace excyrender::Photometry;
 
+    // Textures
     class_<ImageTexture<Spectrum>, std::shared_ptr<ImageTexture<Spectrum>>, boost::noncopyable>
-      ("ImageTexture", init<std::shared_ptr<Mapping2d>, std::string>())
-    ;
+      ("ImageTexture", init<std::shared_ptr<Mapping2d>, std::string>((arg("mapping"), arg("filename"))));
 
+    // Mappings
     class_<UVMapping2d, std::shared_ptr<UVMapping2d>>
-      ("UVMapping2d", init<real,real,real,real>());
+      ("UVMapping2d", init<real,real,real,real>((arg("scale_u"), arg("scale_v"), arg("offset_u")=0, arg("offset_v")=0)));
 
 
     implicitly_convertible<std::shared_ptr<UVMapping2d>,
@@ -154,16 +157,43 @@ void geometry_api()
 {
     using namespace boost::python;
     using namespace PyAPI;
+    using excyrender::real;
+    using namespace excyrender::Geometry;
 
     // Direction
-    excyrender::Geometry::Direction (*direction)(excyrender::real,excyrender::real,excyrender::real) = &excyrender::Geometry::direction;
+    Direction (*direction)(real,real,real) = &excyrender::Geometry::direction;
     def("direction", direction);
 
-    class_<excyrender::Geometry::Direction>
-      ("Direction", init<excyrender::Geometry::Direction>())
-      .def("x", &excyrender::Geometry::Direction::x)
-      .def("y", &excyrender::Geometry::Direction::y)
-      .def("z", &excyrender::Geometry::Direction::z);
+    class_<Direction>
+      ("Direction", init<Direction>())
+      .def("x", &Direction::x)
+      .def("y", &Direction::y)
+      .def("z", &Direction::z);
+
+    // Vector
+    class_<Vector>
+      ("Vector")
+      .def(init<real,real,real>())
+      .def_readwrite("x", &Vector::x)
+      .def_readwrite("y", &Vector::y)
+      .def_readwrite("z", &Vector::z)
+      .def(self + self)
+      .def(self - self)
+      .def(self * real())
+      .def(real() * self)
+      .def(self / real())
+      .def(self_ns::str(self_ns::self))
+    ;
+
+    real   (*vec_dot)(Vector const &, Vector const &) = &dot;
+    Vector (*vec_normalize)(Vector const &) = &normalize;
+
+    def("dot",               vec_dot);
+    def("len_sq",            &excyrender::Geometry::len_sq);
+    def("len",               &excyrender::Geometry::len);
+    def("normalize",         vec_normalize);
+    def("cross",             &excyrender::Geometry::cross);
+    def("create_orthogonal", &excyrender::Geometry::createOrthogonal);
 }
 
 
