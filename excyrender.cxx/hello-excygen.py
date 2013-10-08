@@ -13,5 +13,5 @@ sunsky = SunSky(direction=direction(1,2,3),
 foo = cross(Vector(1,0,0), Vector(0,1,0))
 print foo
 
-tex = ImageTexture(UVMapping2d(1,1,offset_u=2),
+tex = ImageTexture(PlanarMapping2d(Vector(1,0,0), Vector(0,0,1), offset_v=2),
                    filename="loose_gravel_9261459 (mayang.com).JPG")

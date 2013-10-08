@@ -7,6 +7,7 @@
 
 #include "Photometry/Texture/ImageTexture.hh"
 #include "Photometry/Texture/UVMapping2d.hh"
+#include "Photometry/Texture/PlanarMapping2d.hh"
 
 #include "Primitives/PrimitiveList.hh"
 #include "SurfaceIntegrators/Path.hh"
@@ -22,15 +23,8 @@
 
 // Enable std::shared_ptr for use in our API.
 namespace std {
-    template<class T> const T* get_pointer(const std::shared_ptr<T>& p)
-    {
-        return p.get();
-    }
-
-    template<class T> T* get_pointer(std::shared_ptr<T>& p)
-    {
-        return p.get();
-    }
+    template<class T> const T* get_pointer(const std::shared_ptr<T>& p) { return p.get(); }
+    template<class T> T*       get_pointer(std::shared_ptr<T>& p)       { return p.get(); }
 }
 
 
@@ -135,6 +129,7 @@ void material_api()
     using namespace PyAPI;
 
     using excyrender::real;
+    using excyrender::Geometry::Vector;
     using namespace excyrender::Photometry::Texture;
     using namespace excyrender::Photometry;
 
@@ -143,12 +138,15 @@ void material_api()
       ("ImageTexture", init<std::shared_ptr<Mapping2d>, std::string>((arg("mapping"), arg("filename"))));
 
     // Mappings
-    class_<UVMapping2d, std::shared_ptr<UVMapping2d>>
+    class_<UVMapping2d, std::shared_ptr<UVMapping2d>, Mapping2d>
       ("UVMapping2d", init<real,real,real,real>((arg("scale_u"), arg("scale_v"), arg("offset_u")=0, arg("offset_v")=0)));
 
+    class_<PlanarMapping2d, std::shared_ptr<PlanarMapping2d>, Mapping2d>
+      ("PlanarMapping2d", init<Vector,Vector,real,real>((arg("vs"), arg("vt"), arg("offset_u")=0, arg("offset_v")=0)));
 
-    implicitly_convertible<std::shared_ptr<UVMapping2d>,
-                           std::shared_ptr<Mapping2d> >();
+
+    implicitly_convertible<std::shared_ptr<UVMapping2d>,     std::shared_ptr<Mapping2d> >();
+    implicitly_convertible<std::shared_ptr<PlanarMapping2d>, std::shared_ptr<Mapping2d> >();
 }
 
 
