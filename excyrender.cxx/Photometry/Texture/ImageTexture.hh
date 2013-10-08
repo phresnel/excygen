@@ -7,6 +7,7 @@
 #include "Texture.hh"
 #include "Mapping2d.hh"
 #include "detail/Image.hh"
+#include "memory.hh"
 
 namespace excyrender { namespace Photometry { namespace Texture {
 

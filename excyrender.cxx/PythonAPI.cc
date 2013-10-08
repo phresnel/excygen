@@ -4,6 +4,10 @@
 
 #include "raytrace.hh"
 #include "Photometry/Lighting.hh"
+
+#include "Photometry/Texture/ImageTexture.hh"
+#include "Photometry/Texture/UVMapping2d.hh"
+
 #include "Primitives/PrimitiveList.hh"
 #include "SurfaceIntegrators/Path.hh"
 #include "ImageFormat/PPM.hh"
@@ -14,9 +18,23 @@
 
 #include <iostream>
 
+// Enable std::shared_ptr for use in our API.
+namespace std {
+    template<class T> const T* get_pointer(const std::shared_ptr<T>& p)
+    {
+        return p.get();
+    }
+
+    template<class T> T* get_pointer(std::shared_ptr<T>& p)
+    {
+        return p.get();
+    }
+}
+
+
 namespace PyAPI {
     std::string api_version()
-    {
+    {        
         return "<master>";
     }
 
@@ -96,8 +114,6 @@ namespace PyAPI {
 
 
 
-
-
 void photometry_api()
 {
     using namespace boost::python;
@@ -107,6 +123,29 @@ void photometry_api()
       ("RGB")
       .def(init<excyrender::real, excyrender::real, excyrender::real>())
     ;
+}
+
+
+
+void material_api()
+{
+    using namespace boost::python;
+    using namespace PyAPI;
+
+    using excyrender::real;
+    using namespace excyrender::Photometry::Texture;
+    using namespace excyrender::Photometry;
+
+    class_<ImageTexture<Spectrum>, std::shared_ptr<ImageTexture<Spectrum>>, boost::noncopyable>
+      ("ImageTexture", init<std::shared_ptr<Mapping2d>, std::string>())
+    ;
+
+    class_<UVMapping2d, std::shared_ptr<UVMapping2d>>
+      ("UVMapping2d", init<real,real,real,real>());
+
+
+    implicitly_convertible<std::shared_ptr<UVMapping2d>,
+                           std::shared_ptr<Mapping2d> >();
 }
 
 
@@ -165,9 +204,10 @@ BOOST_PYTHON_MODULE(excygen) {
 
     //== API Meta ==================================================================================
     def("api_version", api_version);
-    def("api_compile_date", api_compile_date);    
+    def("api_compile_date", api_compile_date);            
     geometry_api();
     photometry_api();
+    material_api();
     rendering_api();
     skylight_api();
 }
