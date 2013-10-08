@@ -96,23 +96,25 @@ namespace PyAPI {
 
 
 
-BOOST_PYTHON_MODULE(excygen) {
+
+
+void photometry_api()
+{
     using namespace boost::python;
     using namespace PyAPI;
 
-    //== API Meta ==================================================================================
-    def("api_version", api_version);
-    def("api_compile_date", api_compile_date);
-
-
-    //== Photometry API ============================================================================
     class_<excyrender::Photometry::RGB>
       ("RGB")
       .def(init<excyrender::real, excyrender::real, excyrender::real>())
     ;
+}
 
 
-    //== Geometric API =============================================================================
+
+void geometry_api()
+{
+    using namespace boost::python;
+    using namespace PyAPI;
 
     // Direction
     excyrender::Geometry::Direction (*direction)(excyrender::real,excyrender::real,excyrender::real) = &excyrender::Geometry::direction;
@@ -123,15 +125,29 @@ BOOST_PYTHON_MODULE(excygen) {
       .def("x", &excyrender::Geometry::Direction::x)
       .def("y", &excyrender::Geometry::Direction::y)
       .def("z", &excyrender::Geometry::Direction::z);
+}
 
 
-    //== Rendering API =============================================================================
-    def("render", render, (arg("renderer"), arg("sun_sky")));
+
+void rendering_api()
+{
+    using namespace boost::python;
+    using namespace PyAPI;
+
+    def("render", render, (arg("renderer"), arg("sunsky")));
 
     class_<Renderer>("Renderer", init<int, int, int>((arg("width")=640, arg("height")=480, arg("sample_per_pixel")=16)))
       .def_readonly("width", &Renderer::width)
       .def_readonly("height", &Renderer::height)
       .def_readonly("samples_per_pixel", &Renderer::samples_per_pixel);
+}
+
+
+
+void skylight_api()
+{
+    using namespace boost::python;
+    using namespace PyAPI;
 
     class_<SunSky>("SunSky", init<excyrender::Geometry::Direction,
                                   excyrender::Photometry::RGB,
@@ -139,6 +155,21 @@ BOOST_PYTHON_MODULE(excygen) {
                                                                 arg("sunlight")=excyrender::Photometry::RGB(10,10,10),
                                                                 arg("skylight")=excyrender::Photometry::RGB(1,2,3))))
       .def_readonly("direction", &SunSky::direction);
+}
+
+
+
+BOOST_PYTHON_MODULE(excygen) {
+    using namespace boost::python;
+    using namespace PyAPI;
+
+    //== API Meta ==================================================================================
+    def("api_version", api_version);
+    def("api_compile_date", api_compile_date);    
+    geometry_api();
+    photometry_api();
+    rendering_api();
+    skylight_api();
 }
 
 
