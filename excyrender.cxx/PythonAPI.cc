@@ -208,7 +208,7 @@ void rendering_api()
 
     def("render", render, (arg("renderer"), arg("sunsky")));
 
-    class_<Renderer>("Renderer", init<int, int, int>((arg("width")=640, arg("height")=480, arg("sample_per_pixel")=16)))
+    class_<Renderer>("Renderer", init<int, int, int>((arg("width")=640, arg("height")=480, arg("samples_per_pixel")=16)))
       .def_readonly("width", &Renderer::width)
       .def_readonly("height", &Renderer::height)
       .def_readonly("samples_per_pixel", &Renderer::samples_per_pixel);
