@@ -27,6 +27,7 @@
 #include <boost/python/object.hpp>
 
 #include <iostream>
+#include <list>
 
 // Enable std::shared_ptr for use in our API.
 namespace std {
@@ -76,7 +77,8 @@ namespace PyAPI {
 
 
     void render(Renderer const &renderer,
-                SunSky const &sunSky)
+                SunSky const &sunSky,
+                std::shared_ptr<excyrender::Primitives::Primitive> primitive)
     {
         using namespace excyrender;
 
@@ -95,12 +97,10 @@ namespace PyAPI {
             )
         });
 
-        Primitives::PrimitiveList const primitive({});
-
         auto const integrator =
                 SurfaceIntegrators::Path(
                     surface_integrator.maximum_recursion,
-                    primitive,
+                    *primitive,
                     lightSources,
                     [&sunSky](Geometry::Direction const &) {
                         return Photometry::Spectrum::FromRGB(400,800,8,sunSky.skylight);
@@ -253,7 +253,7 @@ void rendering_api()
     using namespace boost::python;
     using namespace PyAPI;
 
-    def("render", render, (arg("renderer"), arg("sunsky")));
+    def("render", render, (arg("renderer"), arg("sunsky"), arg("primitive")));
 
     class_<Renderer>("Renderer", init<int, int, int>((arg("width")=640, arg("height")=480, arg("samples_per_pixel")=16)))
       .def_readonly("width", &Renderer::width)
@@ -282,6 +282,7 @@ void primitives_api()
 {
     using namespace boost::python;
     using namespace PyAPI;
+    using namespace excyrender::Primitives;
 
     struct local {
         static
@@ -291,15 +292,22 @@ void primitives_api()
             boost::python::object height_function,
             std::shared_ptr<excyrender::Photometry::Material::Material> material)
         {
+            auto ptr = height_function.ptr();
+            Py_INCREF(ptr);
             return excyrender::Primitives::create_terrain2d_alpha(world_rect,
                                                                   grid_resolution,
-                                                                  excyrender::Scripting::Python::PyHeightFun(height_function.ptr()),
+                                                                  excyrender::Scripting::Python::PyHeightFun(ptr),
                                                                   material);
         }
     };
 
-    class_<excyrender::Primitives::FinitePrimitive, std::shared_ptr<excyrender::Primitives::FinitePrimitive>, boost::noncopyable>
+    class_<FinitePrimitive, std::shared_ptr<FinitePrimitive>, boost::noncopyable, Primitive>
       ("FinitePrimitive", no_init);
+
+    class_<Primitive, std::shared_ptr<Primitive>, boost::noncopyable>
+      ("Primitive", no_init);
+
+    implicitly_convertible<std::shared_ptr<FinitePrimitive>, std::shared_ptr<Primitive> >();
 
     def("Terrain2dAlpha", &local::create_terrain2d_alpha,
       (arg("world_rect"), arg("grid_resolution"), arg("height_function"), arg("material")));

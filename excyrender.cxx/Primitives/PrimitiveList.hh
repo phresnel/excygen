@@ -20,6 +20,9 @@ public:
     {
     }
 
+    template <typename Iter>
+    PrimitiveList (Iter begin, Iter end) : primitives(begin, end) {}
+
     optional<Intersection> intersect(Geometry::Ray const &ray) const noexcept
     {
         optional<Intersection> ret;
