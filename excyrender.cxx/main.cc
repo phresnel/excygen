@@ -32,6 +32,7 @@
 #include "Photometry/Texture/ImageTexture.hh"
 
 #include "Primitives/BoundingIntervalHierarchy.hh"
+#include "Primitives/factories.hh"
 #include "DebugPixel.hh"
 
 #include "Scripting/Et1.hh"
@@ -148,25 +149,12 @@ int main (int argc, char *argv[]) {
         }
         */
 
-        const auto world_rect = Geometry::Rectangle({-1000,-1000},{1000,1000});
-        builder.add(std::shared_ptr<Primitives::FinitePrimitive>(new
-                             PrimitiveFromFiniteShape (std::shared_ptr<Shapes::FiniteShape>(
-                                                          new Shapes::Terrain2d(
-                                                               world_rect, world_rect,
-                                                               2048,
-                                                               //[](real u,real v) { return -4 + 5*sin(u) * sin(v); }
-                                                               //Nature::Et1::compile("let foo(int x,typeof(x) y) = x+y in foo(1,2)")
-                                                               Scripting::Python::PyHeightFun("test")
-                                                           )),
-                             std::shared_ptr<Material::Material>(
-                                     new Material::BSDFPassthrough(BSDF({
-                                        std::shared_ptr<BxDF>(new Surface::Lambertian (Spectrum::FromRGB(400,800,8, {0.7,0.7,0.7})))})
-                                  //new Material::Lambertian(
-                                  //shared_ptr<SpectrumTexture>(ColorImageTexture(Photometry::Texture::XZPlanarMapping(0.4,0.4,0,0),
-                                  //                                                  "loose_gravel_9261459 (mayang.com).JPG"))
-                             ))
-                         ))
-                );
+        builder.add(create_terrain2d_alpha(Geometry::Rectangle({-1000,-1000},{1000,1000}),
+                                           2048,
+                                           Scripting::Python::PyHeightFun("test"),
+                                           std::shared_ptr<Photometry::Material::Material>(
+                                              new Photometry::Material::Lambertian(Photometry::Texture::constantTexture(Spectrum::FromRGB(400,800,8, {0.7,0.7,0.7}))))
+                                         ));
 
 
         PrimitiveList const primitive({

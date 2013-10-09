@@ -138,3 +138,5 @@
 ../excyrender.cxx/raytrace.cc
 ../excyrender.cxx/RNG.hh
 ../excyrender.cxx/RNG.cc
+../excyrender.cxx/Primitives/factories.hh
+../excyrender.cxx/Primitives/factories.cc

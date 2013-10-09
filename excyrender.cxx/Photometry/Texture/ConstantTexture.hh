@@ -21,6 +21,11 @@ namespace excyrender { namespace Photometry { namespace Texture {
         T val;
     };
 
+    template <typename T>
+    shared_ptr<ConstantTexture<T>> constantTexture (T const &val) {
+        return shared_ptr<ConstantTexture<T>>(new ConstantTexture<T>(val));
+    }
+
 } } }
 
 #endif // CONSTANTTEXTURE_HH_INCLUDED_20130811
