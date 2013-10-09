@@ -32,8 +32,8 @@ namespace excyrender {
                 for (auto i=0; i!=samples_per_pixel; ++i) {
                     const auto u = (x + rng()-real(0.5)) / real(width),
                                v = 1 - (y + rng()-real(0.5)) / real(height);
-                    const auto ray = inverse(Transform::LookAt({0,-200,-100}, {0,-200,0},{0,1,0}))
-                                   * Ray{Point{0,0,0}, Geometry::direction(u-0.5, v-0.5, 0.8)};
+                    const auto ray = //inverse(Transform::LookAt({0,0,0}, {0,0,1},{0,1,0})) *
+                                     Ray{Point{0,0,0}, Geometry::direction(u-0.5, v-0.5, 0.8)};
                     sum += integrate(ray, rng) * (real(1) / samples_per_pixel);
                     current_debug = 0;
                 }

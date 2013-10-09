@@ -53,6 +53,7 @@ excygen = env.Program(target='excygen',
                         'Scripting/Python.cc'
                        ],
                 LIBS=['gomp', 'SDL', 'SDL_image',
+                      'noise',
                       'pthread', 'dl', 'util', 'm', 'python2.7', 'boost_python' # python-config --libs
                      ]
                 )
