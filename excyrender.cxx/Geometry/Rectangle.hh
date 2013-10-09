@@ -20,7 +20,7 @@ namespace excyrender { namespace Geometry {
 
         Rectangle() = delete;
 
-        constexpr Rectangle(Point2d const &min, Point2d const &max)
+        constexpr Rectangle(Point2d const &min, Point2d const &max) noexcept
         : min_(enforce_precondition(min.x<=max.x, min))
         , max_(enforce_precondition(min.y<=max.y, max))
         {

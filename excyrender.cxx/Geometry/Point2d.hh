@@ -9,7 +9,10 @@
 namespace excyrender { namespace Geometry {
 
     struct Point2d final {
-        real x, y;
+        real x=0, y=0;
+
+        constexpr Point2d() noexcept = default;
+        constexpr Point2d(real x, real y) noexcept : x(x), y(y) {}
     };
 
 } }

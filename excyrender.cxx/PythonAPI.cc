@@ -15,11 +15,16 @@
 #include "SurfaceIntegrators/Path.hh"
 #include "ImageFormat/PPM.hh"
 
+#include "Primitives/factories.hh"
+
 #include "Geometry/Direction.hh"
 #include "Geometry/Vector.hh"
+#include "Geometry/Rectangle.hh"
 
+#include "Scripting/Python.hh"
 #include <Python.h>
 #include <boost/python.hpp>
+#include <boost/python/object.hpp>
 
 #include <iostream>
 
@@ -173,8 +178,10 @@ void material_api()
 
 
     // Materials ----------------------------------------------------------------------------------
-    class_<Material::Lambertian, std::shared_ptr<Material::Lambertian>>
+    class_<Material::Lambertian, std::shared_ptr<Material::Lambertian>, Material::Material>
       ("Lambertian", init<std::shared_ptr<SpectrumTexture>>((arg("texture"))));
+
+    implicitly_convertible<std::shared_ptr<Material::Lambertian>, std::shared_ptr<Material::Material> >();
 }
 
 
@@ -220,6 +227,23 @@ void geometry_api()
     def("normalize",         vec_normalize);
     def("cross",             &excyrender::Geometry::cross);
     def("create_orthogonal", &excyrender::Geometry::createOrthogonal);
+
+
+    // Point2d
+    class_<Point2d>
+      ("Point2d")
+      .def(init<real,real>())
+      .def_readwrite("x", &Point2d::x)
+      .def_readwrite("y", &Point2d::y);
+
+    // Rectangle
+    class_<Rectangle>
+      ("Rectangle", init<Point2d, Point2d>((arg("min"), arg("max"))))
+      .def("left",   &Rectangle::left)
+      .def("top",    &Rectangle::top)
+      .def("width",  &Rectangle::width)
+      .def("height", &Rectangle::height);
+
 }
 
 
@@ -254,6 +278,35 @@ void skylight_api()
 
 
 
+void primitives_api()
+{
+    using namespace boost::python;
+    using namespace PyAPI;
+
+    struct local {
+        static
+        std::shared_ptr<excyrender::Primitives::FinitePrimitive> create_terrain2d_alpha (
+            excyrender::Geometry::Rectangle const &world_rect,
+            int grid_resolution,
+            boost::python::object height_function,
+            std::shared_ptr<excyrender::Photometry::Material::Material> material)
+        {
+            return excyrender::Primitives::create_terrain2d_alpha(world_rect,
+                                                                  grid_resolution,
+                                                                  excyrender::Scripting::Python::PyHeightFun(height_function.ptr()),
+                                                                  material);
+        }
+    };
+
+    class_<excyrender::Primitives::FinitePrimitive, std::shared_ptr<excyrender::Primitives::FinitePrimitive>, boost::noncopyable>
+      ("FinitePrimitive", no_init);
+
+    def("Terrain2dAlpha", &local::create_terrain2d_alpha,
+      (arg("world_rect"), arg("grid_resolution"), arg("height_function"), arg("material")));
+}
+
+
+
 BOOST_PYTHON_MODULE(excygen) {
     using namespace boost::python;
     using namespace PyAPI;
@@ -266,6 +319,7 @@ BOOST_PYTHON_MODULE(excygen) {
     material_api();
     rendering_api();
     skylight_api();
+    primitives_api();
 }
 
 

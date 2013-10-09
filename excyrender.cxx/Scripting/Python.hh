@@ -18,12 +18,13 @@ namespace excyrender { namespace Scripting { namespace Python {
         PyFun& operator= (PyFun const &) = delete;
         PyFun (PyFun const &) = delete;
 
-        PyFun (std::string const &module, std::string const &function);
+        explicit PyFun (PyObject *pyob);
+        explicit PyFun (std::string const &module, std::string const &function);
         PyObject* operator() (PyObject *args) const;
         virtual ~PyFun();
 
     private:
-        PyObject *pName, *pModule, *pDict, *pFunc, *pValue;
+        PyObject *pName = 0, *pModule = 0, *pDict = 0, *pFunc = 0, *pValue = 0;
     };
 
 
@@ -31,7 +32,8 @@ namespace excyrender { namespace Scripting { namespace Python {
     class PyHeightFun final
     {
     public:
-        PyHeightFun(std::string const &module_name);
+        explicit PyHeightFun(std::string const &module_name);
+        explicit PyHeightFun(PyObject *pyob);
         float operator() (float u, float v) const;
 
     private:

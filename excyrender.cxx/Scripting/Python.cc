@@ -52,6 +52,10 @@ PyFun::PyFun (std::string const &module,
 }
 
 
+PyFun::PyFun (PyObject *pyob) : pFunc(pyob)
+{}
+
+
 
 PyObject* PyFun::operator() (PyObject *args) const {
     return PyObject_CallObject(pFunc, args);
@@ -61,8 +65,8 @@ PyObject* PyFun::operator() (PyObject *args) const {
 
 PyFun::~PyFun() {
     // Clean up
-    Py_DECREF(pModule);
-    Py_DECREF(pName);
+    Py_CLEAR(pModule);
+    Py_CLEAR(pName);
 }
 
 
@@ -71,6 +75,12 @@ PyFun::~PyFun() {
 
 
 PyHeightFun::PyHeightFun(std::string const &module) : fun(new PyFun(module, "height"))
+{
+}
+
+
+
+PyHeightFun::PyHeightFun(PyObject *pyob) : fun(new PyFun(pyob))
 {
 }
 
